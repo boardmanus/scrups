@@ -16,7 +16,7 @@ module.exports = function (grunt) {
             all: [
                 'Gruntfile.js',
                 'tasks/*.js',
-                '<%= nodeunit.tests %>'
+                'src/*.js'
             ],
             options: {
                 jshintrc: '.jshintrc'
@@ -24,27 +24,16 @@ module.exports = function (grunt) {
         },
 
         // Configuration to be run (and then tested).
-        screeps: {
+        scrups: {
             options: {
-                email: '',
-                password: '',
+                email: 'email@gmail.com',
+                password: '*****',
                 branch: 'default'
             },
-            test: {
-                src: ['test/fixtures/happy/*']
-            },
             pull: {
-              dest: 'dest'
+              dest: 'src'
             }
-        },
-
-        // Unit tests.
-        nodeunit: {
-            tests: [],
-            testHappy: ['test/screeps_test.js'],
-            testEmpty: ['test/screeps_empty_test.js']
         }
-
     });
 
     // Actually load this plugin's task(s).
@@ -53,23 +42,6 @@ module.exports = function (grunt) {
     // These plugins provide necessary tasks.
     grunt.loadNpmTasks('grunt-contrib-jshint');
     grunt.loadNpmTasks('grunt-contrib-nodeunit');
-    grunt.loadNpmTasks('grunt-contrib-git');
-
-    // Whenever the "test" task is run, first clean the "tmp" dir, then run this
-    // plugin's task(s), then test the result.
-    grunt.registerTask('test-happy', ['screeps', 'nodeunit:testHappy']);
-    grunt.registerTask('test-empty', ['screeps', 'nodeunit:testEmpty']);
-
-    grunt.registerTask('switch-to-empty-tests', function () {
-        grunt.config.set('screeps.test.src', ['test/fixtures/empty/*']);
-    });
-
-    // By default, lint and run all tests.
-    grunt.registerTask('default', [
-        'jshint',
-        'test-happy',
-        'switch-to-empty-tests',
-        'test-empty'
-    ]);
-
+    grunt.loadNpmTasks('grunt-git');
+    grunt.loadNpmTasks('grunt-screeps');
 };
