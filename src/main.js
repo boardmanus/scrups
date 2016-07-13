@@ -12,8 +12,10 @@ var Dismantler = require('worker.dismantler');
 
 function debug(obj, msg) {
     const OUTPUT_DEBUG = false;
-    if (!OUTPUT_DEBUG) return;
-    
+    if (!OUTPUT_DEBUG) {
+      return;
+    }
+
     var name = "";
     if (obj instanceof Structure) {
         name = obj.structureType + "-" + obj.id + ": ";
@@ -21,7 +23,7 @@ function debug(obj, msg) {
     else if (obj instanceof Creep) {
         name = obj.memory.role + "-" + obj.name + "-" + obj.memory.operation + ": ";
     }
-    
+
     console.log(name + msg);
 }
 
@@ -51,7 +53,7 @@ module.exports.loop = function () {
         var enemies = room.find(FIND_HOSTILE_CREEPS);
         var sources = room.find(FIND_SOURCES);
         var flags = room.find(FIND_FLAGS);
-        
+
         var highways = [];
         if (room.memory.highways == null && spawners.length == 0) {
             sources.forEach(function(source) {
@@ -60,10 +62,10 @@ module.exports.loop = function () {
                    highways.push(spawner.pos.findPathTo(source));
                 });
             });
-            
+
             console.log("Surveyed " + highways.length + " highways.");
             room.memory.highways = highways;
-            
+
             highways.forEach(function(highway) {
                 highway.forEach(function(pos) {
                     var res = room.createConstructionSite(pos.x, pos.y, STRUCTURE_ROAD);
@@ -76,7 +78,7 @@ module.exports.loop = function () {
         else {
             highways = room.memory.highways;
         }
-        
+
         spawners.forEach(function(spawner) {
             if (workers.length < 10 && !spawner.spawning) {
                 var w = Worker.create(spawner, { minEnergy: 3*room.energyAvailable/4 });
@@ -85,9 +87,9 @@ module.exports.loop = function () {
                 }
             }
         });
-        
-    
-        console.log("Workers: " + upgraders.length + " upgraders, " + builders.length + " builders, " + repairers.length + " repairers, " + 
+
+
+        console.log("Workers: " + upgraders.length + " upgraders, " + builders.length + " builders, " + repairers.length + " repairers, " +
                     harvesters.length + " harvesters, " + storers.length + " storers, " + dismantlers.length + " dismantlers and " + waiters.length + " waiters.");
         towers.forEach(function(t) {
             if (t.energy == 0) {
@@ -115,10 +117,9 @@ module.exports.loop = function () {
                 t.attack(enemy);
             }
         });
-        
+
         workers.forEach(function(worker) {
             Worker.work(worker);
         });
     }
 }
-

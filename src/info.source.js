@@ -14,13 +14,13 @@ module.exports = {
         console.log("Finding path from " + spawner.pos + " to " + source.pos);
         var _path = spawner.pos.findPathTo(source.pos);
         var _creeps = [];
-        
+
         this.creeps = function() {
             return _creeps;
-        }
-        
+        };
+
         this.path = function() {
             return _path;
-        }
+        };
     }
 };

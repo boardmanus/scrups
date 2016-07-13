@@ -15,27 +15,25 @@
     "node": ">= 0.8.0"
   },
   "devDependencies": {
-    "grunt": "^0.4.5",
-    "grunt-contrib-clean": "^0.5.0",
-    "grunt-contrib-jshint": "*",
-    "grunt-contrib-nodeunit": "^0.3.3",
+    "grunt": "*",
+    "grunt-contrib-clean": "*",
+    "grunt-eslint": "*",
+    "eslint-config-airbnb": "*",
+    "grunt-contrib-nodeunit": "*",
     "grunt-screeps": "*",
-    "grunt-git": "^1.0.0",
-    "nock": "^0.59.1",
-    "underscore": "^1.7.0"
-  },
-  "peerDependencies": {
-    "grunt": ">=0.4.0"
+    "grunt-git": "*",
+    "nock": "*",
+    "underscore": "*"
   },
   "keywords": [
     "screeps"
   ],
   "main": "Gruntfile.js",
   "dependencies": {
-    "grunt": "^0.4.5",
-    "grunt-contrib-clean": "^0.5.0",
-    "grunt-git": "^1.0.0",
+    "grunt": "*",
+    "grunt-contrib-clean": "*",
+    "grunt-git": "*",
     "grunt-screeps": "*",
-    "underscore": "^1.7.0"
+    "underscore": "*"
   }
 }
