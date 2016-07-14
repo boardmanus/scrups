@@ -1,6 +1,7 @@
 /*
  * Repairer logic
  */
+const u = require('utils');
 const Dismantler = require('worker.dismantler');
 
 const Repairer = {
@@ -49,7 +50,7 @@ const Repairer = {
     if (repair) {
       repair = !Dismantler.has_structures_to_dismantle(structure.room, structure.pos);
       if (!repair) {
-        console.log("Won't repair " + structure.structureType + '-' + structure.id + ' as it is flagged for deconstruction');
+        console.log(`Won\'t repair ${u.name(structure)} as it is flagged for deconstruction`);
       }
     }
 
@@ -71,29 +72,51 @@ const Repairer = {
      * @param structure the structure to generate a weighting for
      * @return the wieghting for a repair of this structure
      */
-  repair_weighting(structure) {
-    var damageRatio = structure.hits / structure.hitsMax;
+  repair_weighting(pos, structure) {
+    const damageRatio = structure.hits / structure.hitsMax;
+    const distance = pos.getRangeTo(structure);
     switch (structure.structureType) {
-      case STRUCTURE_SPAWN: return 0;
+      case STRUCTURE_SPAWN: {
+        return 0;
+      }
       case STRUCTURE_STORAGE:
-      case STRUCTURE_EXTENSION: return 1000 + damageRatio * 500;
+      case STRUCTURE_EXTENSION: {
+        return 1000 + damageRatio * 500 + distance;
+      }
       case STRUCTURE_ROAD:
-        return ((structure.hits < structure.hitsMax / 5) ? 2000 : 4000) + damageRatio * 500;
+        return (((structure.hits < structure.hitsMax / 5) ? 2000 : 4000) +
+                  damageRatio * 500 + distance);
       case STRUCTURE_WALL:
-        if (structure.hits < 1000) return 3000 + structure.hits / 1000 * 500;
-        else if (structure.hits < 10000) return 5000 + structure.hits / 10000 * 500;
-                else if (structure.hits < 20000) return 7000 + structure.hits / 20000 * 500;
+        if (structure.hits < 1000) {
+          return distance + 3000 + structure.hits / 1000 * 500;
+        } else if (structure.hits < 10000) {
+          return distance + 5000 + structure.hits / 10000 * 500;
+        } else if (structure.hits < 20000) {
+          return distance + 7000 + structure.hits / 20000 * 500;
+        }
+        break;
       case STRUCTURE_RAMPART:
-        if (structure.hits < structure.hitsMax / 50) return 5000 + structure.hits / (structure.hitsMax / 50) * 500;
-        else if (structure.hits < structure.hitsMax / 15) return 5000 + structure.hits / (structure.hitsMax / 15) * 500;
-                else if (structure.hits < structure.hitsMax / 10) return 7000 + structure.hits / (structure.hitsMax / 10) * 500;
+        if (structure.hits < structure.hitsMax / 50) {
+          return distance + 5000 + structure.hits / (structure.hitsMax / 50) * 500;
+        } else if (structure.hits < structure.hitsMax / 15) {
+          return distance + 5000 + structure.hits / (structure.hitsMax / 15) * 500;
+        } else if (structure.hits < structure.hitsMax / 10) {
+          return distance + 7000 + structure.hits / (structure.hitsMax / 10) * 500;
+        }
+        break;
       case STRUCTURE_CONTAINER:
-        if (structure.hits < structure.hitsMax / 50) return 2000 + damageRatio * 500;
-        else if (structure.hits < structure.hitsMax / 10) return 4000 + damageRatio * 500;
-                else if (structure.hits < structure.hitsMax / 5) return 6000 + damageRatio * 500;
-      default: break;
+        if (structure.hits < structure.hitsMax / 50) {
+          return 2000 + damageRatio * 500;
+        } else if (structure.hits < structure.hitsMax / 10) {
+          return 4000 + damageRatio * 500;
+        } else if (structure.hits < structure.hitsMax / 5) {
+          return 6000 + damageRatio * 500;
+        }
+        break;
+      default:
+        break;
     }
-    return 1000000;
+    return 1000000 + distance;
   },
 
 
@@ -103,7 +126,9 @@ const Repairer = {
      * @return an ordered array of construction sites
      */
   find_sites(worker) {
-    var sites = worker.room.find(FIND_MY_STRUCTURES, { filter: Repairer.should_repair });
+    const sites = worker.room.find(FIND_MY_STRUCTURES, {
+      filter: Repairer.should_repair,
+    });
     return _.sortBy(sites, Repairer.repair_weighting);
   },
 
@@ -111,62 +136,61 @@ const Repairer = {
     /**
      * Start/Continue the worker building at the site.
      * @param worker the worker to order around
-     * @param site the site to build at.  If null, the workers current site is used, or the best available.
+     * @param site the site to build at.
      * @return the result of the operation
      */
-  work(worker, site = null) {
+  work(worker, workSite = null) {
     if (worker.spawning) {
-      console.log('worker-' + worker.name + ' is spawning...');
+      console.log(`${u.name(worker)} is spawning...`);
       return Repairer.ERROR.IS_SPAWNING;
     }
 
-    if (_.sum(worker.carry) == 0) {
-      console.log('worker-' + worker.name + ' has no energy to repair with...');
+    let site = workSite;
+    if (_.sum(worker.carry) === 0) {
+      console.log(`${u.name(worker)} has no energy to repair with...`);
       return Repairer.ERROR.NO_ENERGY;
     }
 
-    if (site == null && worker.memory.site == null) {
-      var sites = Repairer.find_sites(worker);
-      if (sites.length == 0) {
-        console.log('worker-' + worker.name + ' found no structures to repair...');
+    if (!site && !worker.memory.site) {
+      const sites = Repairer.find_sites(worker);
+      if (sites.length === 0) {
+        console.log(`${u.name(worker)} found no structures to repair...`);
         return Repairer.ERROR.NO_REPAIR_SITES;
       }
       site = sites[0];
-      console.log('worker-' + worker.name + ' will repair ' + site.structureType + '-' + site.id);
+      console.log(`${u.name(worker)} will repair ${u.name(site)}`);
       worker.memory.site = site.id;
-    }
-    else if (worker.memory.site == null) {
+    } else if (!worker.memory.site) {
       worker.memory.site = site.id;
-    }
-        else {
+    } else {
       site = Game.getObjectById(worker.memory.site);
     }
 
     if (site == null) {
-      console.log('worker-' + worker.name + ' has no site to repair...');
+      console.log(`${u.name(worker)} has no site to repair...`);
       return Repairer.ERROR.REPAIR_FAILED;
     }
 
-    var e = _.sum(worker.carry);
-    var h = site.hits;
-    var res = worker.repair(site);
+    const e = _.sum(worker.carry);
+    const h = site.hits;
+    let res = worker.repair(site);
     switch (res) {
       case 0:
-        console.log('worker-' + worker.name + ' repairing ' + site.structureType + '-' + site.id + ' (energy=' + e + '=>' + worker.carry.energy + ', hits=' + h + ' => ' + site.hits + '/' + site.hitsMax + ')');
+        console.log(`${u.name(worker)} repairing ${u.name(site)} (energy=${e}=>${_.sum(worker.carry)}, hits=${h}=>${site.hits}/${site.hitsMax})`);
         if (e === _.sum(worker.carry) && h === site.hits) {
-          console.log('worker-' + worker.name + " didn't appear to repair " + site.structureType + '-' + site.id + '...');
+          console.log(`${u.name(worker)} didn't appear to repair ${u.name(site)}...`);
           return Repairer.ERROR.REPAIR_FAILED;
         }
         break;
       case ERR_NOT_IN_RANGE:
         res = worker.moveTo(site);
-        if (res != 0) {
-          console.log('worker-' + worker.name + " couldn't move to repair site (" + res + ')');
+        if (res !== 0) {
+          console.log(`${u.name(worker)} couldn't move to repair site (${res})`);
           return Repairer.ERROR.REPAIR_FAILED;
         }
         break;
       default:
-        console.log('worker-' + worker.name + ' failed to repair ' + site.structureType + '-' + site.id + ' (' + res + ')');
+        console.log(`${u.name(worker)}  failed to repair ${u.name(site)} (${res})`);
         return Repairer.ERROR.REPAIR_FAILED;
     }
 

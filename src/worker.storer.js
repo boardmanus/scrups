@@ -74,8 +74,10 @@ const Storer = {
       case STRUCTURE_TOWER:
         if (structure.room.find(FIND_HOSTILE_CREEPS).length > 0) {
           weight = 0;
+        } else if (structure.energy < structure.energyCapacity / 3) {
+          weight = 500;
         }
-        weight += (structure.energyAvailable / structure.energyCapacity) * 1000;
+        weight += (structure.energy / structure.energyCapacity) * 500;
         break;
       default: break;
     }

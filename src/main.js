@@ -25,8 +25,8 @@ module.exports.loop = function mainLoop() {
     const workers = room.find(FIND_MY_CREEPS, {
       filter: (w) => w.memory.role === Worker.ROLE,
     });
-    const towers = room.find(FIND_MY_STRUCTURES, { filter: (s) =>
-      s.structureType === STRUCTURE_TOWER,
+    const towers = room.find(FIND_MY_STRUCTURES, {
+      filter: (s) => s.structureType === STRUCTURE_TOWER,
     });
     const spawners = room.find(FIND_MY_SPAWNS);
     const upgraders = workers.filter((w) => w.memory.operation === Upgrader.OPERATION);
@@ -80,6 +80,7 @@ module.exports.loop = function mainLoop() {
 
     console.log(`Workers: ${upgraders.length} upgraders, ${builders.length} builders, ${repairers.length} repairers, ${harvesters.length} harvesters, ${storers.length} storers, ${dismantlers.length} dismantlers and ${waiters.length} waiters.`);
     towers.forEach((t) => {
+      console.log(`${u.name(t)} has ${t.energy}/${t.energyCapacity} energy available.`);
       if (t.energy === 0) {
         return;
       }
