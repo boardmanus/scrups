@@ -17,6 +17,11 @@ const Storer = {
   },
 
 
+  /**
+    * Determines whether a structure can have stuff stored in it
+    * @param structure the structure to test
+    * @return true if the structure can have stuff stored
+    */
   is_storable(structure) {
     switch (structure.structureType) {
       case STRUCTURE_EXTENSION:
@@ -34,6 +39,12 @@ const Storer = {
   },
 
 
+  /**
+   * Determines a weighting value for how critical it is to store at a structure
+   * @param worker the worker that will store
+   * @param structure the structure to test
+   * @return a weighting (lower is more critical)
+   */
   storage_weighting(worker, structure) {
     let weight = 1000;
     let ratio = 1.0;
@@ -62,8 +73,9 @@ const Storer = {
         break;
       case STRUCTURE_TOWER:
         if (structure.room.find(FIND_HOSTILE_CREEPS).length > 0) {
-          return 0;
+          weight = 0;
         }
+        weight += (structure.energyAvailable / structure.energyCapacity) * 1000;
         break;
       default: break;
     }
