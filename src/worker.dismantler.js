@@ -1,6 +1,8 @@
 /*
  * Dismantler logic
  */
+const u = require('utils');
+
 const Dismantler = {
 
 
@@ -74,27 +76,27 @@ const Dismantler = {
     }
 
     if (_.sum(worker.carry) > 2 * worker.carryCapacity / 3) {
-      console.log(`worker-${worker.name} is carrying too much energy`);
+      console.log(`${u.name(worker)} is carrying too much energy`);
       return Dismantler.ERROR.FULL_ENERGY;
     }
 
-    console.log(`worker-${worker.name} is carrying ${_.sum(worker.carry)}/${worker.carryCapacity}`);
+    console.log(`${u.name(worker)} is carrying ${_.sum(worker.carry)}/${worker.carryCapacity}`);
 
     if (!site && !worker.memory.site) {
       const sites = Dismantler.find_sites(worker.room);
       if (sites.length === 0) {
-        console.log(`worker-${worker.name} found no sites to dismantle...`);
+        console.log(`${u.name(worker)} found no sites to dismantle...`);
         return Dismantler.ERROR.NO_SITES_TO_DISMANTLE;
       }
       site = sites[worker.ticksToLive % sites.length];
-      console.log(`worker-${worker.name} about to dismantle ${site.structureType}-${site.id}`);
+      console.log(`${u.name(worker)} about to dismantle ${u.name(site)}`);
       worker.memory.site = site.id;
     } else if (!worker.memory.site) {
       worker.memory.site = site.id;
     } else {
       site = Game.getObjectById(worker.memory.site);
       if (site == null) {
-        console.log(`worker-${worker.name} site-${worker.memory.site} invalid!  Removing...`);
+        console.log(`${u.name(worker)} site-${worker.memory.site} invalid!  Removing...`);
         worker.memory.site = null;
         return Dismantler.ERROR.NO_SITES_TO_DISMANTLE;
       }
@@ -107,12 +109,12 @@ const Dismantler = {
       case ERR_NOT_IN_RANGE:
         res = worker.moveTo(site);
         if (res === ERR_NO_PATH) {
-          console.log(`worker-${worker.name} failed moving to ${site.structureType}-${site.id} (${res})`);
+          console.log(`${u.name(worker)} failed moving to ${u.name(site)} (${res})`);
           return Dismantler.ERROR.FAILED_TO_DISMANTLE;
         }
         break;
       default:
-        console.log(`worker-${worker.name} failed to dismantle ${site.structureType}-${site.id} (${res}`);
+        console.log(`${u.name(worker)} failed to dismantle ${u.name(site)} (${res}`);
         return Dismantler.ERROR.FAILED_TO_DISMANTLE;
     }
 

@@ -6,21 +6,7 @@ const Waiter = require('worker.waiter');
 const Harvester = require('worker.harvester');
 const Builder = require('worker.builder');
 const Dismantler = require('worker.dismantler');
-
-/**
- * @return an objects name for output
- */
-function oname(obj) {
-  if (obj instanceof Structure) {
-    return `${obj.structureType}'-'${obj.id}`;
-  } else if (obj instanceof Creep) {
-    return ((obj.my) ?
-      `${obj.memory.role}'-'${obj.name}` :
-      `enemy-${obj.owner}-${obj.name}`);
-  }
-  return `unknown-${obj}`;
-}
-
+const u = require('utils');
 
 /**
   * Mainloop of the screeps application
@@ -33,9 +19,15 @@ module.exports.loop = function mainLoop() {
     }
   }
 
-  for (const [, room] of Game.rooms) {
+  Object.keys(Game.rooms).forEach((roomName) => {
+    const room = Game.rooms[roomName];
     // RoomInfo.init(room);
-    const workers = room.find(FIND_MY_CREEPS, (w) => w.memory.role === Worker.ROLE);
+    const workers = room.find(FIND_MY_CREEPS, {
+      filter: (w) => w.memory.role === Worker.ROLE,
+    });
+    const towers = room.find(FIND_MY_STRUCTURES, { filter: (s) =>
+      s.structureType === STRUCTURE_TOWER,
+    });
     const spawners = room.find(FIND_MY_SPAWNS);
     const upgraders = workers.filter((w) => w.memory.operation === Upgrader.OPERATION);
     const builders = workers.filter((w) => w.memory.operation === Builder.OPERATION);
@@ -47,9 +39,6 @@ module.exports.loop = function mainLoop() {
     const waiters = workers.filter((w) => w.memory.operation === Waiter.OPERATION);
     const dismantlers = workers.filter((w) =>
       w.memory.operation === Dismantler.OPERATION
-    );
-    const towers = room.find(FIND_MY_STRUCTURES, (s) =>
-      s.structureType === STRUCTURE_TOWER
     );
     const enemies = room.find(FIND_HOSTILE_CREEPS);
     const sources = room.find(FIND_SOURCES);
@@ -83,7 +72,7 @@ module.exports.loop = function mainLoop() {
       if (workers.length < 10 && !spawner.spawning) {
         const w = Worker.create(spawner, { minEnergy: 3 * room.energyAvailable / 4 });
         if (w) {
-          console.log(`Adding new worker ${oname(w)}`);
+          console.log(`Adding new worker ${u.name(w)}`);
         }
       }
     });
@@ -104,22 +93,22 @@ module.exports.loop = function mainLoop() {
              (s.structureType === STRUCTURE_RAMPART)) && Repairer.should_repair(s),
         });
         rs = _.sortBy(rs, Repairer.repair_weighting);
-        console.log(`${oname(t)} has ${rs.length} repairable structures`);
+        console.log(`${u.name(t)} has ${rs.length} repairable structures`);
         if (rs.length > 0) {
           const s = rs[0];
-          console.log(`${oname(t)} repairing ${oname(s)} (hits=${s.hits})`);
+          console.log(`${u.name(t)} repairing ${u.name(s)} (hits=${s.hits})`);
           const res = t.repair(s);
           if (res !== 0) {
-            console.log(`${oname(t)} failed to repair ${oname(s)} (${res})`);
+            console.log(`${u.name(t)} failed to repair ${u.name(s)} (${res})`);
           }
         }
       } else {
         const enemy = enemies[0];
-        console.log(`${oname(t)} attacking ${oname(enemy)}`);
+        console.log(`${u.name(t)} attacking ${u.name(enemy)}`);
         t.attack(enemy);
       }
     });
 
     workers.forEach((worker) => Worker.work(worker));
-  }
+  });
 };

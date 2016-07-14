@@ -18,9 +18,13 @@
   },
   "globals": {
     "_": false,
+    COLOR_BLUE: false,
+    "FIND_MY_CONSTRUCTION_SITES": false,
     "ERR_NOT_IN_RANGE": false,
+    ERR_NO_PATH: false,
     "LOOK_CONSTRUCTION_SITES": false,
     "LOOK_STRUCTURES": false,
+    LOOK_FLAGS: false,
     "BODYPART_COST": true,
     "CREEP_LIFE_TIME": true,
     "Game": true,
