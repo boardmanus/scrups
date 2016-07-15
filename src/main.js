@@ -41,32 +41,6 @@ module.exports.loop = function mainLoop() {
       w.memory.operation === Dismantler.OPERATION
     );
     const enemies = room.find(FIND_HOSTILE_CREEPS);
-    const sources = room.find(FIND_SOURCES);
-    // const flags = room.find(FIND_FLAGS);
-
-    let highways = [];
-    if (room.memory.highways && spawners.length === 0) {
-      sources.forEach((source) => {
-        highways.push(room.controller.pos.findPathTo(source));
-        spawners.forEach((spawner) => {
-          highways.push(spawner.pos.findPathTo(source));
-        });
-      });
-
-      console.log(`Surveyed ${highways.length} highways.`);
-      room.memory.highways = highways;
-
-      highways.forEach((highway) => {
-        highway.forEach((pos) => {
-          const res = room.createConstructionSite(pos.x, pos.y, STRUCTURE_ROAD);
-          if (res !== 0) {
-            console.log(`Failed to construct road at ${pos} (err=${res})`);
-          }
-        });
-      });
-    } else {
-      highways = room.memory.highways;
-    }
 
     spawners.forEach((spawner) => {
       if (workers.length < 10 && !spawner.spawning) {

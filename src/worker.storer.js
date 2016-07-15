@@ -1,6 +1,7 @@
 /*
  * Storer logic
  */
+const u = require('utils');
 
 const Storer = {
 
@@ -109,7 +110,7 @@ const Storer = {
     }
 
     if (_.sum(worker.carry) === 0) {
-      console.log(`worker-${worker.name} has no energy to store...`);
+      console.log(`${u.name(worker)} has no energy to store...`);
       return Storer.ERROR.NO_ENERGY;
     }
 
@@ -154,14 +155,14 @@ const Storer = {
         if (constructRoad) {
           worker.room.createConstructionSite(worker, STRUCTURE_ROAD);
           if (res !== 0) {
-            console.log(`worker-${worker.name} failed marking a road on the way to ${site.structureType}-site.id`);
+            console.log(`${u.name(worker)} failed marking a road on the way to ${u.name(site)}`);
           }
         }
         worker.moveTo(site);
         break;
       }
       default:
-        console.log(`worker:store-${worker.name} failed to store energy at ${site.structureType}-${site.id} (${res})`);
+        console.log(`${u.name(worker)} failed to store energy at ${u.name(site)} (${res})`);
         return Storer.ERROR.STORAGE_FAILED;
     }
 

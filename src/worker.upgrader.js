@@ -1,6 +1,7 @@
 /*
  * Upgrader logic
  */
+const u = require('utils');
 
 const Upgrader = {
 
@@ -27,7 +28,7 @@ const Upgrader = {
     }
 
     if (_.sum(worker.carry) === 0) {
-      console.log(`worker-${worker.name} has no energy to upgrade with...`);
+      console.log(`${u.name(worker)} has no energy to upgrade with...`);
       return Upgrader.ERROR.NO_ENERGY;
     }
 
@@ -39,7 +40,7 @@ const Upgrader = {
         worker.moveTo(worker.room.controller);
         break;
       default:
-        console.log(`worker-${worker.name} failed to upgrade controller (${res})`);
+        console.log(`${u.name(worker)} failed to upgrade controller (${res})`);
         return Upgrader.ERROR.UPGRADE_FAILED;
     }
 

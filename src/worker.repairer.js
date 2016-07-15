@@ -58,20 +58,20 @@ const Repairer = {
   },
 
 
-    /**
-     * Indicates whether a structure needs repairing of some kind.
-     * @param structure the structure to check
-     */
+  /**
+   * Indicates whether a structure needs repairing of some kind.
+   * @param structure the structure to check
+   */
   needs_repairing(structure) {
     return structure.hits < structure.hitsMax;
   },
 
 
-    /**
-     * Defines the order in which repairs should be taken
-     * @param structure the structure to generate a weighting for
-     * @return the wieghting for a repair of this structure
-     */
+  /**
+   * Defines the order in which repairs should be taken
+   * @param structure the structure to generate a weighting for
+   * @return the wieghting for a repair of this structure
+   */
   repair_weighting(pos, structure) {
     const damageRatio = structure.hits / structure.hitsMax;
     const distance = pos.getRangeTo(structure);
@@ -120,11 +120,11 @@ const Repairer = {
   },
 
 
-    /**
-     * Finds the construction sites in the room, and orders them by priority.
-     * @param room the room to search
-     * @return an ordered array of construction sites
-     */
+  /**
+   * Finds the construction sites in the room, and orders them by priority.
+   * @param room the room to search
+   * @return an ordered array of construction sites
+   */
   find_sites(worker) {
     const sites = worker.room.find(FIND_MY_STRUCTURES, {
       filter: Repairer.should_repair,

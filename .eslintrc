@@ -18,6 +18,7 @@
   },
   "globals": {
     "_": false,
+    CONTROLLER_DOWNGRADE: false,
     COLOR_BLUE: false,
     "FIND_MY_CONSTRUCTION_SITES": false,
     "ERR_NOT_IN_RANGE": false,

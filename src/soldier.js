@@ -7,7 +7,7 @@
  * mod.thing == 'a thing'; // true
  */
 
-var Soldier = {
+const Soldier = {
 
   ROLE: 'soldier',
 
@@ -39,46 +39,47 @@ var Soldier = {
      * @return the new soldier
      */
   create(spawner, ranged, maxEnergy = -1) {
-    var e = spawner.room.energyAvailable;
+    let e = spawner.room.energyAvailable;
     if (maxEnergy >= 0 && maxEnergy < e) {
       e = maxEnergy;
     }
 
-    var attackCost = ranged ? Soldier.COST.RANGED_ATTACK : Soldier.COST.ATTACK;
-    var attackPart = ranged ? RANGED_ATTACK : ATTACK;
-    var body = [MOVE, TOUGH, attackPart];
+    const attackCost = ranged ? Soldier.COST.RANGED_ATTACK : Soldier.COST.ATTACK;
+    const attackPart = ranged ? RANGED_ATTACK : ATTACK;
+    const body = [MOVE, TOUGH, attackPart];
 
     e -= attackCost - Soldier.COST.MOVE - Soldier.COST.TOUGH;
     if (e < 0) {
       return null;
     }
 
-    var minCost = Soldier.COST.TOUGH;
+    const minCost = Soldier.COST.TOUGH;
     while (e >= minCost) {
       if (e >= attackCost) {
         body.push(attackPart);
         e = e - attackCost;
-        console.log('added ' + attackPart + ' - energy=' + e);
+        console.log(`added ${attackPart} - energy=${e}`);
       }
       if (e >= Soldier.COST.MOVE) {
         body.push(MOVE);
         e = e - Soldier.COST.MOVE;
-        console.log('added move - energy=' + e);
+        console.log(`added move - energy=${e}`);
       }
       if (e >= Soldier.COST.TOUGH) {
         body.push(TOUGH);
         e = e - Soldier.COST.TOUGH;
-        console.log('added toughness - energy=' + e);
+        console.log(`added toughness - energy=${e}`);
       }
     }
 
-    var soldier = spawner.createCreep(body, null, { role: Soldier.ROLE, operation: Soldier.OPERATION.WAITING });
+    const soldier = spawner.createCreep(body, null,
+      { role: Soldier.ROLE, operation: Soldier.OPERATION.WAITING });
     if (!_.isString(soldier)) {
-      console.log('Failed to spawn new soldier with body ' + body);
+      console.log(`Failed to spawn new soldier with body ${body}`);
       return null;
     }
 
-    console.log('Spawned soldier-' + soldier + ' with body ' + body);
+    console.log(`Spawned ${soldier} with body ${body}`);
     return Game.creeps[soldier];
   },
 
@@ -88,7 +89,7 @@ var Soldier = {
      * @return the soldier for chaining
      */
   work(soldier) {
-    operation = soldier.memory.operation;
+    let operation = soldier.memory.operation;
     if (operation === null) {
       operation = Soldier.OPERATION.WAITING;
     }

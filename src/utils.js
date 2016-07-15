@@ -17,7 +17,10 @@ module.exports = {
         `enemy-${obj.owner}-${obj.name}`);
     } else if (obj instanceof Room) {
       return `room-${obj.name}`;
+    } else if (obj instanceof Source) {
+      return `source-${obj.id}`;
     }
+
     return `unknown-${obj}`;
   },
 };

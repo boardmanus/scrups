@@ -6,6 +6,7 @@
  * var mod = require('worker');
  * mod.thing == 'a thing'; // true
  */
+const u = require('utils');
 const Builder = require('worker.builder');
 const Harvester = require('worker.harvester');
 const Upgrader = require('worker.upgrader');
@@ -89,7 +90,7 @@ const Worker = {
       return null;
     }
 
-    console.log(`Spawned worker-${worker} with body ${body}`);
+    console.log(`Spawned ${u.name(worker)} with body ${body}`);
     return Game.creeps[worker];
   },
 
@@ -148,7 +149,7 @@ const Worker = {
 
   work(worker) {
     if (worker.memory.operation == null) {
-      console.log(`worker-${worker.name} has no operation set...`);
+      console.log(`${u.name(worker)} has no operation set...`);
       Waiter.work(worker);
       return worker;
     }
