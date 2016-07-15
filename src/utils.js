@@ -15,6 +15,8 @@ module.exports = {
       return ((obj.my) ?
         `${obj.memory.role}-${obj.name}` :
         `enemy-${obj.owner}-${obj.name}`);
+    } else if (obj instanceof Room) {
+      return `room-${obj.name}`;
     }
     return `unknown-${obj}`;
   },
