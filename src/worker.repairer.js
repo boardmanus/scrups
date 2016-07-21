@@ -41,7 +41,7 @@ const Repairer = {
         repair = structure.hits < structure.hitsMax / 3;
         break;
       case STRUCTURE_WALL:
-        repair = structure.hits < 20000;
+        repair = structure.hits < structure.hitsMax / 100;
         break;
       default:
         break;
@@ -129,7 +129,7 @@ const Repairer = {
     const sites = worker.room.find(FIND_MY_STRUCTURES, {
       filter: Repairer.should_repair,
     });
-    return _.sortBy(sites, Repairer.repair_weighting);
+    return _.sortBy(sites, (s) => Repairer.repair_weighting(worker.pos, s));
   },
 
 

@@ -13,15 +13,15 @@ const u = require('utils');
   * Mainloop of the screeps application
   */
 module.exports.loop = function mainLoop() {
-  for (const name of Memory.creeps) {
+  for (const name in Memory.creeps) {
     if (!Game.creeps[name]) {
       Memory.creeps[name] = null;
       console.log('Clearing non-existing creep memory:', name);
     }
   }
 
-  _.each(Game.rooms, (roomName, room) => {
-    const city = new City(room);
+  for (const roomName in Game.rooms) {
+    const city = new City(Game.rooms[roomName]);
 
     // RoomInfo.init(room);
     const upgraders = city.citizens.filter((w) =>
@@ -48,7 +48,7 @@ module.exports.loop = function mainLoop() {
 
     city.spawners.forEach((spawner) => {
       if (city.citizens.length < 10 && !spawner.spawning) {
-        const w = Worker.create(spawner, { minEnergy: 3 * room.energyAvailable / 4 });
+        const w = Worker.create(spawner, { minEnergy: 3 * city.room.energyAvailable / 4 });
         if (w) {
           console.log(`Adding new worker ${u.name(w)}`);
         }
@@ -66,10 +66,8 @@ module.exports.loop = function mainLoop() {
         if (t.energy < t.energyCapacity / 3) {
           return;
         }
-        let rs = _.filter(city.structures, (s) =>
-          Repairer.should_repair(s)
-        );
-        rs = _.sortBy(rs, Repairer.repair_weighting);
+        let rs = _.filter(city.structures, Repairer.should_repair);
+        rs = _.sortBy(rs, (s) => Repairer.repair_weighting(t.pos, s));
         console.log(`${u.name(t)} has ${rs.length} repairable structures`);
         if (rs.length > 0) {
           const s = rs[0];
@@ -87,5 +85,5 @@ module.exports.loop = function mainLoop() {
     });
 
     city.citizens.forEach((worker) => Worker.work(worker));
-  });
+  }
 };
