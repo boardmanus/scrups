@@ -35,8 +35,36 @@ const Defender = {
      * @param source the source to harvest from.
      * @return the result of the operation
      */
-  work(worker) {
-    console.log(`${u.name(worker)} - not implemented!`);
+  work(soldier) {
+    let target = null;
+    if (soldier.memory.target == null) {
+      const targets = _.sortBy(soldier.room.find(FIND_HOSTILE_CREEPS), (t) =>
+        soldier.pos.getRangeTo(t)
+      );
+      if (targets.length > 0) {
+        target = targets[0];
+        soldier.memory.target = target.id;
+      }
+    } else {
+      target = Game.getObjectById(soldier.memory.target);
+    }
+
+    if (!target) {
+      return Defender.ERROR.NONE;
+    }
+
+    const res = soldier.attack(target);
+    switch (res) {
+      case 0:
+        break;
+      case ERR_NOT_IN_RANGE:
+        soldier.moveTo(target);
+        break;
+      default:
+        soldier.memory.target = null;
+        break;
+    }
+
     return Defender.ERROR.NONE;
   },
 };

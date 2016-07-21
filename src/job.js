@@ -2,7 +2,7 @@
  * A job for a worker to perform...
  */
 
-const u = require('utils');
+const u = require('./utils');
 
 const Job = class Job {
 
@@ -11,20 +11,13 @@ const Job = class Job {
     this.site = site;
   }
 
-  get type() {
-    return this.type;
-  }
-
-  get site() {
-    return this.site;
-  }
-
   /**
    * Generate information about the job
    */
   info() {
     return `job-${this.type} @ ${u.name(this.site)}`;
   }
+
  /**
   * Determines the priority of the job with respect to the game state.
   */

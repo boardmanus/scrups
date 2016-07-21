@@ -6,44 +6,48 @@ const Waiter = require('worker.waiter');
 const Harvester = require('worker.harvester');
 const Builder = require('worker.builder');
 const Dismantler = require('worker.dismantler');
+const City = require('city');
 const u = require('utils');
 
 /**
   * Mainloop of the screeps application
   */
 module.exports.loop = function mainLoop() {
-  for (let i = 0; i < Memory.creeps.length; ++i) {
-    if (!Game.creeps[i]) {
-      delete Memory.creeps[name];
+  for (const name of Memory.creeps) {
+    if (!Game.creeps[name]) {
+      Memory.creeps[name] = null;
       console.log('Clearing non-existing creep memory:', name);
     }
   }
 
-  Object.keys(Game.rooms).forEach((roomName) => {
-    const room = Game.rooms[roomName];
+  _.each(Game.rooms, (roomName, room) => {
+    const city = new City(room);
+
     // RoomInfo.init(room);
-    const workers = room.find(FIND_MY_CREEPS, {
-      filter: (w) => w.memory.role === Worker.ROLE,
-    });
-    const towers = room.find(FIND_MY_STRUCTURES, {
-      filter: (s) => s.structureType === STRUCTURE_TOWER,
-    });
-    const spawners = room.find(FIND_MY_SPAWNS);
-    const upgraders = workers.filter((w) => w.memory.operation === Upgrader.OPERATION);
-    const builders = workers.filter((w) => w.memory.operation === Builder.OPERATION);
-    const repairers = workers.filter((w) => w.memory.operation === Repairer.OPERATION);
-    const harvesters = workers.filter((w) =>
+    const upgraders = city.citizens.filter((w) =>
+      w.memory.operation === Upgrader.OPERATION
+    );
+    const builders = city.citizens.filter((w) =>
+      w.memory.operation === Builder.OPERATION
+    );
+    const repairers = city.citizens.filter((w) =>
+      w.memory.operation === Repairer.OPERATION
+    );
+    const harvesters = city.citizens.filter((w) =>
       w.memory.operation === Harvester.OPERATION
     );
-    const storers = workers.filter((w) => w.memory.operation === Storer.OPERATION);
-    const waiters = workers.filter((w) => w.memory.operation === Waiter.OPERATION);
-    const dismantlers = workers.filter((w) =>
+    const storers = city.citizens.filter((w) =>
+      w.memory.operation === Storer.OPERATION
+    );
+    const waiters = city.citizens.filter((w) =>
+      w.memory.operation === Waiter.OPERATION
+    );
+    const dismantlers = city.citizens.filter((w) =>
       w.memory.operation === Dismantler.OPERATION
     );
-    const enemies = room.find(FIND_HOSTILE_CREEPS);
 
-    spawners.forEach((spawner) => {
-      if (workers.length < 10 && !spawner.spawning) {
+    city.spawners.forEach((spawner) => {
+      if (city.citizens.length < 10 && !spawner.spawning) {
         const w = Worker.create(spawner, { minEnergy: 3 * room.energyAvailable / 4 });
         if (w) {
           console.log(`Adding new worker ${u.name(w)}`);
@@ -53,20 +57,18 @@ module.exports.loop = function mainLoop() {
 
 
     console.log(`Workers: ${upgraders.length} upgraders, ${builders.length} builders, ${repairers.length} repairers, ${harvesters.length} harvesters, ${storers.length} storers, ${dismantlers.length} dismantlers and ${waiters.length} waiters.`);
-    towers.forEach((t) => {
+    city.towers.forEach((t) => {
       console.log(`${u.name(t)} has ${t.energy}/${t.energyCapacity} energy available.`);
       if (t.energy === 0) {
         return;
       }
-      if (enemies.length === 0) {
+      if (city.enemies.length === 0) {
         if (t.energy < t.energyCapacity / 3) {
           return;
         }
-        let rs = room.find(FIND_STRUCTURES, {
-          filter: (s) =>
-            ((s.owner == null) ||
-             (s.structureType === STRUCTURE_RAMPART)) && Repairer.should_repair(s),
-        });
+        let rs = _.filter(city.structures, (s) =>
+          Repairer.should_repair(s)
+        );
         rs = _.sortBy(rs, Repairer.repair_weighting);
         console.log(`${u.name(t)} has ${rs.length} repairable structures`);
         if (rs.length > 0) {
@@ -78,12 +80,12 @@ module.exports.loop = function mainLoop() {
           }
         }
       } else {
-        const enemy = enemies[0];
+        const enemy = city.enemies[0];
         console.log(`${u.name(t)} attacking ${u.name(enemy)}`);
         t.attack(enemy);
       }
     });
 
-    workers.forEach((worker) => Worker.work(worker));
+    city.citizens.forEach((worker) => Worker.work(worker));
   });
 };
