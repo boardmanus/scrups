@@ -74,6 +74,7 @@
     "FIND_STRUCTURES": false,
     "RESOURCE_ENERGY": false,
     "STRUCTURE_CONTAINER": false,
+    "STRUCTURE_CONTROLLER": false,
     "STRUCTURE_EXTENSION": false,
     "STRUCTURE_EXTRACTOR": false,
     "STRUCTURE_LINK": false,

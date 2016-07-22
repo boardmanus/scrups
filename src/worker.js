@@ -14,6 +14,7 @@ const Storer = require('worker.storer');
 const Repairer = require('worker.repairer');
 const Waiter = require('worker.waiter');
 const Dismantler = require('worker.dismantler');
+const Claimer = require('worker.claimer');
 
 
 /**
@@ -23,6 +24,7 @@ const COST = {
   MOVE: 50,
   CARRY: 50,
   WORK: 100,
+  CLAIM: 600,
 };
 
 const MIN_PART_COST = COST.MOVE;
@@ -57,33 +59,41 @@ const Worker = {
 
     // Keep adding body parts until we run out of energy
     const workerToCarry = 2;
-    const body = [MOVE, WORK, CARRY];
-    while (e >= MIN_PART_COST) {
-            // First put in the correct ratio of work parts
-      for (let j = 0; j < workerToCarry; ++j) {
-        if (e >= COST.WORK) {
-          body.push(WORK);
-          e = e - COST.WORK;
-          console.log(`added work - energy=${e}`);
+    let body;
+    let workerOperation;
+    if (attribs.claimer) {
+      body = [MOVE, CLAIM];
+      workerOperation = Claimer.OPERATION;
+    } else {
+      body = [MOVE, WORK, CARRY];
+      workerOperation = Waiter.OPERATION;
+      while (e >= MIN_PART_COST) {
+              // First put in the correct ratio of work parts
+        for (let j = 0; j < workerToCarry; ++j) {
+          if (e >= COST.WORK) {
+            body.push(WORK);
+            e = e - COST.WORK;
+            console.log(`added work - energy=${e}`);
+          }
         }
-      }
 
-      if (e >= COST.CARRY) {
-        body.push(CARRY);
-        e = e - COST.CARRY;
-        console.log(`added carry - energy=${e}`);
-      }
+        if (e >= COST.CARRY) {
+          body.push(CARRY);
+          e = e - COST.CARRY;
+          console.log(`added carry - energy=${e}`);
+        }
 
-      if (e >= COST.MOVE) {
-        body.push(MOVE);
-        e = e - COST.MOVE;
-        console.log(`added move - energy=${e}`);
+        if (e >= COST.MOVE) {
+          body.push(MOVE);
+          e = e - COST.MOVE;
+          console.log(`added move - energy=${e}`);
+        }
       }
     }
 
     const worker = spawner.createCreep(body, null, {
       role: Worker.ROLE,
-      operation: Waiter.OPERATION,
+      operation: workerOperation,
     });
     if (!_.isString(worker)) {
       console.log(`Failed to spawn new worker with body ${body}`);
@@ -96,6 +106,14 @@ const Worker = {
 
   wait(worker) {
     Waiter.work(worker);
+    return worker;
+  },
+
+  claim(worker, controller = null) {
+    if (Claimer.work(worker, controller) !== Claimer.ERROR.NONE) {
+      return Worker.wait(worker);
+    }
+
     return worker;
   },
 
@@ -169,6 +187,8 @@ const Worker = {
         return Worker.repair(worker);
       case Dismantler.OPERATION:
         return Worker.dismantle(worker);
+      case Claimer.OPERATION:
+        return Worker.claim(worker);
       default:
         break;
     }

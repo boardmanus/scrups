@@ -18,22 +18,22 @@ const Dismantler = {
   },
 
 
-    /**
-     * Determines if a flag is a dismantler
-     * @param flag the flag to check
-     * @return true if a dismantler flag
-     */
+  /**
+   * Determines if a flag is a dismantler
+   * @param flag the flag to check
+   * @return true if a dismantler flag
+   */
   is_dismantler_flag(f) {
     return f.color === COLOR_BLUE;
   },
 
 
-    /**
-     * Determines whether the position in the room has a dismantler flag.
-     * @param room the room to check
-     * @param the position in the room
-     * @return true if the re are structures to be dismantled.
-     */
+  /**
+   * Determines whether the position in the room has a dismantler flag.
+   * @param room the room to check
+   * @param the position in the room
+   * @return true if the re are structures to be dismantled.
+   */
   has_structures_to_dismantle(room, pos) {
     const flags = room.lookForAt(LOOK_FLAGS, pos);
     return (_.filter(flags, Dismantler.is_dismantler_flag).length !== 0);
