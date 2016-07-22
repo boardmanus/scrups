@@ -36,32 +36,32 @@ module.exports.loop = function mainLoop() {
     Object.keys(Game.rooms).forEach((roomName) => {
       const city = new City(Game.rooms[roomName]);
 
-    // RoomInfo.init(room);
+      // RoomInfo.init(room);
       const upgraders = city.citizens.filter((w) =>
-      w.memory.operation === Upgrader.OPERATION
-    );
+        w.memory.operation === Upgrader.OPERATION
+      );
 
       const claimers = city.citizens.filter((w) =>
-      w.memory.operation === Claimer.OPERATION
-    );
+        w.memory.operation === Claimer.OPERATION
+      );
       const builders = city.citizens.filter((w) =>
-      w.memory.operation === Builder.OPERATION
-    );
+        w.memory.operation === Builder.OPERATION
+      );
       const repairers = city.citizens.filter((w) =>
-      w.memory.operation === Repairer.OPERATION
-    );
+        w.memory.operation === Repairer.OPERATION
+      );
       const harvesters = city.citizens.filter((w) =>
-      w.memory.operation === Harvester.OPERATION
-    );
+        w.memory.operation === Harvester.OPERATION
+      );
       const storers = city.citizens.filter((w) =>
-      w.memory.operation === Storer.OPERATION
-    );
+        w.memory.operation === Storer.OPERATION
+      );
       const waiters = city.citizens.filter((w) =>
-      w.memory.operation === Waiter.OPERATION
-    );
+        w.memory.operation === Waiter.OPERATION
+      );
       const dismantlers = city.citizens.filter((w) =>
-      w.memory.operation === Dismantler.OPERATION
-    );
+        w.memory.operation === Dismantler.OPERATION
+      );
 
       city.spawners.forEach((spawner) => {
         if (spawner.spawning) {
