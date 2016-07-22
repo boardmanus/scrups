@@ -111,7 +111,7 @@ const Worker = {
 
   claim(worker, controller = null) {
     if (Claimer.work(worker, controller) !== Claimer.ERROR.NONE) {
-      return Worker.wait(worker);
+      console.log(`${u.name(worker)} failed to claim!`);
     }
 
     return worker;

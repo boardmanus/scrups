@@ -41,9 +41,15 @@
        return null;
      }
 
-     console.log('Found claim flag.');
-     const controller = flag.room.controller;
-     if (!controller.my) {
+     console.log(`Found claim flag ${flag}, ${flag.pos.room}, ${flag.pos}`);
+     const room = flag.room;
+     if (!room) {
+       console.log('Found flag, but not in that room...');
+       return flag;
+     }
+
+     const controller = room.controller;
+     if (!controller.owner === 'Piklor') {
        console.log(`controller-${controller.id} already owned by us - ignoring...`);
        flag.remove();
        return null;
@@ -81,14 +87,25 @@
        worker.memory.site = site.id;
      } else {
        site = Game.getObjectById(worker.memory.site);
-       if (!site || site.structureType !== STRUCTURE_CONTROLLER) {
-         console.log(`${u.name(worker)} controller invalid!  Removing...`);
+       if (!site
+            || (!(site instanceof Flag)
+                && (site.structureType !== STRUCTURE_CONTROLLER))) {
+         console.log(`${u.name(worker)} controller id=${worker.memory.site}, (${u.name(site)}) invalid!  Removing...`);
          worker.memory.site = null;
          return Claimer.ERROR.NOT_CONTROLLER;
        }
+
+       if (site instanceof Flag && site.room) {
+         site = site.room.controller;
+         worker.memory.site = site.id;
+       }
      }
 
-     const res = worker.claim(site);
+     if (site instanceof Flag) {
+       worker.moveTo(site);
+       return Claimer.ERROR.NONE;
+     }
+     const res = worker.claimController(site);
      switch (res) {
        case 0:
          break;

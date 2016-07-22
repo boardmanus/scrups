@@ -19,6 +19,8 @@ module.exports = {
       return `room-${obj.name}`;
     } else if (obj instanceof Source) {
       return `source-${obj.id}`;
+    } else if (obj instanceof Flag) {
+      return `flag-${obj.name}`;
     }
 
     return `unknown-${obj}`;
