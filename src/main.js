@@ -7,7 +7,7 @@ const Harvester = require('worker.harvester');
 const Builder = require('worker.builder');
 const Claimer = require('worker.claimer');
 const Dismantler = require('worker.dismantler');
-const City = require('city');
+const Country = require('country');
 const Profiler = require('screeps-profiler');
 const u = require('utils');
 
@@ -33,11 +33,11 @@ module.exports.loop = function mainLoop() {
       }
     });
 
-    const cities = Object.keys(Game.rooms).map((roomName) =>
-      new City(Game.rooms[roomName])
-    );
+    const country = new Country();
+    Game.country = country;
+    country.run();
 
-    cities.forEach((city) => {
+    country.cities.forEach((city) => {
     // RoomInfo.init(room);
       const upgraders = city.citizens.filter((w) =>
         w.memory.operation === Upgrader.OPERATION);

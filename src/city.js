@@ -8,6 +8,8 @@ const City = class City {
 
   constructor(room) {
     this.room = room;
+    this.controller = room.controller;
+    this.constructionSites = room.find(FIND_MY_CONSTRUCTION_SITES);
     this.spawners = room.find(FIND_MY_SPAWNS);
     this.citizens = room.find(FIND_MY_CREEPS);
     this.enemies = room.find(FIND_HOSTILE_CREEPS);
@@ -49,6 +51,10 @@ const City = class City {
         default: break;
       }
     }
+  }
+
+  needsHelp() {
+    return this.controller.my && (this.spawners.length === 0);
   }
 
   /**

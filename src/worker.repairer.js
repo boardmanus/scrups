@@ -18,11 +18,11 @@ const Repairer = {
   },
 
 
-  /**
-   * Determines whether a structure should be repaired
-   * @param structure the structure to check
-   * @return true if the structure should be repaired
-   */
+    /**
+     * Determines whether a structure should be repaired
+     * @param structure the structure to check
+     * @return true if the structure should be repaired
+     */
   should_repair(structure) {
     let repair = false;
     switch (structure.structureType) {
