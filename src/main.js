@@ -95,26 +95,21 @@ module.exports.loop = function mainLoop() {
           if (t.energy < t.energyCapacity / 3) {
             return;
           }
-          if (city.enemies.length === 0) {
-            if (t.energy < t.energyCapacity / 3) {
-              return;
+          let rs = _.filter(city.structures, Repairer.should_repair);
+          rs = _.sortBy(rs, (s) => Repairer.repair_weighting(t.pos, s));
+          console.log(`${u.name(t)} has ${rs.length} repairable structures`);
+          if (rs.length > 0) {
+            const s = rs[0];
+            console.log(`${u.name(t)} repairing ${u.name(s)} (hits=${s.hits})`);
+            const res = t.repair(s);
+            if (res !== 0) {
+              console.log(`${u.name(t)} failed to repair ${u.name(s)} (${res})`);
             }
-            let rs = _.filter(city.structures, Repairer.should_repair);
-            rs = _.sortBy(rs, (s) => Repairer.repair_weighting(t.pos, s));
-            console.log(`${u.name(t)} has ${rs.length} repairable structures`);
-            if (rs.length > 0) {
-              const s = rs[0];
-              console.log(`${u.name(t)} repairing ${u.name(s)} (hits=${s.hits})`);
-              const res = t.repair(s);
-              if (res !== 0) {
-                console.log(`${u.name(t)} failed to repair ${u.name(s)} (${res})`);
-              }
-            }
-          } else {
-            const enemy = city.enemies[0];
-            console.log(`${u.name(t)} attacking ${u.name(enemy)}`);
-            t.attack(enemy);
           }
+        } else {
+          const enemy = city.enemies[0];
+          console.log(`${u.name(t)} attacking ${u.name(enemy)}`);
+          t.attack(enemy);
         }
       });
 

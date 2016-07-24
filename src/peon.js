@@ -13,9 +13,7 @@ const Peon = class Peon {
   }
 
   efficiency(job) {
-    switch (job.type) {
-      case
-    }
+    console.log(`${u.name(job.site)}`);
   }
 };
 

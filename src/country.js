@@ -13,7 +13,9 @@ const Country = class Country {
     this.cities = Object.keys(Game.rooms).map((roomName) =>
       new City(Game.rooms[roomName])
     );
+    this.spawnSites = [];
   }
+
 
   /**
    * Generate information about the site
@@ -28,9 +30,16 @@ const Country = class Country {
         c.operation === Upgrader.OPERATION);
       const builders = city.citizens.filter((c) =>
         c.operation === Builder.OPERATION);
-      const spawnSite = city.constructionSites.filter((cs) =>
+      const spawnSites = city.constructionSites.filter((cs) =>
         cs.structureType === STRUCTURE_SPAWN);
-      if (upgraders.length > 0 && (builders.length > 0 || !spawnSite)) {
+      if (spawnSites.length > 0) {
+        console.log(`City-${u.name(city.room)} has spawn construction sites`);
+        spawnSites.forEach((ss) => {
+          console.log(`Adding spawn construction site ${ss}`);
+          this.spawnSites.push(ss);
+        });
+      }
+      if (upgraders.length > 0 && (builders.length > 0 || spawnSites.length === 0)) {
         return;
       }
 
@@ -48,11 +57,11 @@ const Country = class Country {
           Upgrader.work(upgrader, city.controller);
         }
 
-        if (idleWorkers.length > 0 && spawnSite && builders.length === 0) {
+        if (idleWorkers.length > 0 && spawnSites.length > 0 && builders.length === 0) {
           const builder = idleWorkers.pop();
           builders.push(builder);
           console.log(`Borrowing ${u.name(builder)} from ${otherCity.info()} for ${city.info()})`);
-          Builder.work(builder, spawnSite);
+          Builder.work(builder, spawnSites[0]);
         }
       });
     });

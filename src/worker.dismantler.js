@@ -24,7 +24,7 @@ const Dismantler = {
    * @return true if a dismantler flag
    */
   is_dismantler_flag(f) {
-    return f.color === COLOR_BLUE;
+    return /^Dismantle/.test(f.name);
   },
 
 
@@ -49,7 +49,11 @@ const Dismantler = {
     console.log(`Found ${flags.length} dismantler flags.`);
     let structures = [];
     flags.forEach((flag) => {
-      const flaggedStructures = room.lookForAt(LOOK_STRUCTURES, flag.pos);
+      const type = flag.name.replace(/^Dismantle-?(.*)/, '$1');
+      let flaggedStructures = room.lookForAt(LOOK_STRUCTURES, flag.pos);
+      if (type !== '' && type !== 'all') {
+        flaggedStructures = flaggedStructures.filter((s) => s.structureType === type);
+      }
       if (flaggedStructures.length === 0) {
         console.log('Found dismantle flag - but no structures');
         flag.remove();

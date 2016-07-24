@@ -24,7 +24,9 @@ const Builder = {
      * @return an ordered array of construction sites
      */
   find_sites(room) {
-    return _.sortBy(room.find(FIND_MY_CONSTRUCTION_SITES), (s) => {
+    const rooms = room.find(FIND_MY_CONSTRUCTION_SITES);
+    Game.country.spawnSites.forEach((ss) => rooms.push(ss));
+    return _.sortBy(rooms, (s) => {
       switch (s.structureType) {
         case STRUCTURE_WALL: return 10;
         case STRUCTURE_TOWER: return 11;
