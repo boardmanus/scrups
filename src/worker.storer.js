@@ -136,7 +136,7 @@ const Storer = {
       site = Game.getObjectById(worker.memory.site);
     }
 
-    const res = worker.transfer(site, RESOURCE_ENERGY);
+    let res = worker.transfer(site, RESOURCE_ENERGY);
     switch (res) {
       case 0:
         break;
@@ -153,7 +153,7 @@ const Storer = {
           }
         }
         if (constructRoad) {
-          worker.room.createConstructionSite(worker, STRUCTURE_ROAD);
+          res = worker.room.createConstructionSite(worker, STRUCTURE_ROAD);
           if (res !== 0) {
             console.log(`${u.name(worker)} failed marking a road on the way to ${u.name(site)}`);
           }

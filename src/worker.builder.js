@@ -32,7 +32,7 @@ const Builder = {
         case STRUCTURE_TOWER: return 11;
         case STRUCTURE_SPAWN: return 20;
         case STRUCTURE_EXTENSION: return 21;
-        case STRUCTURE_RAMPART: return 22;
+        case STRUCTURE_RAMPART: return 9;
         case STRUCTURE_STORAGE: return 25;
         case STRUCTURE_ROAD: return 30;
         default: break;
