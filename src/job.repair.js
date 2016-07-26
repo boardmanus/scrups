@@ -4,6 +4,10 @@
 
 const Job = require('job');
 
+function damageRatio(site) {
+  return site.hits / site.hitsMax;
+}
+
 function decayPriority(job) {
   const decay = job.site.ticksToDecay;
   if (decay < 10) {
@@ -16,38 +20,38 @@ function decayPriority(job) {
     return Job.Priority.LOW;
   }
 
-  return Job.Priority.NEVER;
+  return Job.Priority.IGNORE;
 }
 
 function defensePriority(job) {
-  const damageRatio = job.site.hits / job.site.hitsMax;
-  if (damageRatio < 0.02) {
+  const dr = damageRatio(job.site);
+  if (dr < 0.02) {
     return Job.Priority.CRITICAL;
-  } else if (damageRatio < 0.04) {
+  } else if (dr < 0.04) {
     return Job.Priority.HIGH;
-  } else if (damageRatio < 0.08) {
+  } else if (dr < 0.08) {
     return Job.Priority.NORMAL;
-  } else if (damageRatio < 0.1) {
+  } else if (dr < 0.1) {
     return Job.Priority.LOW;
-  } else if (damageRatio < 0.9) {
+  } else if (dr < 0.9) {
     return Job.Priority.IDLE;
   }
 
-  return Job.Priority.NEVER;
+  return Job.Priority.IGNORE;
 }
 
 function damageRatioPriority(job) {
-  const damageRatio = job.site.hits / job.site.hitsMax;
-  if (damageRatio < 0.25) {
+  const dr = damageRatio(job.site);
+  if (dr < 0.25) {
     return Job.Priority.HIGH;
-  } else if (damageRatio < 0.5) {
+  } else if (dr < 0.5) {
     return Job.Priority.NORMAL;
-  } else if (damageRatio < 0.75) {
+  } else if (dr < 0.75) {
     return Job.Priority.LOW;
-  } else if (damageRatio < 0.9) {
+  } else if (dr < 0.9) {
     return Job.Priority.IDLE;
   }
-  return Job.Priority.NEVER;
+  return Job.Priority.IGNORE;
 }
 
 function roadPriority(job) {
@@ -65,7 +69,7 @@ function wallPriority(job) {
 const JobRepair = class JobRepair extends Job {
 
   constructor(site) {
-    super('harvest', site);
+    super(JobRepair.TYPE, site);
   }
 
 
@@ -82,7 +86,17 @@ const JobRepair = class JobRepair extends Job {
 
     return damageRatioPriority(this);
   }
+
+
+  /**
+   * The ratio of work remaining to repair.
+   */
+  completionRatio() {
+    return damageRatio(this.site);
+  }
 };
+
+JobRepair.TYPE = 'repair';
 
 
 module.exports = JobRepair;

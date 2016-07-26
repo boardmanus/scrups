@@ -6,9 +6,11 @@ const u = require('./utils');
 
 const Job = class Job {
 
-  constructor(type, site) {
+  constructor(type, site, priority) {
     this.type = type;
+    this.worker = null;
     this.site = site;
+    this.priority = priority;
   }
 
   /**
@@ -24,7 +26,42 @@ const Job = class Job {
   priority() {
     return Job.Priority.IGNORE;
   }
+
+
+  /**
+   * Determines the completion ration of the job.
+   * @return the completion ratio [0.0, 1.0]
+   */
+  completionRatio() {
+    return 0.0;
+  }
+
+
+  /**
+   * Determines whether the job is complete
+   */
+  isComplete() {
+    return this.completionRatio() === 1.0;
+  }
+
+
+  /**
+   * Determines whether the job has been assigned to a worker.
+   */
+  isAssigned() {
+    return this.worker !== null;
+  }
+
+
+  /**
+   * Assign a worker to the job.
+   */
+  assign(worker) {
+    this.worker = worker;
+    worker.memory.job = this;
+  }
 };
+
 
 Job.Priority = {
 

@@ -19,6 +19,10 @@ const City = class City {
     this.harvestableMinerals = _.filter(this.minerals, (m) =>
       m.pos.lookFor(LOOK_STRUCTURES).length > 0
     );
+    this.storage = this.structures.filter((s) =>
+      s.structureType === STRUCTURE_CONTAINER ||
+      s.structureType === STRUCTURE_STORAGE ||
+      (s.structureType === STRUCTURE_LINK && s.isReceiver));
 
     // Determine the number of various structures.
     let numRoads = 0;

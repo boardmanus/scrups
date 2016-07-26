@@ -5,7 +5,7 @@
 const Job = require('job');
 
 function towerPriority(job) {
-  const energyRatio = job.site.energy / job.site.energyCapacity;
+  const energyRatio = job.completionRatio();
   const enemiesPresent = (job.site.room.enemies.length > 0);
   if (energyRatio < 0.1) {
     return Job.Priority.CRITICAL;
@@ -20,7 +20,7 @@ function towerPriority(job) {
 }
 
 function linkPriority(job) {
-  const energyRatio = job.site.energy / job.site.energyCapacity;
+  const energyRatio = job.completionRatio();
   const importance = job.site.strategicImportance || Job.Priority.NORMAL;
   if (energyRatio < 0.3) {
     return Job.Priority.more(importance);
@@ -32,9 +32,14 @@ function linkPriority(job) {
 
 function spawnerPriority(job) {
   const room = job.site.room;
+  if (room.energyAvailable === room.energyCapacity) {
+    // Already at maximum capacity.
+    return Job.Priority.IGNORE;
+  }
+
   const spawnQueue = room.spawnQueue || {};
   let requiredEnergy = 0;
-  let spawnPriority = Job.Priority.LOW;
+  let spawnPriority = Job.Priority.IGNORE;
   if (spawnQueue.length > 0) {
     spawnPriority = spawnQueue[0].priority();
     spawnQueue.forEach((j) => { requiredEnergy += j.requiredEnergy(); });
@@ -42,36 +47,37 @@ function spawnerPriority(job) {
     requiredEnergy = job.site.energy;
   }
 
+  const storePriority = (room.energyAvailable < room.energyCapacity / 2) ?
+    Job.Priority.NORMAL : Job.Priority.LOW;
+
   if (requiredEnergy > room.energyAvailable) {
-    return spawnPriority;
-  } else if (room.energyAvailable < room.energyCapacity) {
-    return Job.Priority.LOW;
+    return Math.min(spawnPriority, storePriority);
   }
 
-  return Job.Priority.NEVER;
+  return storePriority;
 }
 
 function containerPriority(job) {
-  const energyRatio = _.sum(job.site.store) / job.site.storeCapacity;
+  const energyRatio = job.completionRatio();
   if (energyRatio < 0.3) {
     return Job.Priority.LOW;
   }
-  return Job.Priority.IDLE;
+  return job.isComplete() ? Job.Priority.IGNORE : Job.Priority.IDLE;
 }
 
 function storagePriority(job) {
-  const energyRatio = _.sum(job.site.store) / job.site.storeCapacity;
+  const energyRatio = job.completionRatio();
   if (energyRatio < 0.3) {
     return Job.Priority.LOW;
   }
-  return Job.Priority.IDLE;
+  return job.isComplete() ? Job.Priority.IGNORE : Job.Priority.IDLE;
 }
 
 
 const JobStore = class JobStore extends Job {
 
   constructor(site) {
-    super('store', site);
+    super(JobStore.TYPE, site);
   }
 
 
@@ -88,9 +94,30 @@ const JobStore = class JobStore extends Job {
       case STRUCTURE_STORAGE: return storagePriority(this);
       default: break;
     }
-    return Job.Priority.IDLE;
+    return Job.Priority.IGNORE;
+  }
+
+
+  /**
+   * Completion ratio is how full the site is.
+   */
+  completionRatio() {
+    switch (this.site.structureType) {
+      case STRUCTURE_TOWER:
+      case STRUCTURE_LINK:
+      case STRUCTURE_SPAWN:
+        return this.site.energyAvailable / this.site.energyCapacity;
+      case STRUCTURE_EXTENSION:
+        return this.site.room.energyAvailable / this.site.room.energyCapacity;
+      case STRUCTURE_CONTAINER:
+      case STRUCTURE_STORAGE:
+        return _.sum(this.site.store) / this.site.storeCapacity;
+      default: break;
+    }
+    return 1.0;
   }
 };
 
+JobStore.TYPE = 'store';
 
 module.exports = JobStore;

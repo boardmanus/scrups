@@ -8,7 +8,7 @@ const Job = require('job');
 const JobUpgrade = class JobUpgrade extends Job {
 
   constructor(site) {
-    super('harvest', site);
+    super(JobUpgrade.TYPE, site);
   }
 
 
@@ -33,6 +33,15 @@ const JobUpgrade = class JobUpgrade extends Job {
 
     return Job.Priority.IDLE;
   }
+
+  /**
+   * Completion is relative to the next controller level.
+   */
+  completionRatio() {
+    return this.site.progress / (this.site.progress + this.site.progressTotal);
+  }
 };
+
+JobUpgrade.TYPE = 'upgrade';
 
 module.exports = JobUpgrade;

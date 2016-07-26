@@ -21,6 +21,17 @@ function ratioPriority(ratio) {
   return Job.Priority.HIGH;
 }
 
+
+function mineralCompletion(mineral) {
+  return mineral.store / mineral.storeCapacity;
+}
+
+
+function sourceCompletion(source) {
+  return source.energy / source.energyCapacity;
+}
+
+
 /**
  * Determines the priority of a job at a mineral source.
  * @param mineral the mineral site for the job
@@ -28,7 +39,7 @@ function ratioPriority(ratio) {
  * @return the priority of harvesting the mineral
  */
 function mineralPriority(mineral, harvestRatio) {
-  return ratioPriority(mineral.store / mineral.storeCapacity * harvestRatio);
+  return ratioPriority(mineralCompletion(mineral) * harvestRatio);
 }
 
 
@@ -39,7 +50,7 @@ function mineralPriority(mineral, harvestRatio) {
  * @return the priority of harvesting the source
  */
 function sourcePriority(source, harvestRatio) {
-  return ratioPriority(source.energy / source.energyCapacity * harvestRatio);
+  return ratioPriority(sourceCompletion(source) * harvestRatio);
 }
 
 
@@ -51,8 +62,18 @@ const JobHarvest = class JobHarvest extends Job {
    * @param harvestRatio the amount of space available for the job
    */
   constructor(site, harvestRatio) {
-    super('harvest', site);
+    super(JobHarvest.TYPE, site);
     this.harvestRatio = harvestRatio;
+    if (this.site instanceof Mineral) {
+      this.fPriority = mineralPriority;
+      this.fCompletionRatio = mineralCompletion;
+    } else if (this.site instanceof Source) {
+      this.fPriority = sourcePriority;
+      this.fCompletionRatio = sourceCompletion;
+    } else {
+      this.fPriority = () => Job.Priority.IGNORE;
+      this.fCompletionRatio = () => 0.0;
+    }
   }
 
 
@@ -60,14 +81,18 @@ const JobHarvest = class JobHarvest extends Job {
   * Determines the priority of the job with respect to the game state.
   */
   priority() {
-    if (this.site instanceof Mineral) {
-      return mineralPriority(this.site, this.harvestRatio);
-    } else if (this.site instanceof Source) {
-      return sourcePriority(this.site, this.harvestRatio);
-    }
-    return Job.Priority.NONE;
+    return this.fPriority(this.site, this.harvestRatio);
+  }
+
+
+  /**
+   * Completion is determined by how much energy is left at the site
+   */
+  completionRatio() {
+    return this.fCompletionRatio(this.site);
   }
 };
 
+JobHarvest.TYPE = 'harvest';
 
 module.exports = JobHarvest;
