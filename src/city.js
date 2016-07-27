@@ -24,7 +24,7 @@ const City = class City {
     // Search for all citizens of the city - they may even be in other rooms!
     this.citizens = room.find(FIND_MY_CREEPS, { filter: (c) => !c.memory.city });
     this.citizens.forEach((c) => { c.memory.city = room.name; });
-    this.citizens.concat(Object.keys(Game.creeps)
+    this.citizens = this.citizens.concat(Object.keys(Game.creeps)
       .filter((k) => Memory.creeps[k].city === room.name)
       .map((k) => Game.creeps[k]));
 
@@ -119,9 +119,9 @@ const City = class City {
 
     this.boss = new Boss(this);
   }
-  
+
   needsHelp() {
-      return false;
+    return false;
   }
 };
 
