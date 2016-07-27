@@ -86,6 +86,7 @@
     "STRUCTURE_TERMINAL": false,
     "STRUCTURE_TOWER": false,
     "STRUCTURE_WALL": false,
+    "STRUCTURE_LAB": false,
     "Memory": false,
     "TOP": false,
     "TOP_RIGHT": false,
