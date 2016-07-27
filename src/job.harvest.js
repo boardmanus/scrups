@@ -106,7 +106,7 @@ const JobHarvest = class JobHarvest extends Job {
 
 JobHarvest.TYPE = 'harvest';
 
-JobHarvest.maxNumberOfWorkers = function maxNumberOfWorkers(site) {
+JobHarvest.maxWorkers = function maxWorkers(site) {
   // TODO: look at location, and determine the desired number of harvest jobs
   return 3;
 };

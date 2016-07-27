@@ -39,5 +39,8 @@ const JobBuild = class JobBuild extends Job {
 
 JobBuild.TYPE = 'build';
 
+JobBuild.maxWorkers = function maxWorkers(site) {
+  return 1;
+};
 
 module.exports = JobBuild;

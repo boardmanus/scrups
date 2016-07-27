@@ -53,7 +53,7 @@ const JobUpgrade = class JobUpgrade extends Job {
 
 JobUpgrade.TYPE = 'upgrade';
 
-JobStore.maxNumberOfWorkers = function maxNumberOfWorkers(site) {
+JobUpgrade.maxWorkers = function maxWorkers(site) {
   // TODO:
   return 5;
 };

@@ -1,9 +1,7 @@
 /**
  * A City representation of the room.
  */
-
-const u = require('./utils');
-
+const Boss = require('boss');
 
 /**
  * Monkey patch some screeps classes...
@@ -22,7 +20,14 @@ const City = class City {
     this.controller = room.controller;
     this.constructionSites = room.find(FIND_MY_CONSTRUCTION_SITES);
     this.spawners = room.find(FIND_MY_SPAWNS);
-    this.citizens = room.find(FIND_MY_CREEPS);
+
+    // Search for all citizens of the city - they may even be in other rooms!
+    this.citizens = room.find(FIND_MY_CREEPS, { filter: (c) => !c.memory.city });
+    this.citizens.forEach((c) => { c.memory.city = room.name; });
+    this.citizens.concat(Object.keys(Game.creeps)
+      .filter((k) => Memory.creeps[k].city === room.name)
+      .map((k) => Game.creeps[k]));
+
     this.enemies = room.find(FIND_HOSTILE_CREEPS);
     this.structures = room.find(FIND_STRUCTURES);
     this.sources = room.find(FIND_SOURCES);
@@ -111,6 +116,12 @@ const City = class City {
         default: break;
       }
     }
+
+    this.boss = new Boss(this);
+  }
+  
+  needsHelp() {
+      return false;
   }
 };
 

@@ -108,14 +108,12 @@ const JobRepair = class JobRepair extends Job {
    */
   energyRequired() {
     return energyRequiredForSite(this.site);
-    const damage = this.site.hitsMax - this.site.hits;
-    return damage / REPAIR_POWER;
   }
 };
 
 JobRepair.TYPE = 'repair';
 
-JobRepair.maxNumberOfWorkers = function maxNumberOfWorkers(site) {
+JobRepair.maxWorkers = function maxWorkers(site) {
   const energyRequired = energyRequiredForSite(site);
   if (energyRequired < 200) {
     return 1;

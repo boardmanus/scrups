@@ -155,7 +155,7 @@ const JobStore = class JobStore extends Job {
 
 JobStore.TYPE = 'store';
 
-JobStore.maxNumberOfWorkers = function maxNumberOfWorkers(site) {
+JobStore.maxWorkers = function maxWorkers(site) {
   const energyRequired = energyRequiredForSite(site);
   if (energyRequired < 200) {
     return 1;
