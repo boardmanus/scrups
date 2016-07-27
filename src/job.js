@@ -6,11 +6,18 @@ const u = require('./utils');
 
 const Job = class Job {
 
-  constructor(type, site, priority) {
+  /**
+   * Constructs a new job to be worked.
+   * @param type the type of job
+   * @param site the site of the will take place at
+   * @param instance the job instance value (integer)
+   * @param worker worker assigned to the job (optional)
+   */
+  constructor(type, site, instance, worker = null) {
     this.type = type;
-    this.worker = null;
     this.site = site;
-    this.priority = priority;
+    this.instance = instance;
+    this.worker = worker;
   }
 
   /**
@@ -38,6 +45,15 @@ const Job = class Job {
 
 
   /**
+   * Determines the energy required to complete the job.
+   * @return the energy required
+   */
+  energyRequired() {
+    return 0.0;
+  }
+
+
+  /**
    * Determines whether the job is complete
    */
   isComplete() {
@@ -58,7 +74,6 @@ const Job = class Job {
    */
   assign(worker) {
     this.worker = worker;
-    worker.memory.job = this;
   }
 };
 

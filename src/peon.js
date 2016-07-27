@@ -1,7 +1,6 @@
 /*
  * A base Peon for performing jobs
  */
-const u = require('./utils');
 const Job = require('./job.all');
 
 
@@ -23,6 +22,18 @@ const Peon = class Peon {
 
 
   /**
+   * @return the ratio of carried energy to capacity.
+   */
+  carryRatio() {
+    if (this.creep.carryCapacity === 0) {
+      return 0.0;
+    }
+
+    return _.sum(this.creep.carry) / this.creep.carryCapacity;
+  }
+
+
+  /**
    * Determines whether the peon can work a particular job.
    * @param job the job to test
    * @return true if the peon can work it
@@ -40,7 +51,7 @@ const Peon = class Peon {
       return null;
     }
 
-    return this.job.site.bestCollectionSite(this.creep.pos);
+    return this.city.bestCollectionSite(this.creep.pos);
   }
 
 
@@ -54,9 +65,9 @@ const Peon = class Peon {
       return false;
     }
 
-    const siteEnergyRequirements = this.job.site.energyRequired();
+    const jobEnergyRequirements = this.job.energyRequired();
     const energy = _.sum(this.creep.carry);
-    if (energy > siteEnergyRequirements) {
+    if (energy > jobEnergyRequirements) {
       return false;
     }
 
@@ -65,7 +76,7 @@ const Peon = class Peon {
       return false;
     }
 
-    const requiredRatio = siteEnergyRequirements / this.creep.carryCapacity;
+    const requiredRatio = jobEnergyRequirements / this.creep.carryCapacity;
     const priority = this.job.priority();
     switch (priority) {
       case Job.Priority.CRITICAL: return requiredRatio > 5.0;
@@ -95,8 +106,10 @@ const Peon = class Peon {
   }
 };
 
-Peon.TYPE = 'generic';
+Peon.TYPE = 'peon';
+
 Peon.BODY_TYPE = [MOVE, WORK, CARRY];
+
 Peon.SPECIALIZATION = [
   Job.Harvest.TYPE,
   Job.Store.TYPE,

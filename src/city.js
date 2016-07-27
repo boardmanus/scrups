@@ -112,24 +112,6 @@ const City = class City {
       }
     }
   }
-
-  needsHelp() {
-    return this.controller.my && (this.spawners.length === 0);
-  }
-
-  /**
-   * Generate information about the site
-   */
-  info() {
-    return `site-${this.type}-${u.name(this.site)}`;
-  }
-
- /**
-  * Determines the priority of the job with respect to the game state.
-  */
-  workOrders() {
-    return [];
-  }
 };
 
 

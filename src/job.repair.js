@@ -66,10 +66,16 @@ function wallPriority(job) {
   return defensePriority(job);
 }
 
+function energyRequiredForSite(site) {
+  const damage = site.hitsMax - site.hits;
+  return damage / REPAIR_POWER;
+}
+
+
 const JobRepair = class JobRepair extends Job {
 
-  constructor(site) {
-    super(JobRepair.TYPE, site);
+  constructor(site, instance, worker = null) {
+    super(JobRepair.TYPE, site, instance, worker);
   }
 
 
@@ -94,9 +100,31 @@ const JobRepair = class JobRepair extends Job {
   completionRatio() {
     return damageRatio(this.site);
   }
+
+
+  /**
+   * Determine the energy required to finish repairs
+   * @return the energy required
+   */
+  energyRequired() {
+    return energyRequiredForSite(this.site);
+    const damage = this.site.hitsMax - this.site.hits;
+    return damage / REPAIR_POWER;
+  }
 };
 
 JobRepair.TYPE = 'repair';
 
+JobRepair.maxNumberOfWorkers = function maxNumberOfWorkers(site) {
+  const energyRequired = energyRequiredForSite(site);
+  if (energyRequired < 200) {
+    return 1;
+  } else if (energyRequired < 1000) {
+    return 2;
+  } else if (energyRequired < 5000) {
+    return 3;
+  }
+  return 4;
+};
 
 module.exports = JobRepair;

@@ -2,7 +2,6 @@
  * A boss works out all the jobs that needs doing, and distributes them to
  * creeps
  */
-const u = require('utils');
 const Job = require('job.all');
 
 
@@ -10,15 +9,6 @@ const Boss = class Boss {
 
   constructor(city) {
     this.city = city;
-
-    // Query the current crop of creeps to find active jobs.
-    const activeJobs = [];
-    this.city.creeps.forEach((c) => {
-      const job = createJob(c);
-      if (job) {
-        activeJobs.push(job);
-      }
-    });
 
     // Determine all the construction jobs to be worked
     const constructionJobs = [];

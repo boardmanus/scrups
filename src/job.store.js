@@ -74,10 +74,26 @@ function storagePriority(job) {
 }
 
 
+function energyRequiredForSite(site) {
+  switch (site.structureType) {
+    case STRUCTURE_TOWER:
+    case STRUCTURE_LINK:
+    case STRUCTURE_SPAWN:
+    case STRUCTURE_EXTENSION:
+      return site.energyCapacity - site.energyAvailable;
+    case STRUCTURE_CONTAINER:
+    case STRUCTURE_STORAGE:
+      return site.storeCapacity - _.sum(site.store);
+    default: break;
+  }
+  return 0;
+}
+
+
 const JobStore = class JobStore extends Job {
 
-  constructor(site) {
-    super(JobStore.TYPE, site);
+  constructor(site, instance, worker = null) {
+    super(JobStore.TYPE, site, instance, worker);
   }
 
 
@@ -106,9 +122,8 @@ const JobStore = class JobStore extends Job {
       case STRUCTURE_TOWER:
       case STRUCTURE_LINK:
       case STRUCTURE_SPAWN:
-        return this.site.energyAvailable / this.site.energyCapacity;
       case STRUCTURE_EXTENSION:
-        return this.site.room.energyAvailable / this.site.room.energyCapacity;
+        return this.site.energyAvailable / this.site.energyCapacity;
       case STRUCTURE_CONTAINER:
       case STRUCTURE_STORAGE:
         return _.sum(this.site.store) / this.site.storeCapacity;
@@ -116,8 +131,38 @@ const JobStore = class JobStore extends Job {
     }
     return 1.0;
   }
+
+
+  /**
+   * Determines the energy required to finish storing.
+   * @return the energy required.
+   */
+  energyRequired() {
+    switch (this.site.structureType) {
+      case STRUCTURE_TOWER:
+      case STRUCTURE_LINK:
+      case STRUCTURE_SPAWN:
+      case STRUCTURE_EXTENSION:
+        return this.site.energyCapacity - this.site.energyAvailable;
+      case STRUCTURE_CONTAINER:
+      case STRUCTURE_STORAGE:
+        return this.site.storeCapacity - _.sum(this.site.store);
+      default: break;
+    }
+    return 0;
+  }
 };
 
 JobStore.TYPE = 'store';
+
+JobStore.maxNumberOfWorkers = function maxNumberOfWorkers(site) {
+  const energyRequired = energyRequiredForSite(site);
+  if (energyRequired < 200) {
+    return 1;
+  } else if (energyRequired < 1000) {
+    return 2;
+  }
+  return 3;
+};
 
 module.exports = JobStore;

@@ -7,8 +7,8 @@ const Job = require('job');
 
 const JobUpgrade = class JobUpgrade extends Job {
 
-  constructor(site) {
-    super(JobUpgrade.TYPE, site);
+  constructor(site, instance, worker = null) {
+    super(JobUpgrade.TYPE, site, instance, worker);
   }
 
 
@@ -40,8 +40,22 @@ const JobUpgrade = class JobUpgrade extends Job {
   completionRatio() {
     return this.site.progress / (this.site.progress + this.site.progressTotal);
   }
+
+
+  /**
+   * Determines the energy required to take the controller to the next level
+   * @return the energy required
+   */
+  energyRequired() {
+    return this.site.progressTotal;
+  }
 };
 
 JobUpgrade.TYPE = 'upgrade';
+
+JobStore.maxNumberOfWorkers = function maxNumberOfWorkers(site) {
+  // TODO:
+  return 5;
+};
 
 module.exports = JobUpgrade;

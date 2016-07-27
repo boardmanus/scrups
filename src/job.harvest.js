@@ -59,20 +59,19 @@ const JobHarvest = class JobHarvest extends Job {
   /**
    * Constructs a new harvesting job.
    * @param site the site at which to harvest
-   * @param harvestRatio the amount of space available for the job
+   * @param instance the job number for harvesting
+   * @param worker the worker assigned
    */
-  constructor(site, harvestRatio) {
-    super(JobHarvest.TYPE, site);
-    this.harvestRatio = harvestRatio;
+  constructor(site, instance, worker = null) {
+    super(JobHarvest.TYPE, site, instance, worker);
     if (this.site instanceof Mineral) {
+      this.harvestRatio = (1.0 - mineralCompletion(site)) / instance;
       this.fPriority = mineralPriority;
-      this.fCompletionRatio = mineralCompletion;
     } else if (this.site instanceof Source) {
+      this.harvestRatio = (1.0 - sourceCompletion(site)) / instance;
       this.fPriority = sourcePriority;
-      this.fCompletionRatio = sourceCompletion;
     } else {
       this.fPriority = () => Job.Priority.IGNORE;
-      this.fCompletionRatio = () => 0.0;
     }
   }
 
@@ -86,13 +85,30 @@ const JobHarvest = class JobHarvest extends Job {
 
 
   /**
+   * No energy is required to harvest energy.
+   */
+  energyRequired() {
+    return 0.0;
+  }
+
+
+  /**
    * Completion is determined by how much energy is left at the site
    */
   completionRatio() {
-    return this.fCompletionRatio(this.site);
+    if (this.worker == null) {
+      return 0.0;
+    }
+
+    return this.worker.carryRatio();
   }
 };
 
 JobHarvest.TYPE = 'harvest';
+
+JobHarvest.maxNumberOfWorkers = function maxNumberOfWorkers(site) {
+  // TODO: look at location, and determine the desired number of harvest jobs
+  return 3;
+};
 
 module.exports = JobHarvest;
