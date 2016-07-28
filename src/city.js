@@ -2,6 +2,7 @@
  * A City representation of the room.
  */
 const Boss = require('boss');
+const CivilEngineer = require('civilengineer');
 
 /**
  * Monkey patch some screeps classes...
@@ -118,10 +119,29 @@ const City = class City {
     }
 
     this.boss = new Boss(this);
+    this.civilEngineer = new CivilEngineer(this);
   }
 
   needsHelp() {
-    return false;
+    return ((this.citizens === 0) ||
+              ((this.spawners.length === 0) && (this.citizens.length < 5)));
+  }
+
+
+  /**
+   * Relocate a creep to this city.
+   * @param creep the creep to Relocate
+   */
+  relocate(creep) {
+    if (creep.memory.city !== this.room.name) {
+      creep.memory.city = this.room.name;
+      this.citizens.push(creep);
+    }
+  }
+
+  run() {
+    this.civilEngineer.run();
+    this.boss.run();
   }
 };
 

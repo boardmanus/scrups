@@ -58,6 +58,12 @@ const Boss = class Boss {
     for (let instance = 0; instance < maxJobs; ++instance) {
       upgradeJobs.push(new Job.Upgrade(city.controller, instance));
     }
+    console.log(`${upgradeJobs.length} upgrading jobs`);
+    this.upgradeJobs = upgradeJobs;
+  }
+
+  run() {
+
   }
 };
 

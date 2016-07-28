@@ -22,6 +22,7 @@ const Country = class Country {
    */
   run() {
     this.cities.forEach((city) => {
+      city.run();
       if (!city.needsHelp()) {
         return;
       }
@@ -53,6 +54,7 @@ const Country = class Country {
         if (idleWorkers.length > 0 && upgraders.length === 0) {
           const upgrader = idleWorkers.pop();
           upgraders.push(upgrader);
+          city.relocate(upgrader.creep);
           console.log(`Borrowing ${u.name(upgrader)} from ${otherCity.info()} for ${city.info()})`);
           Upgrader.work(upgrader, city.controller);
         }

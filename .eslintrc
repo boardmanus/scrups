@@ -31,6 +31,7 @@
     "LOOK_CONSTRUCTION_SITES": false,
     "LOOK_STRUCTURES": false,
     LOOK_FLAGS: false,
+    LOOK_TERRAIN: false,
     "BODYPART_COST": false,
     "CREEP_LIFE_TIME": false,
     "Game": false,
