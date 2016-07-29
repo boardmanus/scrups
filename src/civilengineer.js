@@ -6,16 +6,16 @@ const ROOM_WIDTH = 50;
 const TERRAIN_PLAIN = 'plain';
 const TERRAIN_SWAMP = 'swamp';
 const BUILD_STEP_THRESHOLD = 20;
-const TIME_NEW_ROAD_REPORT = 100;
+const TIME_NEW_ROAD_REPORT = 10000;
 
 
 function movementCostAt(room, x, y) {
-  const t = room.lookForAt(LOOK_TERRAIN, x, y);
+  const t = room.lookForAt(LOOK_TERRAIN, x, y)[0];
 
-  switch (t) {
-    case TERRAIN_PLAIN: return 1;
-    case TERRAIN_SWAMP: return 3;
-    default: break;
+  if (t == TERRAIN_PLAIN) {
+      return 1;
+  } else if (t == TERRAIN_SWAMP) {
+     return 3;
   }
 
   return 0;
@@ -29,30 +29,35 @@ function movementCostAt(room, x, y) {
  * @return the grid
  */
 function createGrid(room) {
+    let cost = 0;
   const grid = new Array(ROOM_HEIGHT);
   for (let y = 0; y < ROOM_HEIGHT; ++y) {
     const row = new Array(ROOM_WIDTH);
     grid[y] = row;
     for (let x = 0; x < ROOM_WIDTH; ++x) {
-      row[x] = { steps: 0, totalSteps: 0, cost: movementCostAt(room, x, y) };
+      cost = movementCostAt(room, x, y);
+      row[x] = { steps: 0, totalSteps: 0, cost: cost };
     }
   }
   return grid;
 }
 
 
-function generateNewRoadPositions(eng) {
-  const newRoads = [];
+function generateRoadPositions(eng) {
+  const roads = { new: [], obsolete: [] };
   for (let y = 0; y < ROOM_HEIGHT; ++y) {
     for (let x = 0; x < ROOM_WIDTH; ++x) {
       const info = eng.movementGrid[y][x];
-      if (info.steps > BUILD_STEP_THRESHOLD) {
-        newRoads.push({ x, y });
+      const road = eng.city.room.lookForAt(LOOK_STRUCTURES, x, y).find((s) => s.structureType === STRUCTURE_ROAD);
+      if (!road && info.steps > BUILD_STEP_THRESHOLD) {
+        roads.new.push({ x, y });
+      } else if (road && info.steps === 0) {
+         roads.obsolete.push({x, y});
       }
     }
   }
 
-  return newRoads;
+  return roads;
 }
 
 
@@ -66,16 +71,29 @@ function constructRoads(room, locations) {
 }
 
 
+function deconstructRoads(room, locations) {
+  locations.forEach((pos) => {
+    const res = room.createFlag(pos.x, pos.y, `Dismantle-${pos.x}x${pos.y}-Road`);
+    if (res !== 0) {
+      console.log(`Failed to mark road destruction @ (${pos.x}, ${pos.y}) - err=${res}`);
+    }
+  });
+}
+
+
 function resetMovementGrid(eng) {
   for (let y = 0; y < ROOM_HEIGHT; ++y) {
     for (let x = 0; x < ROOM_WIDTH; ++x) {
       eng.movementGrid[y][x].steps = 0;
     }
   }
+  eng.startTime = Game.time;
+  eng.city.room.memory.movementGridTime = eng.startTime;
 }
 
 
-function roadReport(pos) {
+function roadReport(pos, total = false) {
+    const steps = (total? pos.totalSteps : pos.steps);
   if (pos.steps > 10) {
     return 'x';
   } else if (pos.steps > 5) {
@@ -110,11 +128,11 @@ const CivilEngineer = class CivilEngineer {
     return gridPos.steps;
   }
 
-  roadingReport() {
+  roadingReport(total = false) {
     for (let y = 0; y < ROOM_HEIGHT; ++y) {
       let row = '';
       for (let x = 0; x < ROOM_WIDTH; ++x) {
-        row += roadReport(this.movementGrid[y][x]);
+        row += roadReport(this.movementGrid[y][x], total);
       }
       console.log(row);
     }
@@ -123,9 +141,10 @@ const CivilEngineer = class CivilEngineer {
   run() {
     const dt = Game.time - this.startTime;
     if (dt > TIME_NEW_ROAD_REPORT) {
-      const newRoadPositions = generateNewRoadPositions(this);
+      const roadPositions = generateRoadPositions(this);
       resetMovementGrid(this);
-      constructRoads(this.city.room, newRoadPositions);
+      constructRoads(this.city.room, roadPositions.new);
+      deconstructRoads(this.city.room, roadPositions.obsolete);
     }
   }
 };

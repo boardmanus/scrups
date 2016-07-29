@@ -49,7 +49,7 @@ const Dismantler = {
     console.log(`Found ${flags.length} dismantler flags.`);
     let structures = [];
     flags.forEach((flag) => {
-      const type = flag.name.replace(/^Dismantle-?(.*)/, '$1');
+      const type = flag.name.replace(/^Dismantle(-.+-)?(.*)$/, '$2');
       let flaggedStructures = room.lookForAt(LOOK_STRUCTURES, flag.pos);
       if (type !== '' && type !== 'all') {
         flaggedStructures = flaggedStructures.filter((s) => s.structureType === type);

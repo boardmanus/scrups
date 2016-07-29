@@ -101,7 +101,8 @@ const Storer = {
    * @return an ordered array of storage sites
    */
   find_sites(worker) {
-    const sites = worker.city.room.find(FIND_STRUCTURES, { filter: Storer.is_storable });
+    const sites = worker.city.room.find(FIND_STRUCTURES, {
+      filter: Storer.is_storable });
     console.log(`Found ${sites.length} sites to store energy at...`);
     return _.sortBy(sites, (s) => Storer.storage_weighting(worker, s));
   },
@@ -151,23 +152,6 @@ const Storer = {
       case 0:
         break;
       case ERR_NOT_IN_RANGE: {
-        let constructRoad = true;
-        const items = worker.room.lookAt(worker);
-        for (let i = 0; i < items.length; ++i) {
-          const item = items[i];
-          if ((item.type === LOOK_CONSTRUCTION_SITES)
-                        || ((item.type === LOOK_STRUCTURES)
-                            && (item.structure.structureType === STRUCTURE_ROAD))) {
-            constructRoad = false;
-            break;
-          }
-        }
-        if (constructRoad) {
-          res = worker.room.createConstructionSite(worker, STRUCTURE_ROAD);
-          if (res !== 0) {
-            console.log(`${u.name(worker)} failed marking a road on the way to ${u.name(site)}`);
-          }
-        }
         res = worker.moveTo(site);
         if (res === 0) {
           worker.room.city.civilEngineer.registerMovement(worker);

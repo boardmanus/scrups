@@ -110,22 +110,6 @@ const Harvester = {
         }
         break;
       case ERR_NOT_IN_RANGE: {
-        let constructRoad = true;
-        const items = worker.room.lookAt(worker);
-        for (const item of items) {
-          if ((item.type === LOOK_CONSTRUCTION_SITES)
-              || ((item.type === LOOK_STRUCTURES)
-                  && (item.structure.structureType === STRUCTURE_ROAD))) {
-            constructRoad = false;
-            break;
-          }
-        }
-        if (constructRoad) {
-          res = worker.room.createConstructionSite(worker, STRUCTURE_ROAD);
-          if (res !== 0) {
-            console.log(`${u.name(worker)} failed marking a road on the way to ${u.name(source)}`);
-          }
-        }
         res = worker.moveTo(source);
         if (res === 0) {
           worker.room.city.civilEngineer.registerMovement(worker);
