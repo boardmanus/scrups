@@ -75,6 +75,17 @@ function resetMovementGrid(eng) {
 }
 
 
+function roadReport(pos) {
+  if (pos.steps > 10) {
+    return 'x';
+  } else if (pos.steps > 5) {
+    return 'o';
+  } else if (pos.steps > 0) {
+    return '-';
+  }
+  return ' ';
+}
+
 const CivilEngineer = class CivilEngineer {
 
   constructor(city) {
@@ -99,6 +110,15 @@ const CivilEngineer = class CivilEngineer {
     return gridPos.steps;
   }
 
+  roadingReport() {
+    for (let y = 0; y < ROOM_HEIGHT; ++y) {
+      let row = '';
+      for (let x = 0; x < ROOM_WIDTH; ++x) {
+        row += roadReport(this.movementGrid[y][x]);
+      }
+      console.log(row);
+    }
+  }
 
   run() {
     const dt = Game.time - this.startTime;

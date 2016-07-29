@@ -37,6 +37,7 @@
     "Game": false,
     "Creep": false,
     "LOOK_CREEPS": false,
+    Resource: false,
     "StructureController": false,
     "StructureExtension": false,
     "StructureLink": false,
