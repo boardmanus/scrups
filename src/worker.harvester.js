@@ -26,14 +26,31 @@ const Harvester = {
    * @return an ordered array of energy sources
    */
   find_sources(room, worker = null) {
-    return _.sortBy(room.find(FIND_SOURCES), (s) => {
-      const energyRatio = s.energy / s.energyCapacity;
+    let sources = room.city.sources;
+    if (room.storage) {
+        sources.push(room.storage);
+    }
+    sources = sources.concat(room.find(FIND_DROPPED_ENERGY))
+                     .concat(room.find(FIND_STRUCTURES, { filter: (s) => s.structureType === STRUCTURE_CONTAINER }));
+    
+    sources = _.sortBy(sources, (s) => {
+        let energyRatio = 1.0;
+        if (s instanceof Structure) {
+            energyRatio = s.store[RESOURCE_ENERGY] / s.storeCapacity * 0.25;
+        } else if (s instanceof Resource) {
+            console.log(`Energy to pickup ${u.name(s)}!`);
+            energyRatio = 10.0;
+        } else {
+            energyRatio = s.energy / s.energyCapacity;
+        }
       let distance = 10;
       if (worker) {
         distance = worker.pos.getRangeTo(s);
       }
       return distance / energyRatio;
     });
+    
+    return sources;
   },
 
 
@@ -70,7 +87,17 @@ const Harvester = {
       source = Game.getObjectById(worker.memory.site);
     }
 
-    let res = worker.harvest(source);
+    let res = 0;
+    if (source instanceof Structure) {
+          console.log(`${u.name(worker)} nicking energy from storage`);
+        res = worker.withdraw(source, RESOURCE_ENERGY, worker.carryCapacity - _.sum(worker.carry));
+    } else if (source instanceof Resource) {
+          console.log(`${u.name(worker)} is picking up some energy!`);
+        res = worker.pickup(source);  
+    } else {
+        res = worker.harvest(source);
+    }
+    
     switch (res) {
       case 0:
         if (_.sum(worker.carry) >= worker.carryCapacity) {

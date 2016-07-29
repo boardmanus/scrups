@@ -21,6 +21,8 @@ module.exports = {
       return `source-${obj.id}`;
     } else if (obj instanceof Flag) {
       return `flag-${obj.name}`;
+    } else if (obj instanceof Resource) {
+      return `resource-${obj.resourceType}-${obj.id}`;
     }
 
     return `unknown-${obj}`;

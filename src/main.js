@@ -75,8 +75,10 @@ module.exports.loop = function mainLoop() {
         }
 
         if (city.citizens.length < 10 && !spawner.spawning) {
+          let params = Worker.bestSpawnCost(city);
           const w = Worker.create(spawner, {
-            minEnergy: 3 * city.room.energyAvailable / 4,
+            minEnergy: params.minEnergy,
+            maxEnergy: params.maxEnergy,
           });
           if (w) {
             console.log(`Adding new worker ${u.name(w)}`);
@@ -95,7 +97,7 @@ module.exports.loop = function mainLoop() {
           if (t.energy < t.energyCapacity / 3) {
             return;
           }
-          if (t.energy < t.energyCapacity / 2 && city.room.energyAvailable < city.room.energyAvailable/2) {
+          if (t.energy < t.energyCapacity / 2 && city.room.energyAvailable < city.room.energyAvailable / 2) {
             return;
           }
           let rs = _.filter(city.structures, Repairer.should_repair);

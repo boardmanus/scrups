@@ -104,6 +104,24 @@ const Worker = {
     return Game.creeps[worker];
   },
 
+  bestSpawnCost(city) {
+    let minCost = MIN_COST;
+    let maxCost = city.room.energyCapacity;
+
+    if (city.citizens.length < 3) {
+      maxCost = minCost;
+    } else if (city.citizens.length < 5) {
+      maxCost = Math.max(maxCost / 3, 2 * minCost);
+    } else if (city.citizens.length < 7) {
+      minCost = Math.min(2 * MIN_COST, maxCost);
+      maxCost = Math.max(maxCost / 2, minCost);
+    } else {
+      minCost = Math.min(3 * MIN_COST, maxCost);
+    }
+
+    return { minCost, maxCost };
+  },
+
   wait(worker) {
     Waiter.work(worker);
     return worker;
