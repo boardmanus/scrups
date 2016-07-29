@@ -33,7 +33,7 @@ module.exports.loop = function mainLoop() {
       }
     });
 
-    const country = new Country();
+    const country = Profiler.registerObject(new Country());
     Game.country = country;
     country.run();
 
@@ -85,7 +85,7 @@ module.exports.loop = function mainLoop() {
       });
 
 
-      console.log(`Workers: ${claimers.length} claimers, ${upgraders.length} upgraders, ${builders.length} builders, ${repairers.length} repairers, ${harvesters.length} harvesters, ${storers.length} storers, ${dismantlers.length} dismantlers and ${waiters.length} waiters.`);
+      console.log(`${u.name(city.room)} workers: ${claimers.length} claimers, ${upgraders.length} upgraders, ${builders.length} builders, ${repairers.length} repairers, ${harvesters.length} harvesters, ${storers.length} storers, ${dismantlers.length} dismantlers and ${waiters.length} waiters.`);
       city.towers.forEach((t) => {
         console.log(`${u.name(t)} has ${t.energy}/${t.energyCapacity} energy available.`);
         if (t.energy === 0) {
@@ -93,6 +93,9 @@ module.exports.loop = function mainLoop() {
         }
         if (city.enemies.length === 0) {
           if (t.energy < t.energyCapacity / 3) {
+            return;
+          }
+          if (t.energy < t.energyCapacity / 2 && city.room.energyAvailable < city.room.energyAvailable/2) {
             return;
           }
           let rs = _.filter(city.structures, Repairer.should_repair);

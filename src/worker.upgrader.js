@@ -32,7 +32,7 @@ const Upgrader = {
       return Upgrader.ERROR.NO_ENERGY;
     }
 
-    const res = worker.upgradeController(worker.room.controller);
+    const res = worker.upgradeController(worker.city.room.controller);
     switch (res) {
       case 0:
         break;

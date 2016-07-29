@@ -34,6 +34,7 @@ const Builder = {
         case STRUCTURE_EXTENSION: return 21;
         case STRUCTURE_RAMPART: return 9;
         case STRUCTURE_STORAGE: return 25;
+        case STRUCTURE_LAB: return 26;
         case STRUCTURE_ROAD: return 30;
         default: break;
       }
@@ -60,7 +61,7 @@ const Builder = {
     }
 
     if (site == null && worker.memory.site == null) {
-      const sites = Builder.find_sites(worker.room);
+      const sites = Builder.find_sites(worker.city.room);
       if (sites.length === 0) {
         console.log(`${u.name(worker)} found no construction sites to build on...`);
         return Builder.ERROR.NO_CONSTRUCTION_SITES;

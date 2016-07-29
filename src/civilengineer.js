@@ -105,7 +105,7 @@ const CivilEngineer = class CivilEngineer {
     if (dt > TIME_NEW_ROAD_REPORT) {
       const newRoadPositions = generateNewRoadPositions(this);
       resetMovementGrid(this);
-      constructRoads(newRoadPositions);
+      constructRoads(this.city.room, newRoadPositions);
     }
   }
 };

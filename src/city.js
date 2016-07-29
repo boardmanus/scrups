@@ -1,6 +1,7 @@
 /**
  * A City representation of the room.
  */
+ const u = require('utils');
 const Boss = require('boss');
 const CivilEngineer = require('civilengineer');
 
@@ -16,6 +17,7 @@ const City = class City {
 
   constructor(room) {
     this.room = room;
+    room.city = this;
 
     // Get all the information about the room
     this.controller = room.controller;
@@ -26,8 +28,15 @@ const City = class City {
     this.citizens = room.find(FIND_MY_CREEPS, { filter: (c) => !c.memory.city });
     this.citizens.forEach((c) => { c.memory.city = room.name; });
     this.citizens = this.citizens.concat(Object.keys(Game.creeps)
-      .filter((k) => Memory.creeps[k].city === room.name)
+      .filter((k) => Game.creeps[k].memory.city === room.name)
       .map((k) => Game.creeps[k]));
+    this.citizens.forEach((c) => { 
+        c.city = this
+        if (c.city.room !== c.room) {
+            console.log(`${u.name(c)} is in the wrong room (city=${c.city.room.name}, room=${c.room.name})`);
+        }
+    });
+    console.log(`${u.name(room)} has ${this.citizens.length} known citizens!`);
 
     this.enemies = room.find(FIND_HOSTILE_CREEPS);
     this.structures = room.find(FIND_STRUCTURES);

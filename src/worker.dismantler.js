@@ -87,7 +87,7 @@ const Dismantler = {
     console.log(`${u.name(worker)} is carrying ${_.sum(worker.carry)}/${worker.carryCapacity}`);
 
     if (!site && !worker.memory.site) {
-      const sites = Dismantler.find_sites(worker.room);
+      const sites = Dismantler.find_sites(worker.city.room);
       if (sites.length === 0) {
         console.log(`${u.name(worker)} found no sites to dismantle...`);
         return Dismantler.ERROR.NO_SITES_TO_DISMANTLE;

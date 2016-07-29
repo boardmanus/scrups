@@ -80,6 +80,16 @@ const Storer = {
         }
         weight += (structure.energy / structure.energyCapacity) * 500;
         break;
+      case STRUCTURE_SPAWN:
+      case STRUCTURE_EXTENSION:
+          if (structure.room.city.citizens.length < 2) {
+              weight = 0;
+          } else if (structure.room.city.citizens.length < 4) {
+              weight = 100;
+          } else if (structure.room.city.citizens.length < 8) {
+              weight = 400;
+          }
+          break;
       default: break;
     }
     return weight + worker.pos.getRangeTo(structure);
@@ -91,7 +101,7 @@ const Storer = {
    * @return an ordered array of storage sites
    */
   find_sites(worker) {
-    const sites = worker.room.find(FIND_STRUCTURES, { filter: Storer.is_storable });
+    const sites = worker.city.room.find(FIND_STRUCTURES, { filter: Storer.is_storable });
     console.log(`Found ${sites.length} sites to store energy at...`);
     return _.sortBy(sites, (s) => Storer.storage_weighting(worker, s));
   },

@@ -35,7 +35,7 @@ const Repairer = {
         repair = structure.hits < 2 * structure.hitsMax / 3;
         break;
       case STRUCTURE_RAMPART:
-        repair = structure.hits < structure.hitsMax / 10;
+        repair = structure.hits < structure.hitsMax / 30;
         break;
       case STRUCTURE_ROAD:
         repair = structure.hits < structure.hitsMax / 3;
@@ -126,7 +126,7 @@ const Repairer = {
    * @return an ordered array of construction sites
    */
   find_sites(worker) {
-    const sites = worker.room.find(FIND_MY_STRUCTURES, {
+    const sites = worker.city.room.find(FIND_MY_STRUCTURES, {
       filter: Repairer.should_repair,
     });
     return _.sortBy(sites, (s) => Repairer.repair_weighting(worker.pos, s));
