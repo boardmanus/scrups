@@ -127,7 +127,9 @@ const Harvester = {
           }
         }
         res = worker.moveTo(source);
-        if (res !== 0) {
+        if (res === 0) {
+          worker.room.city.civilEngineer.registerMovement(worker);
+        } else if (res !== 0) {
           console.log(`${u.name(worker)} failed to move! (${res})`);
           return Harvester.ERROR.FAILED_TO_MOVE;
         }

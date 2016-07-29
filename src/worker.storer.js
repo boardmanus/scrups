@@ -82,14 +82,14 @@ const Storer = {
         break;
       case STRUCTURE_SPAWN:
       case STRUCTURE_EXTENSION:
-          if (structure.room.city.citizens.length < 2) {
-              weight = 0;
-          } else if (structure.room.city.citizens.length < 4) {
-              weight = 100;
-          } else if (structure.room.city.citizens.length < 8) {
-              weight = 400;
-          }
-          break;
+        if (structure.room.city.citizens.length < 2) {
+          weight = 0;
+        } else if (structure.room.city.citizens.length < 4) {
+          weight = 100;
+        } else if (structure.room.city.citizens.length < 8) {
+          weight = 400;
+        }
+        break;
       default: break;
     }
     return weight + worker.pos.getRangeTo(structure);
@@ -168,7 +168,10 @@ const Storer = {
             console.log(`${u.name(worker)} failed marking a road on the way to ${u.name(site)}`);
           }
         }
-        worker.moveTo(site);
+        res = worker.moveTo(site);
+        if (res === 0) {
+          worker.room.city.civilEngineer.registerMovement(worker);
+        }
         break;
       }
       default:

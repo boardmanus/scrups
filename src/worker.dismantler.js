@@ -112,7 +112,9 @@ const Dismantler = {
         break;
       case ERR_NOT_IN_RANGE:
         res = worker.moveTo(site);
-        if (res === ERR_NO_PATH) {
+        if (res === 0) {
+          worker.room.city.civilEngineer.registerMovement(worker);
+        } else if (res === ERR_NO_PATH) {
           console.log(`${u.name(worker)} failed moving to ${u.name(site)} (${res})`);
           return Dismantler.ERROR.FAILED_TO_DISMANTLE;
         }
