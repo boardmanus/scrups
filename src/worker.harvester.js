@@ -95,11 +95,14 @@ const Harvester = {
         source,
         RESOURCE_ENERGY,
         worker.carryCapacity - _.sum(worker.carry));
+      worker.memory.stoleEnergy = true;
     } else if (source instanceof Resource) {
       console.log(`${u.name(worker)} is picking up some energy!`);
       res = worker.pickup(source);
+      worker.memory.stoleEnergy = false;
     } else {
       res = worker.harvest(source);
+      worker.memory.stoleEnergy = false;
     }
 
     switch (res) {

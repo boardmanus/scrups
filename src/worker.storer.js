@@ -51,25 +51,33 @@ const Storer = {
     let ratio = 1.0;
     switch (structure.structureType) {
       case STRUCTURE_STORAGE:
-        ratio = _.sum(structure.store) / structure.storeCapacity;
-        if (ratio < 0.1) {
-          weight = 2000;
-        } else if (ratio < 0.3) {
-          weight = 4000;
-        } else if (ratio < 0.6) {
-          weight = 6000;
+        if (worker.memory.stoleEnergy) {
+          weight = 100000;
         } else {
-          weight = 8000;
+          ratio = _.sum(structure.store) / structure.storeCapacity;
+          if (ratio < 0.1) {
+            weight = 2000;
+          } else if (ratio < 0.3) {
+            weight = 4000;
+          } else if (ratio < 0.6) {
+            weight = 6000;
+          } else {
+            weight = 8000;
+          }
         }
         break;
       case STRUCTURE_CONTAINER:
-        ratio = _.sum(structure.store) / structure.storeCapacity;
-        if (ratio < 0.3) {
-          weight = 3000;
-        } else if (ratio < 0.7) {
-          weight = 5000;
+        if (worker.memory.stoleEnergy) {
+          weight = 100000;
         } else {
-          weight = 7000;
+          ratio = _.sum(structure.store) / structure.storeCapacity;
+          if (ratio < 0.3) {
+            weight = 3000;
+          } else if (ratio < 0.7) {
+            weight = 5000;
+          } else {
+            weight = 7000;
+          }
         }
         break;
       case STRUCTURE_TOWER:

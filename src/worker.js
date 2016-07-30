@@ -106,7 +106,7 @@ const Worker = {
 
   bestSpawnCost(city) {
     let minCost = MIN_COST;
-    let maxCost = city.room.energyCapacity;
+    let maxCost = Math.min(city.room.energyCapacity, 4 * MIN_COST);
 
     if (city.citizens.length < 3) {
       maxCost = minCost;
@@ -119,7 +119,7 @@ const Worker = {
       minCost = Math.min(3 * MIN_COST, maxCost);
     }
 
-    return { minCost, maxCost };
+    return { minEnergy: minCost, maxEnergy: maxCost };
   },
 
   wait(worker) {

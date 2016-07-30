@@ -67,12 +67,6 @@
      }
 
      worker.memory.site = null;
-    // Dismantle anything marked so
-     if (Dismantler.work(worker) === 0) {
-       return Waiter.ERROR.NONE;
-     }
-
-     worker.memory.site = null;
     // Ensure stuff gets repaired
      const repairers = _.filter(workers, (w) =>
       w.memory.operation === Repairer.OPERATION
@@ -87,6 +81,11 @@
       w.memory.operation === Builder.OPERATION
     );
      if ((builders.length < 3) && (Builder.work(worker) === 0)) {
+       return Waiter.ERROR.NONE;
+     }
+
+    // Dismantle anything marked so
+     if (Dismantler.work(worker) === 0) {
        return Waiter.ERROR.NONE;
      }
 

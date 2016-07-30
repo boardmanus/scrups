@@ -35,13 +35,13 @@ const Repairer = {
         repair = structure.hits < 2 * structure.hitsMax / 3;
         break;
       case STRUCTURE_RAMPART:
-        repair = structure.hits < structure.hitsMax / 30;
+        repair = structure.hits < structure.hitsMax / 20;
         break;
       case STRUCTURE_ROAD:
         repair = structure.hits < structure.hitsMax / 3;
         break;
       case STRUCTURE_WALL:
-        repair = structure.hits < structure.hitsMax / 10000;
+        repair = structure.hits < structure.hitsMax / 1000;
         break;
       default:
         break;
@@ -177,10 +177,10 @@ const Repairer = {
     switch (res) {
       case 0:
         console.log(`${u.name(worker)} repairing ${u.name(site)} (energy=${e}=>${_.sum(worker.carry)}, hits=${h}=>${site.hits}/${site.hitsMax})`);
-        if (e === _.sum(worker.carry) && h === site.hits) {
+        /* if (e === _.sum(worker.carry) && h === site.hits) {
           console.log(`${u.name(worker)} didn't appear to repair ${u.name(site)}...`);
           return Repairer.ERROR.REPAIR_FAILED;
-        }
+        }*/
         break;
       case ERR_NOT_IN_RANGE:
         res = worker.moveTo(site);
