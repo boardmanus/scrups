@@ -39,6 +39,16 @@ const Dismantler = {
     return (_.filter(flags, Dismantler.is_dismantler_flag).length !== 0);
   },
 
+  shouldDismantle(structure) {
+    const flags = structure.pos.lookFor(LOOK_FLAGS).filter(
+      Dismantler.is_dismantler_flag);
+
+    return flags.find((f) => {
+      const type = flag.name.replace(/^Dismantle(-.+-)?(.*)$/, '$2');
+      return (type === '' || type === 'all' || type === structure.structureType);
+    });
+  },
+
   /**
    * Finds  sites in the room, and orders them by priority.
    * @param room the room to search

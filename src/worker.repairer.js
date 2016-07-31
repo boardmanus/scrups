@@ -48,7 +48,8 @@ const Repairer = {
     }
 
     if (repair) {
-      repair = !Dismantler.has_structures_to_dismantle(structure.room, structure.pos);
+      repair = !Dismantler.shouldDismantle(structure);
+      // repair = !Dismantler.has_structures_to_dismantle(structure.room, structure.pos);
       if (!repair) {
         console.log(`Won\'t repair ${u.name(structure)} as it is flagged for deconstruction`);
       }
