@@ -37,7 +37,7 @@ const Upgrader = {
       case 0:
         break;
       case ERR_NOT_IN_RANGE:
-        res = worker.moveTo(worker.room.controller);
+        res = worker.moveTo(worker.city.room.controller);
         if (res === 0) {
           worker.room.city.civilEngineer.registerMovement(worker);
         }

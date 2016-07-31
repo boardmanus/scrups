@@ -25,6 +25,7 @@
     "_": false,
     CONTROLLER_DOWNGRADE: false,
     COLOR_BLUE: false,
+    COLOR_RED: false,
     "FIND_MY_CONSTRUCTION_SITES": false,
     "ERR_NOT_IN_RANGE": false,
     ERR_NO_PATH: false,

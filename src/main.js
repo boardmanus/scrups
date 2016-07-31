@@ -75,11 +75,8 @@ module.exports.loop = function mainLoop() {
         }
 
         if (city.citizens.length < 10 && !spawner.spawning) {
-          let params = Worker.bestSpawnCost(city);
-          const w = Worker.create(spawner, {
-            minEnergy: params.minEnergy,
-            maxEnergy: params.maxEnergy,
-          });
+          const params = Worker.bestSpawnCost(city);
+          const w = Worker.create(spawner, params);
           if (w) {
             console.log(`Adding new worker ${u.name(w)}`);
           }
@@ -89,7 +86,7 @@ module.exports.loop = function mainLoop() {
 
       console.log(`${u.name(city.room)} workers: ${claimers.length} claimers, ${upgraders.length} upgraders, ${builders.length} builders, ${repairers.length} repairers, ${harvesters.length} harvesters, ${storers.length} storers, ${dismantlers.length} dismantlers and ${waiters.length} waiters.`);
       city.towers.forEach((t) => {
-        console.log(`${u.name(t)} has ${t.energy}/${t.energyCapacity} energy available.`);
+        console.log(`${u.name(t)} has ${t.energy}/${t.energyCapacity} energy available (room has ${city.room.energyAvailable}/${city.room.energyCapacityAvailable}).`);
         if (t.energy === 0) {
           return;
         }
@@ -97,9 +94,11 @@ module.exports.loop = function mainLoop() {
           if (t.energy < t.energyCapacity / 3) {
             return;
           }
-          if (t.energy < t.energyCapacity / 2 && city.room.energyAvailable < city.room.energyAvailable / 2) {
+          if (t.energy < t.energyCapacity / 2 &&
+              city.room.energyAvailable < city.room.energyCapacityAvailable / 2) {
             return;
           }
+
           let rs = _.filter(city.structures, Repairer.should_repair);
           rs = _.sortBy(rs, (s) => Repairer.repair_weighting(t.pos, s));
           console.log(`${u.name(t)} has ${rs.length} repairable structures`);

@@ -35,7 +35,7 @@
        return Waiter.ERROR.IS_SPAWNING;
      }
 
-     const room = worker.room;
+     const room = worker.city.room;
 
       // If the worker has no energy, harvest
       // First see if the worker needs to harvest more energy
@@ -53,6 +53,7 @@
     );
      if (((workers.length <= 4)
                 || (room.energyAvailable < room.energyCapacityAvailable / 2))
+            && !worker.memory.stoleEnergy
             && (Storer.work(worker) === 0)) {
        return Waiter.ERROR.NONE;
      }
@@ -99,6 +100,7 @@
      if ((room.energyAvailable < room.energyCapacityAvailable
             || (room.storage
                 && (_.sum(room.storage.store) < room.storage.storeCapacity)))
+          && !worker.memory.stoleEnergy
           && (Storer.work(worker) === 0)) {
        return Waiter.ERROR.NONE;
      }

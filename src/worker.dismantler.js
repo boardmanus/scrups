@@ -44,7 +44,7 @@ const Dismantler = {
       Dismantler.is_dismantler_flag);
 
     return flags.find((f) => {
-      const type = flag.name.replace(/^Dismantle(-.+-)?(.*)$/, '$2');
+      const type = f.name.replace(/^Dismantle(-.+-)?(.*)$/, '$2');
       return (type === '' || type === 'all' || type === structure.structureType);
     });
   },
@@ -61,7 +61,7 @@ const Dismantler = {
     flags.forEach((flag) => {
       const type = flag.name.replace(/^Dismantle(-.+-)?(.*)$/, '$2');
       let flaggedStructures = room.lookForAt(LOOK_STRUCTURES, flag.pos);
-      if (type !== '' && type !== 'all') {
+      if (type !== 'all') {
         flaggedStructures = flaggedStructures.filter((s) => s.structureType === type);
       }
       if (flaggedStructures.length === 0) {
@@ -97,12 +97,13 @@ const Dismantler = {
     console.log(`${u.name(worker)} is carrying ${_.sum(worker.carry)}/${worker.carryCapacity}`);
 
     if (!site && !worker.memory.site) {
-      const sites = Dismantler.find_sites(worker.city.room);
+      const sites = _.sortBy(Dismantler.find_sites(worker.city.room), (s) =>
+        worker.pos.getRangeTo(s));
       if (sites.length === 0) {
         console.log(`${u.name(worker)} found no sites to dismantle...`);
         return Dismantler.ERROR.NO_SITES_TO_DISMANTLE;
       }
-      site = sites[worker.ticksToLive % sites.length];
+      site = sites[0];
       console.log(`${u.name(worker)} about to dismantle ${u.name(site)}`);
       worker.memory.site = site.id;
     } else if (!worker.memory.site) {

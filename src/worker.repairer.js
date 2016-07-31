@@ -25,6 +25,8 @@ const Repairer = {
      */
   should_repair(structure) {
     let repair = false;
+    let ratio = 1.0;
+    const controllerLevel = structure.room.controller.level;
     switch (structure.structureType) {
       case STRUCTURE_STORAGE:
       case STRUCTURE_EXTENSION:
@@ -32,16 +34,20 @@ const Repairer = {
         repair = structure.hits < structure.hitsMax;
         break;
       case STRUCTURE_CONTAINER:
-        repair = structure.hits < 2 * structure.hitsMax / 3;
+        ratio = (controllerLevel < 5) ? 2 / 3 : 1;
+        repair = structure.hits < structure.hitsMax * ratio;
         break;
       case STRUCTURE_RAMPART:
-        repair = structure.hits < structure.hitsMax / 20;
+        ratio = (controllerLevel < 5) ? 1 / 100 : 1 / 20;
+        repair = structure.hits < structure.hitsMax * ratio;
         break;
       case STRUCTURE_ROAD:
+        ratio = (controllerLevel < 5) ? 1 / 4 : 1 / 3;
         repair = structure.hits < structure.hitsMax / 3;
         break;
       case STRUCTURE_WALL:
-        repair = structure.hits < structure.hitsMax / 1000;
+        ratio = (controllerLevel < 5) ? 1 / 5000 : 1 / 1000;
+        repair = structure.hits < structure.hitsMax * ratio;
         break;
       default:
         break;
@@ -49,7 +55,6 @@ const Repairer = {
 
     if (repair) {
       repair = !Dismantler.shouldDismantle(structure);
-      // repair = !Dismantler.has_structures_to_dismantle(structure.room, structure.pos);
       if (!repair) {
         console.log(`Won\'t repair ${u.name(structure)} as it is flagged for deconstruction`);
       }
