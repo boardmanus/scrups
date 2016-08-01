@@ -8,9 +8,10 @@ const Peon = class Peon {
 
   constructor(city, creep) {
     this.city = city;
+    this.creep = creep;
     this.job = null;
     this.operation = null;
-    this.creep = creep;
+    this.phase = null;
   }
 
   /**

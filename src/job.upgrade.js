@@ -17,9 +17,9 @@ const JobUpgrade = class JobUpgrade extends Job {
   */
   priority() {
     const controller = this.site;
-    const numUpgraders = controller.numUpgraders || 0;
+    const numUpgraders = this.instance;
     const downgradeRatio =
-      controller.ticksToLive / CONTROLLER_DOWNGRADE[controller.level];
+    controller.ticksToLive / CONTROLLER_DOWNGRADE[controller.level];
     if (numUpgraders === 0) {
       if (downgradeRatio < 0.1) {
         return Job.Priority.CRITICAL;
@@ -54,7 +54,6 @@ const JobUpgrade = class JobUpgrade extends Job {
 JobUpgrade.TYPE = 'upgrade';
 
 JobUpgrade.maxWorkers = function maxWorkers(site) {
-  // TODO:
   return 5;
 };
 

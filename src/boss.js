@@ -5,6 +5,11 @@
 const Job = require('job.all');
 
 
+function prioritize(jobs) {
+  _.sortBy(jobs, (j) => j.priority());
+}
+
+
 const Boss = class Boss {
 
   constructor(city) {
@@ -21,7 +26,7 @@ const Boss = class Boss {
       }
     });
     console.log(`${constructionJobs.length} construction jobs`);
-    this.constructionJobs = constructionJobs;
+    this.constructionJobs = prioritize(constructionJobs);
 
     const repairJobs = [];
     city.repairableSites.forEach((s) => {
@@ -31,7 +36,7 @@ const Boss = class Boss {
       }
     });
     console.log(`${repairJobs.length} repair jobs`);
-    this.repairJobs = repairJobs;
+    this.repairJobs = prioritize(repairJobs);
 
     const harvestJobs = [];
     city.sources.forEach((s) => {
@@ -41,7 +46,7 @@ const Boss = class Boss {
       }
     });
     console.log(`${harvestJobs.length} harvest jobs`);
-    this.harvestJobs = harvestJobs;
+    this.harvestJobs = prioritize(harvestJobs);
 
     const storeJobs = [];
     city.energyStorage.forEach((s) => {
@@ -51,7 +56,7 @@ const Boss = class Boss {
       }
     });
     console.log(`${storeJobs.length} storing jobs`);
-    this.storeJobs = storeJobs;
+    this.storeJobs = prioritize(storeJobs);
 
     const upgradeJobs = [];
     const maxJobs = Job.Upgrade.maxWorkers(city.controller);
@@ -59,11 +64,26 @@ const Boss = class Boss {
       upgradeJobs.push(new Job.Upgrade(city.controller, instance));
     }
     console.log(`${upgradeJobs.length} upgrading jobs`);
-    this.upgradeJobs = upgradeJobs;
+    this.upgradeJobs = prioritize(upgradeJobs);
+
+    this.allJobs = _.sortBy(_.concat(
+      this.upgradeJobs,
+      this.storeJobs,
+      this.harvestJobs,
+      this.repairJobs,
+      this.constructionJobs),
+      (j) => prioritize(j));
+
+    console.log('Top Jobs:');
+    for (let j = 0; j < Math.min(10, this.allJobs.length); ++j) {
+      const job = this.allJobs[j];
+      console.log(`${j}: ${job.info()}`);
+    }
   }
 
   run() {
     // Allocate jobs to workers
+
   }
 };
 

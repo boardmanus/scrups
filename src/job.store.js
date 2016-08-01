@@ -138,18 +138,7 @@ const JobStore = class JobStore extends Job {
    * @return the energy required.
    */
   energyRequired() {
-    switch (this.site.structureType) {
-      case STRUCTURE_TOWER:
-      case STRUCTURE_LINK:
-      case STRUCTURE_SPAWN:
-      case STRUCTURE_EXTENSION:
-        return this.site.energyCapacity - this.site.energyAvailable;
-      case STRUCTURE_CONTAINER:
-      case STRUCTURE_STORAGE:
-        return this.site.storeCapacity - _.sum(this.site.store);
-      default: break;
-    }
-    return 0;
+    return energyRequiredForSite(this.site);
   }
 };
 

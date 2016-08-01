@@ -19,13 +19,14 @@
     "mocha": "./node_modules/.bin/mocha --require screeps/mocha-requires.js"
   },
   "devDependencies": {
+    "eslint-config-airbnb": "*",
+    "eslint-plugin-lodash-fp": "^2.0.0",
     "grunt": "*",
     "grunt-contrib-clean": "*",
-    "grunt-eslint": "*",
-    "eslint-config-airbnb": "*",
     "grunt-contrib-nodeunit": "*",
-    "grunt-screeps": "*",
+    "grunt-eslint": "*",
     "grunt-git": "*",
+    "grunt-screeps": "*",
     "nock": "*",
     "underscore": "*"
   },

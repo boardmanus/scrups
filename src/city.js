@@ -3,6 +3,7 @@
  */
  const u = require('utils');
  const Boss = require('boss');
+ const Peon = require('peon');
  const CivilEngineer = require('civilengineer');
 
 /**
@@ -37,6 +38,10 @@
        }
      });
      console.log(`${u.name(room)} has ${this.citizens.length} known citizens!`);
+
+     this.peons = this.citizens.map((c) => new Peon(this, c));
+     this.idlePeons = _.filter(this.peons, (p) => p.job === null);
+     console.log(`${u.name(room)} has ${this.idlePeons.length} idle peons!`);
 
      this.enemies = room.find(FIND_HOSTILE_CREEPS);
      this.structures = room.find(FIND_STRUCTURES);
