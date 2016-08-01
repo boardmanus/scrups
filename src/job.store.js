@@ -6,7 +6,7 @@ const Job = require('job');
 
 function towerPriority(job) {
   const energyRatio = job.completionRatio();
-  const enemiesPresent = (job.site.room.enemies.length > 0);
+  const enemiesPresent = (job.site.room.city.enemies.length > 0);
   if (energyRatio < 0.1) {
     return Job.Priority.CRITICAL;
   } else if (energyRatio < 0.3) {

@@ -6,7 +6,7 @@ const Job = require('job.all');
 
 
 function prioritize(jobs) {
-  _.sortBy(jobs, (j) => j.priority());
+  return _.sortBy(jobs, (j) => j.priority());
 }
 
 
@@ -66,19 +66,21 @@ const Boss = class Boss {
     console.log(`${upgradeJobs.length} upgrading jobs`);
     this.upgradeJobs = prioritize(upgradeJobs);
 
-    this.allJobs = _.sortBy(_.concat(
-      this.upgradeJobs,
-      this.storeJobs,
-      this.harvestJobs,
-      this.repairJobs,
-      this.constructionJobs),
-      (j) => prioritize(j));
+    this.allJobs = prioritize(this.upgradeJobs.concat(
+          this.storeJobs,
+          this.harvestJobs,
+          // this.repairJobs,
+          this.constructionJobs));
 
     console.log('Top Jobs:');
     for (let j = 0; j < Math.min(10, this.allJobs.length); ++j) {
       const job = this.allJobs[j];
       console.log(`${j}: ${job.info()}`);
     }
+  }
+
+  jobReport() {
+
   }
 
   run() {

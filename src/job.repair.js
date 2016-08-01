@@ -4,6 +4,15 @@
 
 const Job = require('job');
 
+
+function adjustPriority(instance, priority) {
+  let newPriority = priority;
+  for (let i = 0; i < instance; ++i) {
+    newPriority = Job.Priority.lower(priority);
+  }
+  return newPriority;
+}
+
 function damageRatio(site) {
   return site.hits / site.hitsMax;
 }
@@ -25,15 +34,15 @@ function decayPriority(job) {
 
 function defensePriority(job) {
   const dr = damageRatio(job.site);
-  if (dr < 0.02) {
+  if (dr < 0.002) {
     return Job.Priority.CRITICAL;
-  } else if (dr < 0.04) {
+  } else if (dr < 0.004) {
     return Job.Priority.HIGH;
-  } else if (dr < 0.08) {
+  } else if (dr < 0.008) {
     return Job.Priority.NORMAL;
-  } else if (dr < 0.1) {
+  } else if (dr < 0.01) {
     return Job.Priority.LOW;
-  } else if (dr < 0.9) {
+  } else if (dr < 0.09) {
     return Job.Priority.IDLE;
   }
 
@@ -83,14 +92,23 @@ const JobRepair = class JobRepair extends Job {
   * Determines the priority of the job with respect to the game state.
   */
   priority() {
+    let p;
     switch (this.site.structureType) {
-      case STRUCTURE_ROAD: return roadPriority(this);
-      case STRUCTURE_RAMPART: return rampartPriority(this);
-      case STRUCTURE_WALL: return wallPriority(this);
-      default: break;
+      case STRUCTURE_ROAD:
+        p = roadPriority(this);
+        break;
+      case STRUCTURE_RAMPART:
+        p = rampartPriority(this);
+        break;
+      case STRUCTURE_WALL:
+        p = wallPriority(this);
+        break;
+      default:
+        p = damageRatioPriority(this);
+        break;
     }
 
-    return damageRatioPriority(this);
+    return adjustPriority(this.instance, p);
   }
 
 

@@ -24,7 +24,7 @@ const Job = class Job {
    * Generate information about the job
    */
   info() {
-    return `job-${this.type} @ ${u.name(this.site)}`;
+    return `job-${this.type}[${this.priority()}] @ ${u.name(this.site)}`;
   }
 
  /**
