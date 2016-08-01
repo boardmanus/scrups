@@ -131,7 +131,9 @@ function roadReport(eng, x, y, flags = null) {
         case STRUCTURE_WALL: return 'W';
         case STRUCTURE_CONTROLLER: return 'C';
         case STRUCTURE_SPAWN: return 'S';
+        case STRUCTURE_EXTENSION: return 'E';
         case STRUCTURE_LAB: return 'L';
+        case STRUCTURE_LINK: return 'l';
         case STRUCTURE_CONTAINER:
         case STRUCTURE_STORAGE: return 's';
         case STRUCTURE_TOWER: return 'T';
@@ -140,7 +142,7 @@ function roadReport(eng, x, y, flags = null) {
 
       if (stuff.structure.structureType === STRUCTURE_ROAD) {
         if (pos.steps <= destructThreshold) {
-          return 'X';
+          return '-';
         }
 
         return 'r';
@@ -149,7 +151,7 @@ function roadReport(eng, x, y, flags = null) {
   }
 
   if (steps >= constructThreshold) {
-    return 'R';
+    return '+';
   }
 
   return ' ';
