@@ -18,7 +18,14 @@ const Job = class Job {
     this.site = site;
     this.instance = instance;
     this.worker = worker;
+    this.key = `${type}-${instance}-${site.id}`;
   }
+
+
+  id() {
+    return this.key;
+  }
+
 
   /**
    * Generate information about the job

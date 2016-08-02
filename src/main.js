@@ -8,6 +8,11 @@ const Builder = require('worker.builder');
 const Claimer = require('worker.claimer');
 const Dismantler = require('worker.dismantler');
 const Country = require('country');
+const City = require('city');
+const Boss = require('boss');
+const CivilEngineer = require('civilengineer');
+const Peon = require('peon');
+const Job = require('job');
 const Profiler = require('screeps-profiler');
 const u = require('utils');
 
@@ -26,6 +31,12 @@ if (Memory.control && Memory.control.profile) {
   */
 module.exports.loop = function mainLoop() {
   Country.monkeyPatch();
+  Profiler.registerObject(Country, 'Country');
+  Profiler.registerObject(City, 'City');
+  Profiler.registerObject(Boss, 'Boss');
+  Profiler.registerObject(CivilEngineer, 'CivilEngineer');
+  Profiler.registerObject(Peon, 'Peon');
+  Profiler.registerObject(Job, 'Job');
 
   Profiler.wrap(() => {
     Object.keys(Memory.creeps).forEach((name) => {
@@ -35,7 +46,7 @@ module.exports.loop = function mainLoop() {
       }
     });
 
-    const country = Profiler.registerObject(new Country());
+    const country = new Country();
     Game.country = country;
     country.run();
 

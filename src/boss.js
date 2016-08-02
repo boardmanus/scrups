@@ -3,6 +3,7 @@
  * creeps
  */
 const Job = require('job.all');
+const Peon = require('peon');
 const u = require('utils');
 
 
@@ -24,8 +25,6 @@ const Boss = class Boss {
   constructor(city) {
     this.city = city;
 
-    console.log('The Boss found:');
-
     // Determine all the construction jobs to be worked
     const constructionJobs = [];
     city.constructionSites.forEach((cs) => {
@@ -34,7 +33,6 @@ const Boss = class Boss {
         constructionJobs.push(new Job.Build(cs, instance));
       }
     });
-    console.log(`${constructionJobs.length} construction jobs`);
     this.constructionJobs = prioritize(constructionJobs);
 
     const repairJobs = [];
@@ -44,7 +42,6 @@ const Boss = class Boss {
         repairJobs.push(new Job.Repair(s, instance));
       }
     });
-    console.log(`${repairJobs.length} repair jobs`);
     this.repairJobs = prioritize(repairJobs);
 
     const harvestJobs = [];
@@ -54,7 +51,6 @@ const Boss = class Boss {
         harvestJobs.push(new Job.Harvest(s, instance));
       }
     });
-    console.log(`${harvestJobs.length} harvest jobs`);
     this.harvestJobs = prioritize(harvestJobs);
 
     const storeJobs = [];
@@ -64,7 +60,6 @@ const Boss = class Boss {
         storeJobs.push(new Job.Store(s, instance));
       }
     });
-    console.log(`${storeJobs.length} storing jobs`);
     this.storeJobs = prioritize(storeJobs);
 
     const upgradeJobs = [];
@@ -72,7 +67,6 @@ const Boss = class Boss {
     for (let instance = 0; instance < maxJobs; ++instance) {
       upgradeJobs.push(new Job.Upgrade(city.controller, instance));
     }
-    console.log(`${upgradeJobs.length} upgrading jobs`);
     this.upgradeJobs = prioritize(upgradeJobs);
 
     this.allJobs = prioritize(this.upgradeJobs.concat(
@@ -81,11 +75,26 @@ const Boss = class Boss {
           // this.repairJobs,
           this.constructionJobs));
 
-    console.log('Top Jobs:');
-    for (let j = 0; j < Math.min(10, this.allJobs.length); ++j) {
-      const job = this.allJobs[j];
-      console.log(`${j}: ${job.info()}`);
-    }
+    // Hook up the peons existing jobs...
+    this.peons = this.city.citizens.map((c) => new Peon(this, c));
+    _.each(this.peons, (p) => {
+      if (!p.jobId) {
+        return;
+      }
+      let job = _.find(this.allJobs, (j) => j.id() === p.jobId);
+      if (!job) {
+        const components = p.jobId.split('-');
+        job = new Job(
+          components[0],
+          Game.getObjectById(components[2]),
+          components[1],
+          p);
+      }
+      p.assign(job);
+    });
+
+    this.idlePeons = _.filter(this.peons, (p) => p.job === null);
+    console.log(`${this.info()} has ${this.idlePeons.length} idle peons`);
   }
 
   info() {
@@ -104,6 +113,13 @@ const Boss = class Boss {
     console.log(`Formatting job report [sendEmail=${opts.sendEmail}, numJobs=${opts.numJobs}, jobType=${opts.jobType}]`);
     let report = `Job Report for ${this.info()} (${opts.jobType})\n`;
 
+    for (let peonIdx = 0; peonIdx < this.peons.length; ++peonIdx) {
+      const peon = this.peons[peonIdx];
+      if (!peon.job) continue;
+      report += `${peon.info()} is working ${peon.job.info()}\n`;
+    }
+
+    report += 'Jobs available:\n';
     const numJobs = Math.min(opts.numJobs, jobs.length);
     for (let j = 0; j < numJobs; ++j) {
       const job = jobs[j];
@@ -119,7 +135,35 @@ const Boss = class Boss {
 
   run() {
     // Allocate jobs to workers
+    let jobIndex = 0;
+    const idleWorkers = this.idlePeons;
+    while (idleWorkers.length > 0 && this.allJobs.length - jobIndex > 0) {
+      const job = this.allJobs[jobIndex++];
+      // Find best peon for the job
+      let efficiency = 0.0;
+      let bestIdx = 0;
+      const worker = _.reduce(idleWorkers, (bestPeon, peon, idx) => {
+        if (peon.job) {
+          return bestPeon;
+        }
+        const efficiency2 = peon.efficiency(job);
+        if (efficiency2 > efficiency) {
+          efficiency = efficiency2;
+          bestIdx = idx;
+          return peon;
+        }
+        return bestPeon;
+      }, null);
+      if (worker) {
+        job.assign(worker);
+        worker.assign(job);
+        idleWorkers.splice(bestIdx, 1);
+      } else {
+        // console.log(`Weird - no peon can work ${job.info()}`);
+      }
+    }
 
+    console.log(`${this.info()} has ${this.idlePeons.length} idle peons after assigning jobs.`);
   }
 };
 

@@ -10,9 +10,25 @@ const Peon = class Peon {
     this.city = city;
     this.creep = creep;
     this.job = null;
-    this.operation = null;
-    this.phase = null;
+    this.operation = creep.memory.operation;
+    this.phase = creep.memory.phase;
+    this.jobId = creep.memory.jobId;
   }
+
+
+  info() {
+    return `peon-${this.creep.name}`;
+  }
+
+  /**
+   * Assign a job to the worker.
+   */
+  assign(job) {
+    this.job = job;
+    this.creep.memory.jobId = job.id();
+    job.assign(this);
+  }
+
 
   /**
    * @return an array of job types the peon can work.
@@ -95,15 +111,17 @@ const Peon = class Peon {
    * @return the effieciency (0.0 - can't do it, 1.0 - most efficient)
    */
   efficiency(job) {
-    const energyRatio = _.sum(this.creep.carry) / this.creep.carryCapacity;
+    let energyRatio = 0;
+    const carryRatio = () => _.sum(this.creep.carry) / this.creep.carryCapacity;
+    const distanceRatio = (50 - job.site.pos.getRangeTo(this.creep)) / 50.0;
     switch (job.type) {
-      case Job.Harvest.TYPE: return 1.0 - energyRatio;
-      case Job.Repair.TYPE: return 0.25 + energyRatio * 0.75;
-      case Job.Store.TYPE: return 0.25 + energyRatio * 0.75;
-      case Job.Upgrade.TYPE: return 0.25 + energyRatio * 0.75;
-      default: break;
+      case Job.Harvest.TYPE: energyRatio = (1.0 - carryRatio()); break;
+      case Job.Repair.TYPE: energyRatio = (0.25 + energyRatio * 0.75); break;
+      case Job.Store.TYPE: energyRatio = (0.25 + energyRatio * 0.75); break;
+      case Job.Upgrade.TYPE: energyRatio = (0.25 + energyRatio * 0.75); break;
+      default: return 0.0;
     }
-    return 0.0;
+    return energyRatio * distanceRatio;
   }
 };
 
@@ -117,5 +135,6 @@ Peon.SPECIALIZATION = [
   Job.Repair.TYPE,
   Job.Upgrade.TYPE,
 ];
+
 
 module.exports = Peon;
