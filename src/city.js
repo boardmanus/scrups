@@ -20,12 +20,12 @@
      this.room = room;
      room.city = this;
 
-    // Get all the information about the room
+     // Get all the information about the room
      this.controller = room.controller;
      this.constructionSites = room.find(FIND_MY_CONSTRUCTION_SITES);
      this.spawners = room.find(FIND_MY_SPAWNS);
 
-    // Search for all citizens of the city - they may even be in other rooms!
+     // Search for all citizens of the city - they may even be in other rooms!
      this.citizens = room.find(FIND_MY_CREEPS, { filter: (c) => !c.memory.city });
      this.citizens.forEach((c) => { c.memory.city = room.name; });
      this.citizens = this.citizens.concat(Object.keys(Game.creeps)

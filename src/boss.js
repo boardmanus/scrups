@@ -79,8 +79,34 @@ const Boss = class Boss {
     }
   }
 
-  jobReport() {
+  info() {
+    return `boss-${this.city.room.name}`;
+  }
 
+  jobReport(options = null) {
+    let sendEmail = false;
+    let numJobs = 50;
+    let jobType = 'All Jobs';
+    let jobs = this.allJobs;
+    if (options) {
+      sendEmail = options.sendEmail || false;
+      numJobs = options.numJobs || 50;
+      if (options.jobType) {
+        jobType = options.jobType;
+        jobs = this[options.jobType] || jobs;
+      }
+    }
+    console.log(`Formatting job report [sendEmail=${sendEmail}, numJobs=${numJobs}, jobType=${jobType}]`);
+    let report = `Job Report for ${this.info()} (${jobType})\n`;
+    for (let j = 0; j < Math.min(numJobs, jobs.length); ++j) {
+      const job = jobs[j];
+      report += `${j}: ${job.info()}\n`;
+    }
+
+    if (sendEmail) {
+      Game.notify(report);
+    }
+    console.log(report);
   }
 
   run() {
