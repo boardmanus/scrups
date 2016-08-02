@@ -9,7 +9,7 @@ const ROOM_WIDTH = 50;
 const TERRAIN_PLAIN = 'plain';
 const TERRAIN_SWAMP = 'swamp';
 const TERRAIN_WALL = 'wall';
-const BUILD_STEP_THRESHOLD = 20;
+const BUILD_STEP_THRESHOLD = 100;
 const TIME_NEW_ROAD_REPORT = 10000;
 
 
@@ -47,16 +47,17 @@ function createGrid(room) {
 }
 
 
-function generateRoadPositions(eng, constructThreshold, destructThreshold) {
+function generateRoadPositions(eng, constructThreshold, destructThreshold, total) {
   const roads = { new: [], obsolete: [] };
   for (let y = 0; y < ROOM_HEIGHT; ++y) {
     for (let x = 0; x < ROOM_WIDTH; ++x) {
       const info = eng.movementGrid[y][x];
+      const steps = (total ? info.totalSteps : info.steps);
       const road = eng.city.room.lookForAt(LOOK_STRUCTURES, x, y).find((s) =>
         s.structureType === STRUCTURE_ROAD);
-      if (!road && info.steps >= constructThreshold) {
+      if (!road && steps >= constructThreshold) {
         roads.new.push({ x, y });
-      } else if (road && info.steps <= destructThreshold) {
+      } else if (road && steps <= destructThreshold) {
         roads.obsolete.push({ x, y });
       }
     }
@@ -107,16 +108,8 @@ function resetMovementGrid(eng) {
 }
 
 
-function roadReport(eng, x, y, flags = null) {
+function roadTileReport(eng, x, y, constructThreshold, destructThreshold, total) {
   const pos = eng.movementGrid[y][x];
-  let total = false;
-  let constructThreshold = BUILD_STEP_THRESHOLD;
-  let destructThreshold = 0;
-  if (flags) {
-    total = flags.total || false;
-    constructThreshold = flags.constructThreshold || BUILD_STEP_THRESHOLD;
-    destructThreshold = flags.destructThreshold || 0;
-  }
   const steps = (total ? pos.totalSteps : pos.steps);
 
   const allstuff = eng.city.room.lookAt(x, y);
@@ -141,7 +134,7 @@ function roadReport(eng, x, y, flags = null) {
       }
 
       if (stuff.structure.structureType === STRUCTURE_ROAD) {
-        if (pos.steps <= destructThreshold) {
+        if (steps <= destructThreshold) {
           return '-';
         }
 
@@ -156,6 +149,41 @@ function roadReport(eng, x, y, flags = null) {
 
   return ' ';
 }
+
+
+function getCivilEngineer(roomName) {
+  const room = Game.rooms[roomName];
+  if (!room) {
+    return null;
+  }
+
+  const city = room.city;
+  if (!city) {
+    return null;
+  }
+
+  return city.civilEngineer;
+}
+
+
+function roadingOptions(options = null) {
+  const opts = _.defaults(options || {}, {
+    constructThreshold: BUILD_STEP_THRESHOLD,
+    destructThreshold: 0,
+    total: false,
+    destroyRoads: false,
+  });
+
+  if (opts.constructThreshold < BUILD_STEP_THRESHOLD) {
+    opts.constructThreshold = BUILD_STEP_THRESHOLD;
+  }
+  if (opts.destructThreshold >= opts.constructThreshold) {
+    opts.destructThreshold = opts.constructThreshold - 1;
+  }
+
+  return opts;
+}
+
 
 const CivilEngineer = class CivilEngineer {
 
@@ -181,46 +209,86 @@ const CivilEngineer = class CivilEngineer {
     return gridPos.steps;
   }
 
-  roadingReport(flags = null) {
+
+  /**
+   * Provide a report on the state of the roads.
+   * @param options options influencing the report results
+   */
+  roadReport(options = null) {
+    const opts = roadingOptions(options);
+
     for (let y = 0; y < ROOM_HEIGHT; ++y) {
       let row = '';
       for (let x = 0; x < ROOM_WIDTH; ++x) {
-        row += roadReport(this, x, y, flags);
+        row += roadTileReport(
+          this, x, y, opts.constructThreshold, opts.destructThreshold, opts.total);
       }
       console.log(row);
     }
   }
 
-  applyRoadPositions(flags = null) {
-    let constructThreshold = BUILD_STEP_THRESHOLD;
-    let destructThreshold = 0;
-    let destroyRoads = false;
-    if (flags) {
-      destructThreshold = flags.destructThreshold || 0;
-      destroyRoads = flags.destroyRoads || false;
-      constructThreshold = flags.constructThreshold || BUILD_STEP_THRESHOLD;
-      if (constructThreshold < BUILD_STEP_THRESHOLD) {
-        constructThreshold = BUILD_STEP_THRESHOLD;
-      }
-      if (destructThreshold >= constructThreshold) {
-        destructThreshold = constructThreshold - 1;
-      }
-    }
-    console.log(`destructThreshold=${destructThreshold}, constructThreshold=${constructThreshold}`);
-    const roadPositions =
-      generateRoadPositions(this, constructThreshold, destructThreshold);
+
+  /**
+   * Perform roadworks based on the given options
+   * @param options options influencing the road works
+   */
+  roadWorks(options = null) {
+    const opts = roadingOptions(options);
+
+    const roadPositions = generateRoadPositions(
+      this,
+      opts.constructThreshold,
+      opts.destructThreshold,
+      opts.total);
+
     console.log(`${roadPositions.new.length} roads to construct, ${roadPositions.obsolete.length} roads to destroy`);
     constructRoads(this.city.room, roadPositions.new);
-    deconstructRoads(this.city.room, roadPositions.obsolete, destroyRoads);
+    deconstructRoads(this.city.room, roadPositions.obsolete, opts.destroyRoads);
   }
 
+
+  /**
+   * Perform all the civil engineers duties
+   */
   run() {
     const dt = Game.time - this.startTime;
     if (dt > TIME_NEW_ROAD_REPORT) {
-      this.applyRoadPositions();
+      this.roadWorks();
       resetMovementGrid(this);
     }
   }
 };
+
+
+/**
+ * Monkey patch the base game classes to provide easier access to important
+ * functionality.
+ */
+CivilEngineer.monkeyPatch = function monkeyPatch() {
+  /**
+   * Add an easy way to get a roading report from the civil engineer
+   */
+  Game.report.road = function roadReport(roomName, options = null) {
+    const civilEngineer = getCivilEngineer(roomName);
+    if (!civilEngineer) {
+      console.log(`Can't generate roading report - no civil engineer for room ${roomName}`);
+      return;
+    }
+    civilEngineer.roadReport(options);
+  };
+
+  /**
+   * Add an easy way to apply road works to a city
+   */
+  Game.cmd.roadWorks = function roadWorks(roomName, options = null) {
+    const civilEngineer = getCivilEngineer(roomName);
+    if (!civilEngineer) {
+      console.log(`Can't generate roading report - no civil engineer for room ${roomName}`);
+      return;
+    }
+    civilEngineer.roadWorks(options);
+  };
+};
+
 
 module.exports = CivilEngineer;

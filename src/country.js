@@ -10,6 +10,7 @@ const u = require('utils');
 const Country = class Country {
 
   constructor() {
+    Game.country = this;
     this.cities = Object.keys(Game.rooms).map((roomName) =>
       new City(Game.rooms[roomName])
     );
@@ -68,6 +69,17 @@ const Country = class Country {
       });
     });
   }
+};
+
+
+/**
+ * Monkey patch the base game classes to provide easier access to important
+ * functionality.
+ */
+Country.monkeyPatch = function monkeyPatch() {
+  Game.report = {};
+  Game.cmd = {};
+  City.monkeyPatch();
 };
 
 

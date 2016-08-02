@@ -25,6 +25,8 @@ if (Memory.control && Memory.control.profile) {
   * Mainloop of the screeps application
   */
 module.exports.loop = function mainLoop() {
+  Country.monkeyPatch();
+
   Profiler.wrap(() => {
     Object.keys(Memory.creeps).forEach((name) => {
       if (!Game.creeps[name]) {

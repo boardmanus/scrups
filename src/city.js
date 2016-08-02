@@ -188,4 +188,13 @@
 };
 
 
+/**
+ * Monkey patch the base game classes to provide easier access to important
+ * functionality.
+ */
+ City.monkeyPatch = function monkeyPatch() {
+   CivilEngineer.monkeyPatch();
+   Boss.monkeyPatch();
+ };
+
  module.exports = City;

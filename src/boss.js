@@ -3,12 +3,21 @@
  * creeps
  */
 const Job = require('job.all');
+const u = require('utils');
 
 
 function prioritize(jobs) {
   return _.sortBy(jobs, (j) => j.priority());
 }
 
+
+function jobOptions(options = null) {
+  return _.defaults(options || {}, {
+    sendEmail: false,
+    numJobs: 10,
+    jobType: 'All Jobs',
+  });
+}
 
 const Boss = class Boss {
 
@@ -83,29 +92,28 @@ const Boss = class Boss {
     return `boss-${this.city.room.name}`;
   }
 
+
+  /**
+   * Report job information based on the options provided.
+   * @param options the options to modify the report
+   */
   jobReport(options = null) {
-    let sendEmail = false;
-    let numJobs = 50;
-    let jobType = 'All Jobs';
-    let jobs = this.allJobs;
-    if (options) {
-      sendEmail = options.sendEmail || false;
-      numJobs = options.numJobs || 50;
-      if (options.jobType) {
-        jobType = options.jobType;
-        jobs = this[options.jobType] || jobs;
-      }
-    }
-    console.log(`Formatting job report [sendEmail=${sendEmail}, numJobs=${numJobs}, jobType=${jobType}]`);
-    let report = `Job Report for ${this.info()} (${jobType})\n`;
-    for (let j = 0; j < Math.min(numJobs, jobs.length); ++j) {
+    const opts = jobOptions(options);
+    const jobs = this[opts.jobType] || this.allJobs;
+
+    console.log(`Formatting job report [sendEmail=${opts.sendEmail}, numJobs=${opts.numJobs}, jobType=${opts.jobType}]`);
+    let report = `Job Report for ${this.info()} (${opts.jobType})\n`;
+
+    const numJobs = Math.min(opts.numJobs, jobs.length);
+    for (let j = 0; j < numJobs; ++j) {
       const job = jobs[j];
       report += `${j}: ${job.info()}\n`;
     }
 
-    if (sendEmail) {
+    if (opts.sendEmail) {
       Game.notify(report);
     }
+
     console.log(report);
   }
 
@@ -114,5 +122,29 @@ const Boss = class Boss {
 
   }
 };
+
+
+/**
+ * Monkey patch the base game classes to provide easier access to important
+ * functionality.
+ */
+Boss.monkeyPatch = function monkeyPatch() {
+  Game.report.job = function jobReport(roomName, options = null) {
+    const room = Game.rooms[roomName];
+    if (!room) {
+      console.log(`Can't generate job report - unknown room ${roomName}`);
+      return;
+    }
+
+    const city = room.city;
+    if (!city) {
+      console.log(`Can't generate job report - no city for ${u.name(room)}`);
+      return;
+    }
+
+    city.boss.jobReport(options);
+  };
+};
+
 
 module.exports = Boss;
