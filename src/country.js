@@ -11,15 +11,14 @@ const Country = class Country {
 
   constructor() {
     Game.country = this;
-  }
-
-  audit() {
-    this.spawnSites = [];
 
     this.cities = Object.keys(Game.rooms).map((roomName) =>
       new City(Game.rooms[roomName])
     );
+  }
 
+  audit() {
+    this.spawnSites = [];
     _.each(this.cities, (c) => c.audit());
   }
 

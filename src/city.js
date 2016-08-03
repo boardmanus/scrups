@@ -18,6 +18,9 @@ const City = class City {
   constructor(room) {
     this.room = room;
     room.city = this;
+    this.cache = {};
+    this.boss = new Boss(this);
+    this.civilEngineer = new CivilEngineer(this);
   }
 
   audit() {
@@ -27,24 +30,28 @@ const City = class City {
     this.spawners = this.room.find(FIND_MY_SPAWNS);
 
      // Search for all citizens of the city - they may even be in other rooms!
-    this.citizens = this.room.find(FIND_MY_CREEPS, { filter: (c) => !c.memory.city });
-    this.citizens.forEach((c) => { c.memory.city = this.room.name; });
-    this.citizens = this.citizens.concat(Object.keys(Game.creeps)
-      .filter((k) => Game.creeps[k].memory.city === this.room.name)
-      .map((k) => Game.creeps[k]));
-    this.citizens.forEach((c) => {
-      c.city = this;
-      if (c.city.room !== c.room) {
-        console.log(`${u.name(c)} is in the wrong room (city=${c.city.room.name}, room=${c.room.name})`);
-      }
+    _.each(this.room.find(FIND_MY_CREEPS, { filter: (c) => !c.memory.city }), (c) => {
+      c.memory.city = this.room.name;
+    });
+
+    this.citizens = _.map(
+      _.filter(Object.keys(Game.creeps),
+        (k) => Game.creeps[k].memory.city === this.room.name),
+      (k) => {
+        const c = Game.creeps[k];
+        c.city = this;
+        if (this.room !== c.room) {
+          console.log(`${u.name(c)} is in the wrong room (city=${this.room.name}, room=${c.room.name})`);
+        }
+        return c;
     });
 
     this.enemies = this.room.find(FIND_HOSTILE_CREEPS);
     this.structures = this.room.find(FIND_STRUCTURES);
     this.sources = this.room.find(FIND_SOURCES);
     this.minerals = this.room.find(FIND_MINERALS);
-    this.harvestSites = this.minerals.filter((m) =>
-      m.pos.lookFor(LOOK_STRUCTURES).length > 0).join(this.sources);
+    this.harvestSites = _.concat(this.sources, _.filter(this.minerals, (m) =>
+      m.pos.lookFor(LOOK_STRUCTURES).length > 0));
     this.resources = this.room.find(FIND_DROPPED_ENERGY);
 
     // Determine the number of various structures.
@@ -155,9 +162,6 @@ const City = class City {
           break;
       }
     }
-
-    this.boss = new Boss(this);
-    this.civilEngineer = new CivilEngineer(this);
 
     this.boss.audit();
     this.civilEngineer.audit();
