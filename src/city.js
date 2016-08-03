@@ -18,17 +18,19 @@ const City = class City {
   constructor(room) {
     this.room = room;
     room.city = this;
+  }
 
+  audit() {
      // Get all the information about the room
-    this.controller = room.controller;
-    this.constructionSites = room.find(FIND_MY_CONSTRUCTION_SITES);
-    this.spawners = room.find(FIND_MY_SPAWNS);
+    this.controller = this.room.controller;
+    this.constructionSites = this.room.find(FIND_MY_CONSTRUCTION_SITES);
+    this.spawners = this.room.find(FIND_MY_SPAWNS);
 
      // Search for all citizens of the city - they may even be in other rooms!
-    this.citizens = room.find(FIND_MY_CREEPS, { filter: (c) => !c.memory.city });
-    this.citizens.forEach((c) => { c.memory.city = room.name; });
+    this.citizens = this.room.find(FIND_MY_CREEPS, { filter: (c) => !c.memory.city });
+    this.citizens.forEach((c) => { c.memory.city = this.room.name; });
     this.citizens = this.citizens.concat(Object.keys(Game.creeps)
-      .filter((k) => Game.creeps[k].memory.city === room.name)
+      .filter((k) => Game.creeps[k].memory.city === this.room.name)
       .map((k) => Game.creeps[k]));
     this.citizens.forEach((c) => {
       c.city = this;
@@ -37,13 +39,13 @@ const City = class City {
       }
     });
 
-    this.enemies = room.find(FIND_HOSTILE_CREEPS);
-    this.structures = room.find(FIND_STRUCTURES);
-    this.sources = room.find(FIND_SOURCES);
-    this.minerals = room.find(FIND_MINERALS);
+    this.enemies = this.room.find(FIND_HOSTILE_CREEPS);
+    this.structures = this.room.find(FIND_STRUCTURES);
+    this.sources = this.room.find(FIND_SOURCES);
+    this.minerals = this.room.find(FIND_MINERALS);
     this.harvestSites = this.minerals.filter((m) =>
       m.pos.lookFor(LOOK_STRUCTURES).length > 0).join(this.sources);
-    this.resources = room.find(FIND_DROPPED_ENERGY);
+    this.resources = this.room.find(FIND_DROPPED_ENERGY);
 
     // Determine the number of various structures.
     let numRoads = 0;
@@ -156,6 +158,9 @@ const City = class City {
 
     this.boss = new Boss(this);
     this.civilEngineer = new CivilEngineer(this);
+
+    this.boss.audit();
+    this.civilEngineer.audit();
   }
 
   needsHelp() {

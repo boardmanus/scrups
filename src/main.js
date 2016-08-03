@@ -48,6 +48,7 @@ module.exports.loop = function mainLoop() {
 
     const country = new Country();
     Game.country = country;
+    country.audit();
     country.run();
 
     country.cities.forEach((city) => {

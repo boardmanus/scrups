@@ -24,10 +24,12 @@ const Boss = class Boss {
 
   constructor(city) {
     this.city = city;
+  }
 
+  audit() {
     // Determine all the construction jobs to be worked
     const constructionJobs = [];
-    city.constructionSites.forEach((cs) => {
+    this.city.constructionSites.forEach((cs) => {
       const maxJobs = Job.Build.maxWorkers(cs);
       for (let instance = 0; instance < maxJobs; ++instance) {
         constructionJobs.push(new Job.Build(cs, instance));
@@ -36,7 +38,7 @@ const Boss = class Boss {
     this.constructionJobs = prioritize(constructionJobs);
 
     const repairJobs = [];
-    city.repairableSites.forEach((s) => {
+    this.city.repairableSites.forEach((s) => {
       const maxJobs = Job.Repair.maxWorkers(s);
       for (let instance = 0; instance < maxJobs; ++instance) {
         repairJobs.push(new Job.Repair(s, instance));
@@ -45,7 +47,7 @@ const Boss = class Boss {
     this.repairJobs = prioritize(repairJobs);
 
     const harvestJobs = [];
-    city.sources.forEach((s) => {
+    this.city.sources.forEach((s) => {
       const maxJobs = Job.Harvest.maxWorkers(s);
       for (let instance = 0; instance < maxJobs; ++instance) {
         harvestJobs.push(new Job.Harvest(s, instance));
@@ -54,7 +56,7 @@ const Boss = class Boss {
     this.harvestJobs = prioritize(harvestJobs);
 
     const storeJobs = [];
-    city.energyStorage.forEach((s) => {
+    this.city.energyStorage.forEach((s) => {
       const maxJobs = Job.Store.maxWorkers(s);
       for (let instance = 0; instance < maxJobs; ++instance) {
         storeJobs.push(new Job.Store(s, instance));
@@ -63,9 +65,9 @@ const Boss = class Boss {
     this.storeJobs = prioritize(storeJobs);
 
     const upgradeJobs = [];
-    const maxJobs = Job.Upgrade.maxWorkers(city.controller);
+    const maxJobs = Job.Upgrade.maxWorkers(this.city.controller);
     for (let instance = 0; instance < maxJobs; ++instance) {
-      upgradeJobs.push(new Job.Upgrade(city.controller, instance));
+      upgradeJobs.push(new Job.Upgrade(this.city.controller, instance));
     }
     this.upgradeJobs = prioritize(upgradeJobs);
 

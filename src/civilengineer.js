@@ -189,12 +189,15 @@ const CivilEngineer = class CivilEngineer {
 
   constructor(city) {
     this.city = city;
-    if (!city.room.memory.movementGrid) {
-      city.room.memory.movementGrid = createGrid(city.room);
-      city.room.memory.movementGridTime = Game.time;
+  }
+
+  audit() {
+    if (!this.city.room.memory.movementGrid) {
+      this.city.room.memory.movementGrid = createGrid(this.city.room);
+      this.city.room.memory.movementGridTime = Game.time;
     }
-    this.startTime = city.room.memory.movementGridTime;
-    this.movementGrid = city.room.memory.movementGrid;
+    this.startTime = this.city.room.memory.movementGridTime;
+    this.movementGrid = this.city.room.memory.movementGrid;
   }
 
   /**
