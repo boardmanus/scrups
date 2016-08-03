@@ -26,6 +26,91 @@ if (Memory.control && Memory.control.profile) {
   console.log('!!!!! NOT ENABLING PROFILER !!!!!');
 }
 
+
+function oldlogic(country) {
+  country.cities.forEach((city) => {
+  // RoomInfo.init(room);
+    const upgraders = city.citizens.filter((w) =>
+      w.memory.operation === Upgrader.OPERATION);
+
+    const claimers = city.citizens.filter((w) =>
+      w.memory.operation === Claimer.OPERATION);
+    const builders = city.citizens.filter((w) =>
+      w.memory.operation === Builder.OPERATION);
+    const repairers = city.citizens.filter((w) =>
+      w.memory.operation === Repairer.OPERATION);
+    const harvesters = city.citizens.filter((w) =>
+      w.memory.operation === Harvester.OPERATION);
+    const storers = city.citizens.filter((w) =>
+      w.memory.operation === Storer.OPERATION);
+    const waiters = city.citizens.filter((w) =>
+      w.memory.operation === Waiter.OPERATION);
+    const dismantlers = city.citizens.filter((w) =>
+      w.memory.operation === Dismantler.OPERATION);
+
+    city.spawners.forEach((spawner) => {
+      if (spawner.spawning) {
+        return;
+      }
+
+      if (claimers.length === 0 &&
+        Claimer.have_controller_to_claim()) {
+        const w = Worker.create(spawner, {
+          claimer: true,
+        });
+        if (w) {
+          console.log(`Adding new claimer ${u.name(w)}`);
+        } else {
+          console.log('Failed to create claimer!');
+        }
+      }
+
+      if (city.citizens.length < 10 && !spawner.spawning) {
+        const params = Worker.bestSpawnCost(city);
+        const w = Worker.create(spawner, params);
+        if (w) {
+          console.log(`Adding new worker ${u.name(w)}`);
+        }
+      }
+    });
+
+
+    console.log(`${u.name(city.room)} workers: ${claimers.length} claimers, ${upgraders.length} upgraders, ${builders.length} builders, ${repairers.length} repairers, ${harvesters.length} harvesters, ${storers.length} storers, ${dismantlers.length} dismantlers and ${waiters.length} waiters.`);
+    city.towers.forEach((t) => {
+      console.log(`${u.name(t)} has ${t.energy}/${t.energyCapacity} energy available (room has ${city.room.energyAvailable}/${city.room.energyCapacityAvailable}).`);
+      if (t.energy === 0) {
+        return;
+      }
+      if (city.enemies.length === 0) {
+        if (t.energy < t.energyCapacity / 3) {
+          return;
+        }
+        if (t.energy < t.energyCapacity / 2 &&
+            city.room.energyAvailable < city.room.energyCapacityAvailable / 2) {
+          return;
+        }
+
+        let rs = _.filter(city.repairableSites, Repairer.should_repair);
+        rs = _.sortBy(rs, (s) => Repairer.repair_weighting(t.pos, s));
+        console.log(`${u.name(t)} has ${rs.length} repairable structures`);
+        if (rs.length > 0) {
+          const s = rs[0];
+          console.log(`${u.name(t)} repairing ${u.name(s)} (hits=${s.hits})`);
+          const res = t.repair(s);
+          if (res !== 0) {
+            console.log(`${u.name(t)} failed to repair ${u.name(s)} (${res})`);
+          }
+        }
+      } else {
+        const enemy = city.enemies[0];
+        console.log(`${u.name(t)} attacking ${u.name(enemy)}`);
+        t.attack(enemy);
+      }
+    });
+
+    city.citizens.forEach((worker) => Worker.work(worker));
+  });
+}
 /**
   * Mainloop of the screeps application
   */
@@ -37,6 +122,7 @@ module.exports.loop = function mainLoop() {
   Profiler.registerObject(CivilEngineer, 'CivilEngineer');
   Profiler.registerObject(Peon, 'Peon');
   Profiler.registerObject(Job, 'Job');
+  Profiler.registerFN(oldlogic);
 
   Profiler.wrap(() => {
     Object.keys(Memory.creeps).forEach((name) => {
@@ -50,88 +136,6 @@ module.exports.loop = function mainLoop() {
     Game.country = country;
     country.audit();
     country.run();
-
-    country.cities.forEach((city) => {
-    // RoomInfo.init(room);
-      const upgraders = city.citizens.filter((w) =>
-        w.memory.operation === Upgrader.OPERATION);
-
-      const claimers = city.citizens.filter((w) =>
-        w.memory.operation === Claimer.OPERATION);
-      const builders = city.citizens.filter((w) =>
-        w.memory.operation === Builder.OPERATION);
-      const repairers = city.citizens.filter((w) =>
-        w.memory.operation === Repairer.OPERATION);
-      const harvesters = city.citizens.filter((w) =>
-        w.memory.operation === Harvester.OPERATION);
-      const storers = city.citizens.filter((w) =>
-        w.memory.operation === Storer.OPERATION);
-      const waiters = city.citizens.filter((w) =>
-        w.memory.operation === Waiter.OPERATION);
-      const dismantlers = city.citizens.filter((w) =>
-        w.memory.operation === Dismantler.OPERATION);
-
-      city.spawners.forEach((spawner) => {
-        if (spawner.spawning) {
-          return;
-        }
-
-        if (claimers.length === 0 &&
-          Claimer.have_controller_to_claim()) {
-          const w = Worker.create(spawner, {
-            claimer: true,
-          });
-          if (w) {
-            console.log(`Adding new claimer ${u.name(w)}`);
-          } else {
-            console.log('Failed to create claimer!');
-          }
-        }
-
-        if (city.citizens.length < 10 && !spawner.spawning) {
-          const params = Worker.bestSpawnCost(city);
-          const w = Worker.create(spawner, params);
-          if (w) {
-            console.log(`Adding new worker ${u.name(w)}`);
-          }
-        }
-      });
-
-
-      console.log(`${u.name(city.room)} workers: ${claimers.length} claimers, ${upgraders.length} upgraders, ${builders.length} builders, ${repairers.length} repairers, ${harvesters.length} harvesters, ${storers.length} storers, ${dismantlers.length} dismantlers and ${waiters.length} waiters.`);
-      city.towers.forEach((t) => {
-        console.log(`${u.name(t)} has ${t.energy}/${t.energyCapacity} energy available (room has ${city.room.energyAvailable}/${city.room.energyCapacityAvailable}).`);
-        if (t.energy === 0) {
-          return;
-        }
-        if (city.enemies.length === 0) {
-          if (t.energy < t.energyCapacity / 3) {
-            return;
-          }
-          if (t.energy < t.energyCapacity / 2 &&
-              city.room.energyAvailable < city.room.energyCapacityAvailable / 2) {
-            return;
-          }
-
-          let rs = _.filter(city.repairableSites, Repairer.should_repair);
-          rs = _.sortBy(rs, (s) => Repairer.repair_weighting(t.pos, s));
-          console.log(`${u.name(t)} has ${rs.length} repairable structures`);
-          if (rs.length > 0) {
-            const s = rs[0];
-            console.log(`${u.name(t)} repairing ${u.name(s)} (hits=${s.hits})`);
-            const res = t.repair(s);
-            if (res !== 0) {
-              console.log(`${u.name(t)} failed to repair ${u.name(s)} (${res})`);
-            }
-          }
-        } else {
-          const enemy = city.enemies[0];
-          console.log(`${u.name(t)} attacking ${u.name(enemy)}`);
-          t.attack(enemy);
-        }
-      });
-
-      city.citizens.forEach((worker) => Worker.work(worker));
-    });
+    oldlogic(country);
   });
 };

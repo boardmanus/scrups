@@ -83,7 +83,7 @@ function hookUpPrototypes() {
 function profileObjectFunctions(object, label) {
   const objectToWrap = object.prototype ? object.prototype : object;
 
-  Object.keys(objectToWrap).forEach(functionName => {
+  Object.getOwnPropertyNames(objectToWrap).forEach(functionName => {
     const extendedLabel = `${label}.${functionName}`;
     try {
       if (typeof objectToWrap[functionName] === 'function' && functionName !== 'getUsed') {
