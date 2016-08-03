@@ -48,11 +48,8 @@
 
      worker.memory.site = null;
         // Ensure enough energy gets stored
-     const workers = room.find(FIND_MY_CREEPS, (creep) =>
-      creep.memory.role === Worker.ROLE
-    );
-     if (((workers.length <= 4)
-                || (room.energyAvailable < room.energyCapacityAvailable / 2))
+     const workers = room.find(FIND_MY_CREEPS, (creep) => creep.memory.role === Worker.ROLE);
+     if ((workers.length <= 4)
             && !worker.memory.stoleEnergy
             && (Storer.work(worker) === 0)) {
        return Waiter.ERROR.NONE;
@@ -63,9 +60,15 @@
      const upgraders = _.filter(workers, (w) =>
       w.memory.operation === Upgrader.OPERATION
     );
-     if ((upgraders.length < 2) && (Upgrader.work(worker) === 0)) {
+    
+    if ((upgraders.length < 2) && (Upgrader.work(worker) === 0)) {
        return Waiter.ERROR.NONE;
-     }
+    }
+
+    if ((room.energyAvailable < room.energyCapacityAvailable / 2) &&
+        (Storer.work(worker) === 0)) {
+        return Waiter.ERROR.NONE;
+    }
 
      worker.memory.site = null;
     // Ensure stuff gets repaired

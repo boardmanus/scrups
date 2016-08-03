@@ -56,7 +56,7 @@ const Storer = {
         } else {
           ratio = _.sum(structure.store) / structure.storeCapacity;
           if (ratio < 0.1) {
-            weight = 2000;
+            weight = 1000;
           } else if (ratio < 0.3) {
             weight = 4000;
           } else if (ratio < 0.6) {
@@ -97,6 +97,7 @@ const Storer = {
         } else if (structure.room.city.citizens.length < 8) {
           weight = 400;
         }
+        weight = 500 + structure.room.energyAvailable/structure.room.energyCapacityAvailable*1000;
         break;
       default: break;
     }

@@ -135,6 +135,10 @@ const Boss = class Boss {
     console.log(report);
   }
 
+
+  /**
+   * Get the boss to assign jobs to the peons.
+   */
   run() {
     // Allocate jobs to workers
     let jobIndex = 0;

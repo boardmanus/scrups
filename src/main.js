@@ -113,7 +113,7 @@ module.exports.loop = function mainLoop() {
             return;
           }
 
-          let rs = _.filter(city.structures, Repairer.should_repair);
+          let rs = _.filter(city.repairableSites, Repairer.should_repair);
           rs = _.sortBy(rs, (s) => Repairer.repair_weighting(t.pos, s));
           console.log(`${u.name(t)} has ${rs.length} repairable structures`);
           if (rs.length > 0) {

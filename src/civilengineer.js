@@ -9,7 +9,8 @@ const ROOM_WIDTH = 50;
 const TERRAIN_PLAIN = 'plain';
 const TERRAIN_SWAMP = 'swamp';
 const TERRAIN_WALL = 'wall';
-const BUILD_STEP_THRESHOLD = 100;
+const CONSTRUCT_THRESHOLD = 150;
+const DESTRUCT_THRESHOLD = 10;
 const TIME_NEW_ROAD_REPORT = 10000;
 
 
@@ -77,6 +78,9 @@ function constructRoads(room, locations) {
 }
 
 
+/**
+ * Sets about marking roads that should be destroyed.
+ */
 function deconstructRoads(room, locations, destroyRoads) {
   locations.forEach((pos) => {
     if (destroyRoads) {
@@ -97,6 +101,9 @@ function deconstructRoads(room, locations, destroyRoads) {
 }
 
 
+/**
+ * Resets the statistics on the movement grid.
+ */
 function resetMovementGrid(eng) {
   for (let y = 0; y < ROOM_HEIGHT; ++y) {
     for (let x = 0; x < ROOM_WIDTH; ++x) {
@@ -108,6 +115,10 @@ function resetMovementGrid(eng) {
 }
 
 
+/**
+ * Provides an ascii representation of the given tile.
+ * @return the tile representation.
+ */
 function roadTileReport(eng, x, y, constructThreshold, destructThreshold, total) {
   const pos = eng.movementGrid[y][x];
   const steps = (total ? pos.totalSteps : pos.steps);
@@ -151,6 +162,11 @@ function roadTileReport(eng, x, y, constructThreshold, destructThreshold, total)
 }
 
 
+/**
+ * Retrieves the Civil Engineer for a room
+ * @param roomName the name of the room to get him from
+ * @return the Civil Engineer, or null if not found.
+ */
 function getCivilEngineer(roomName) {
   const room = Game.rooms[roomName];
   if (!room) {
@@ -166,19 +182,22 @@ function getCivilEngineer(roomName) {
 }
 
 
+/**
+ * Create a fully-fledged set of options based on the user set
+ * @param options the user options
+ * @return the filled in options with missing defaults
+ */
 function roadingOptions(options = null) {
   const opts = _.defaults(options || {}, {
-    constructThreshold: BUILD_STEP_THRESHOLD,
-    destructThreshold: 0,
+    constructThreshold: CONSTRUCT_THRESHOLD,
+    destructThreshold: DESTRUCT_THRESHOLD,
     total: false,
     destroyRoads: false,
   });
 
-  if (opts.constructThreshold < BUILD_STEP_THRESHOLD) {
-    opts.constructThreshold = BUILD_STEP_THRESHOLD;
-  }
+  // Ensure the thresholds are sane
   if (opts.destructThreshold >= opts.constructThreshold) {
-    opts.destructThreshold = opts.constructThreshold - 1;
+    opts.constructThreshold = opts.destructThreshold + 1;
   }
 
   return opts;
@@ -187,6 +206,10 @@ function roadingOptions(options = null) {
 
 const CivilEngineer = class CivilEngineer {
 
+  /**
+   * Creates a new Civil Engineer responsible for road works and infrastructure
+   * in the city.
+   */
   constructor(city) {
     this.city = city;
   }
@@ -280,6 +303,7 @@ CivilEngineer.monkeyPatch = function monkeyPatch() {
     civilEngineer.roadReport(options);
   };
 
+
   /**
    * Add an easy way to apply road works to a city
    */
@@ -290,6 +314,24 @@ CivilEngineer.monkeyPatch = function monkeyPatch() {
       return;
     }
     civilEngineer.roadWorks(options);
+  };
+
+
+  /**
+   * Remove all the road works flags from the room
+   */
+  Game.cmd.removeRoadWorkSigns = function removeRoadWorkSigns(roomName) {
+    const room = Game.rooms[roomName];
+    if (room === null) {
+      console.log(`${u.name(room)} doesn't seem to exist.`);
+      return;
+    }
+
+    const flags = room.find(FIND_FLAGS, { filter: (f) =>
+      f.name.search(/Dismantle-.*-road/) !== -1,
+    });
+    
+    _.each(flags, (f) => f.remove());
   };
 };
 
