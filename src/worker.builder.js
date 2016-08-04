@@ -23,23 +23,28 @@ const Builder = {
      * @param room the room to search
      * @return an ordered array of construction sites
      */
-  find_sites(room) {
+  find_sites(room, worker = null) {
     const rooms = room.find(FIND_MY_CONSTRUCTION_SITES);
     Game.country.spawnSites.forEach((ss) => rooms.push(ss));
+
     return _.sortBy(rooms, (s) => {
+      let distance = 0;
+      if (worker != null) {
+        distance = worker.pos.getRangeTo(s);
+      }
       switch (s.structureType) {
-        case STRUCTURE_WALL: return 10;
-        case STRUCTURE_TOWER: return 11;
-        case STRUCTURE_SPAWN: return 20;
-        case STRUCTURE_EXTENSION: return 21;
-        case STRUCTURE_RAMPART: return 9;
-        case STRUCTURE_STORAGE: return 25;
-        case STRUCTURE_LINK: return 26;
-        case STRUCTURE_LAB: return 27;
-        case STRUCTURE_ROAD: return 30;
+        case STRUCTURE_WALL: return 100 + distance;
+        case STRUCTURE_TOWER: return 110 + distance;
+        case STRUCTURE_SPAWN: return 200 + distance;
+        case STRUCTURE_EXTENSION: return 210 + distance;
+        case STRUCTURE_RAMPART: return 90 + distance;
+        case STRUCTURE_STORAGE: return 250 + distance;
+        case STRUCTURE_LINK: return 260 + distance;
+        case STRUCTURE_LAB: return 270 + distance;
+        case STRUCTURE_ROAD: return 300 + distance;
         default: break;
       }
-      return 100;
+      return 1000;
     });
   },
 
@@ -62,7 +67,7 @@ const Builder = {
     }
 
     if (site == null && worker.memory.site == null) {
-      const sites = Builder.find_sites(worker.workRoom());
+      const sites = Builder.find_sites(worker.workRoom(), worker);
       if (sites.length === 0) {
         console.log(`${u.name(worker)} found no construction sites to build on...`);
         return Builder.ERROR.NO_CONSTRUCTION_SITES;

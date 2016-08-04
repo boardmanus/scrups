@@ -16,6 +16,43 @@ const Job = require('job');
 const Profiler = require('screeps-profiler');
 const u = require('utils');
 
+function updateProfiling(force = false) {
+    if (!Memory.control) {
+        Memory.control = { profile: false, lastProfile: false };
+    }
+
+    // Nothing has changed.
+    if (Memory.control.profile === Memory.control.lastProfile) {
+        return;
+    }
+    
+    // Enable the profiler if controlled to do so.
+    if (Memory.control.profile) {
+      /**
+       * Enable the profiler to see where we're wasting cpu...
+       */
+      console.log('!!!!! ENABLING PROFILER !!!!!');
+      Profiler.enable();
+      Profiler.registerObject(Country, 'Country');
+      Profiler.registerObject(City, 'City');
+      Profiler.registerObject(Boss, 'Boss');
+      Profiler.registerObject(CivilEngineer, 'CivilEngineer');
+      Profiler.registerObject(Peon, 'Peon');
+      Profiler.registerObject(Job, 'Job');
+      Profiler.registerFN(oldlogic);
+    } else {
+      console.log('!!!!! ENABLING PROFILER !!!!!');
+      Profiler.disable();
+      Profiler.registerObject(Country, 'Country');
+      Profiler.registerObject(City, 'City');
+      Profiler.registerObject(Boss, 'Boss');
+      Profiler.registerObject(CivilEngineer, 'CivilEngineer');
+      Profiler.registerObject(Peon, 'Peon');
+      Profiler.registerObject(Job, 'Job');
+      Profiler.registerFN(oldlogic);
+    }
+}
+
 function oldlogic(country) {
   country.cities.forEach(city => {
   // RoomInfo.init(room);
@@ -150,8 +187,6 @@ module.exports.loop = function mainLoop() {
   // });
   const endUsed = Game.cpu.getUsed();
   const endLimit = Game.cpu.tickLimit;
-  const endBucket = Game.cpu.bucket;
   console.log(`CPU: end=${endUsed} - start=${startUsed} = totalUsed=${endUsed - startUsed}`);
   console.log(`CPU: startLimit=${startLimit} - endLimit=${endLimit} = usedLimit=${startLimit - endLimit}`);
-  console.log(`CPU: startBucket=${startBucket} - endBucket=${endBucket} = usedBucket=${startBucket - endBucket}`);
 };
