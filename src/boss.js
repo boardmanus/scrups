@@ -87,8 +87,9 @@ const Boss = class Boss {
     this.peons = _.map(
       _.filter(Object.keys(Game.creeps),
         (k) =>
-          Game.creeps[k].memory.city === this.room.name ||
-          Game.creeps[k].memory.transferCity === this.room.name),
+          (Game.creeps[k].memory.city === this.room.name &&
+            !Game.creeps[k].memory.transferCity) ||
+              (Game.creeps[k].memory.transferCity === this.room.name)),
       (k) => {
         const c = Game.creeps[k];
         c.city = this;
@@ -218,6 +219,19 @@ Boss.monkeyPatch = function monkeyPatch() {
     }
 
     city.boss.jobReport(options);
+  };
+
+  Game.cmd.transferWorker = function transferWorker(fromRoomName, toRoomName) {
+    const fromRoom = Game.rooms[fromRoomName];
+    const toRoom = Game.rooms[toRoomName];
+    if (!fromRoom || !toRoom) {
+      console.log('Invalid rooms specified for transfer');
+      return;
+    }
+
+    const peon = fromRoom.city.boss.peons[0];
+    peon.creep.memory.transferCity = toRoom.name;
+    console.log(`Transfering ${peon.info()} to ${toRoom.name} (city=${peon.creep.memory.city}, transferCity=${peon.creep.memory.transferCity})`);
   };
 };
 
