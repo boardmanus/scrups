@@ -132,7 +132,7 @@ const Repairer = {
    * @return an ordered array of construction sites
    */
   find_sites(worker) {
-    const sites = worker.city.room.find(FIND_MY_STRUCTURES, {
+    const sites = worker.workRoom().find(FIND_MY_STRUCTURES, {
       filter: Repairer.should_repair,
     });
     return _.sortBy(sites, (s) => Repairer.repair_weighting(worker.pos, s));

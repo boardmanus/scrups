@@ -7,6 +7,11 @@ const Peon = require('peon');
 const u = require('utils');
 
 
+Creep.prototype.workRoom = function workRoom() {
+  return this.memory.transferCity ?
+    Game.rooms[this.memory.transferCity] : this.city.room;
+};
+
 function prioritize(jobs) {
   return _.sortBy(jobs, (j) => j.priority());
 }
@@ -24,6 +29,7 @@ const Boss = class Boss {
 
   constructor(city) {
     this.city = city;
+    this.room = city.room;
   }
 
   audit() {
@@ -78,7 +84,26 @@ const Boss = class Boss {
           this.constructionJobs));
 
     // Hook up the peons existing jobs...
-    this.peons = this.city.citizens.map((c) => new Peon(this, c));
+    this.peons = _.map(
+      _.filter(Object.keys(Game.creeps),
+        (k) =>
+          Game.creeps[k].memory.city === this.room.name ||
+          Game.creeps[k].memory.transferCity === this.room.name),
+      (k) => {
+        const c = Game.creeps[k];
+        c.city = this;
+        if (c.room !== c.city.room) {
+          if (c.room.name !== c.memory.transferCity) {
+            console.log(`${u.name(c)} is in the wrong room (city=${this.room.name}, room=${c.room.name}, transferRoom=${c.memory.transferCity})`);
+          } else {
+            console.log(`${u.name(c)} is working in transfer location room=${c.room.name})`);
+          }
+        }
+        return new Peon(this.city, c);
+      });
+
+    console.log(`${this.info()} has ${this.peons.length} peons to work with.`);
+
     _.each(this.peons, (p) => {
       if (!p.jobId) {
         return;

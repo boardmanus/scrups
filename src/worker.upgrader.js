@@ -32,12 +32,12 @@ const Upgrader = {
       return Upgrader.ERROR.NO_ENERGY;
     }
 
-    let res = worker.upgradeController(worker.city.room.controller);
+    let res = worker.upgradeController(worker.workRoom().controller);
     switch (res) {
       case 0:
         break;
       case ERR_NOT_IN_RANGE:
-        res = worker.moveTo(worker.city.room.controller);
+        res = worker.moveTo(worker.workRoom().controller);
         if (res === 0) {
           worker.room.city.civilEngineer.registerMovement(worker);
         }

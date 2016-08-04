@@ -1,7 +1,6 @@
 /**
  * A City representation of the room.
  */
-const u = require('utils');
 const Boss = require('boss');
 const CivilEngineer = require('civilengineer');
 
@@ -40,17 +39,14 @@ const City = class City {
       (k) => {
         const c = Game.creeps[k];
         c.city = this;
-        if (this.room !== c.room) {
-          console.log(`${u.name(c)} is in the wrong room (city=${this.room.name}, room=${c.room.name})`);
-        }
         return c;
-    });
+      });
 
     this.enemies = this.room.find(FIND_HOSTILE_CREEPS);
     this.structures = this.room.find(FIND_STRUCTURES);
     this.sources = this.room.find(FIND_SOURCES);
     this.minerals = this.room.find(FIND_MINERALS);
-    this.harvestSites = _.concat(this.sources, _.filter(this.minerals, (m) =>
+    this.harvestSites = this.sources.concat(_.filter(this.minerals, (m) =>
       m.pos.lookFor(LOOK_STRUCTURES).length > 0));
     this.resources = this.room.find(FIND_DROPPED_ENERGY);
 

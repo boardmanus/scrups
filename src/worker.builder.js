@@ -61,7 +61,7 @@ const Builder = {
     }
 
     if (site == null && worker.memory.site == null) {
-      const sites = Builder.find_sites(worker.city.room);
+      const sites = Builder.find_sites(worker.workRoom());
       if (sites.length === 0) {
         console.log(`${u.name(worker)} found no construction sites to build on...`);
         return Builder.ERROR.NO_CONSTRUCTION_SITES;

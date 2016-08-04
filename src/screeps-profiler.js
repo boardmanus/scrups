@@ -26,7 +26,7 @@ function setupMemory(profileType, duration, filter) {
     Memory.profiler = {
       map: {},
       totalTime: 0,
-      enabledTick: Game.time + 1,
+      enabledTick: Game.time,
       disableTick: Game.time + duration,
       type: profileType,
       filter,
@@ -118,16 +118,18 @@ const Profiler = {
 
   output() {
     const elapsedTicks = Game.time - Memory.profiler.enabledTick + 1;
-    const header = 'calls\t\ttime\t\tavg\t\tfunction';
+    const header = 'calls\t\ttime\t\tavg\t\tpercentage\tfunction';
     const footer = [
       `Avg: ${(Memory.profiler.totalTime / elapsedTicks).toFixed(2)}`,
       `Total: ${Memory.profiler.totalTime.toFixed(2)}`,
       `Ticks: ${elapsedTicks}`,
+      `Percentage: ${Memory.profiler.totalTime / elapsedTicks / Game.cpu.limit.toFixed(2)}`,
     ].join('\t');
-    return [].concat(header, Profiler.lines().slice(0, 20), footer).join('\n');
+    return [].concat(header, Profiler.lines().slice(0, 50), footer).join('\n');
   },
 
   lines() {
+    const elapsedTicks = Game.time - Memory.profiler.enabledTick + 1;
     const stats = Object.keys(Memory.profiler.map).map(functionName => {
       const functionCalls = Memory.profiler.map[functionName];
       return {
@@ -135,6 +137,7 @@ const Profiler = {
         calls: functionCalls.calls,
         totalTime: functionCalls.time,
         averageTime: functionCalls.time / functionCalls.calls,
+        percentage: functionCalls.time / Game.cpu.limit * 100,
       };
     }).sort((val1, val2) => {
       return val2.totalTime - val1.totalTime;
@@ -145,6 +148,7 @@ const Profiler = {
         data.calls,
         data.totalTime.toFixed(1),
         data.averageTime.toFixed(3),
+        data.percentage.toFixed(2),
         data.name,
       ].join('\t\t');
     });
@@ -222,17 +226,17 @@ module.exports = {
       // Commented lines are part of an on going experiment to keep the profiler
       // performant, and measure certain types of overhead.
 
-      // var callbackStart = Game.cpu.getUsed();
+      const callbackStart = Game.cpu.getUsed();
       const returnVal = callback();
-      // var callbackEnd = Game.cpu.getUsed();
+      const callbackEnd = Game.cpu.getUsed();
       Profiler.endTick();
-      // var end = Game.cpu.getUsed();
+      const end = Game.cpu.getUsed();
 
-      // var profilerTime = (end - start) - (callbackEnd - callbackStart);
-      // var callbackTime = callbackEnd - callbackStart;
-      // var unaccounted = end - profilerTime - callbackTime;
-      // console.log('total-', end, 'profiler-', profilerTime, 'callbacktime-',
-      // callbackTime, 'start-', start, 'unaccounted', unaccounted);
+      const profilerTime = (end - usedOnStart) - (callbackEnd - callbackStart);
+      const callbackTime = callbackEnd - callbackStart;
+      const unaccounted = end - profilerTime - callbackTime;
+      console.log('total-', end, 'profiler-', profilerTime, 'callbacktime-',
+      callbackTime, 'start-', usedOnStart, 'unaccounted', unaccounted);
       return returnVal;
     }
 
