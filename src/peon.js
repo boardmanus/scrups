@@ -25,8 +25,12 @@ const Peon = class Peon {
    */
   assign(job) {
     this.job = job;
-    this.creep.memory.jobId = job.id();
-    job.assign(this);
+    if (job) {
+      this.creep.memory.jobId = job.id();
+      job.assign(this);
+    } else {
+      this.creep.memory.jobId = null;
+    }
   }
 
 

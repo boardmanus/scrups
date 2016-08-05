@@ -1,6 +1,7 @@
 /**
  * A City representation of the room.
  */
+const u = require('utils');
 const Boss = require('boss');
 const CivilEngineer = require('civilengineer');
 
@@ -20,36 +21,69 @@ const City = class City {
     this.cache = {};
     this.boss = new Boss(this);
     this.civilEngineer = new CivilEngineer(this);
+    this.controller = this.room.controller;
+    this.cache = new u.Cache();
   }
 
-  audit() {
-     // Get all the information about the room
-    this.controller = this.room.controller;
-    this.constructionSites = this.room.find(FIND_MY_CONSTRUCTION_SITES);
-    this.spawners = this.room.find(FIND_MY_SPAWNS);
+  get constructionSites() {
+    return this.cache.getValue('constructionSites', () =>
+      this.room.find(FIND_MY_CONSTRUCTION_SITES));
+  }
 
-     // Search for all citizens of the city - they may even be in other rooms!
-    _.each(this.room.find(FIND_MY_CREEPS, { filter: (c) => !c.memory.city }), (c) => {
-      c.memory.city = this.room.name;
-    });
+  get spawners() {
+    return this.cache.getValue('spawners', () =>
+      this.room.find(FIND_MY_SPAWNS));
+  }
 
-    this.citizens = _.map(
-      _.filter(Object.keys(Game.creeps),
-        (k) => Game.creeps[k].memory.city === this.room.name),
-      (k) => {
-        const c = Game.creeps[k];
-        c.city = this;
-        return c;
+  get citizens() {
+    return this.cache.getValue('citizens', () => {
+      // Search for all citizens of the city - they may even be in other rooms!
+      _.each(this.room.find(FIND_MY_CREEPS, { filter: (c) => !c.memory.city }), (c) => {
+        c.memory.city = this.room.name;
       });
 
-    this.enemies = this.room.find(FIND_HOSTILE_CREEPS);
-    this.structures = this.room.find(FIND_STRUCTURES);
-    this.sources = this.room.find(FIND_SOURCES);
-    this.minerals = this.room.find(FIND_MINERALS);
-    this.harvestSites = this.sources.concat(_.filter(this.minerals, (m) =>
-      m.pos.lookFor(LOOK_STRUCTURES).length > 0));
-    this.resources = this.room.find(FIND_DROPPED_ENERGY);
+      return _.map(
+        _.filter(Object.keys(Game.creeps),
+          (k) => Game.creeps[k].memory.city === this.room.name),
+        (k) => {
+          const c = Game.creeps[k];
+          c.city = this;
+          return c;
+        });
+    });
+  }
 
+  get enemies() {
+    return this.cache.getValue('enemies', () =>
+      this.room.find(FIND_HOSTILE_CREEPS));
+  }
+
+  get structures() {
+    return this.cache.getValue('structures', () =>
+      this.room.find(FIND_STRUCTURES));
+  }
+
+  get sources() {
+    return this.cache.getValue('sources', () =>
+      this.room.find(FIND_SOURCES));
+  }
+
+  get minerals() {
+    return this.cache.getValue('minerals', () =>
+      this.room.find(FIND_STRUCTURES));
+  }
+
+  get harvestSites() {
+    return this.cache.getValue('harvestSites', () =>
+      this.sources.concat(_.filter(this.minerals, (m) =>
+        m.pos.lookFor(LOOK_STRUCTURES).length > 0)));
+  }
+
+  get resources() {
+    return this.cache.getValue('minerals', () =>
+      this.room.find(FIND_DROPPED_ENERGY));
+  }
+  audit() {
     // Determine the number of various structures.
     let numRoads = 0;
     let numRamparts = 0;

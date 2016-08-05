@@ -330,7 +330,7 @@ CivilEngineer.monkeyPatch = function monkeyPatch() {
     const flags = room.find(FIND_FLAGS, { filter: (f) =>
       f.name.search(/Dismantle-.*-road/) !== -1,
     });
-    
+
     _.each(flags, (f) => f.remove());
   };
 };
