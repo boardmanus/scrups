@@ -194,7 +194,7 @@ const City = class City {
     }
 
     this.boss.audit();
-    this.civilEngineer.audit();
+    //this.civilEngineer.audit();
   }
 
   needsHelp() {
@@ -215,7 +215,7 @@ const City = class City {
   }
 
   run() {
-    this.civilEngineer.run();
+    //this.civilEngineer.run();
     this.boss.run();
   }
 };

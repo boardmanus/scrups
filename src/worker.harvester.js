@@ -48,6 +48,9 @@ const Harvester = {
       if (worker) {
         distance = worker.pos.getRangeTo(s);
       }
+      if (energyRatio < 0.01) {
+          energyRatio = 0.01;
+      }
       return distance / energyRatio;
     });
 

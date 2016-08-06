@@ -16,16 +16,6 @@ const Job = require('job');
 const Profiler = require('screeps-profiler');
 const u = require('utils');
 
-if (Memory.control && Memory.control.profile) {
-  /**
-   * Enable the profiler to see where we're wasting cpu...
-   */
-  console.log('!!!!! ENABLING PROFILER !!!!!');
-  Profiler.enable();
-} else {
-  console.log('!!!!! NOT ENABLING PROFILER !!!!!');
-}
-
 
 function oldlogic(country) {
   country.cities.forEach((city) => {
@@ -111,20 +101,40 @@ function oldlogic(country) {
     city.citizens.forEach((worker) => Worker.work(worker));
   });
 }
+
+function updateProfiling() {
+  if (!Memory.control) {
+    Memory.control = { profile: false };
+  }
+
+    // Enable the profiler if controlled to do so.
+  if (Memory.control.profile) {
+    /**
+     * Enable the profiler to see where we're wasting cpu...
+     */
+    console.log('!!!!! ENABLING PROFILER !!!!!');
+    Profiler.enable();
+    Profiler.registerObject(Country, 'Country');
+    Profiler.registerObject(City, 'City');
+    Profiler.registerObject(Boss, 'Boss');
+    Profiler.registerObject(CivilEngineer, 'CivilEngineer');
+    Profiler.registerObject(Peon, 'Peon');
+    Profiler.registerObject(Job, 'Job');
+    Profiler.registerFN(oldlogic);
+  }
+}
+
+updateProfiling();
+
 /**
   * Mainloop of the screeps application
   */
 module.exports.loop = function mainLoop() {
+  const startUsed = Game.cpu.getUsed();
+  const startLimit = Game.cpu.tickLimit;
   Country.monkeyPatch();
-  Profiler.registerObject(Country, 'Country');
-  Profiler.registerObject(City, 'City');
-  Profiler.registerObject(Boss, 'Boss');
-  Profiler.registerObject(CivilEngineer, 'CivilEngineer');
-  Profiler.registerObject(Peon, 'Peon');
-  Profiler.registerObject(Job, 'Job');
-  Profiler.registerFN(oldlogic);
 
-  Profiler.wrap(() => {
+  //Profiler.wrap(() => {
     Object.keys(Memory.creeps).forEach((name) => {
       if (!Game.creeps[name]) {
         delete Memory.creeps[name];
@@ -137,5 +147,10 @@ module.exports.loop = function mainLoop() {
     country.audit();
     country.run();
     oldlogic(country);
-  });
+    
+  //});
+  const endUsed = Game.cpu.getUsed();
+  const endLimit = Game.cpu.tickLimit;
+  console.log(`CPU: end=${endUsed} - start=${startUsed} = totalUsed=${endUsed - startUsed}`);
+  console.log(`CPU: startLimit=${startLimit} - endLimit=${endLimit} = usedLimit=${startLimit - endLimit}`);
 };

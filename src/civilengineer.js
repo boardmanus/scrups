@@ -229,10 +229,12 @@ const CivilEngineer = class CivilEngineer {
    * @return the current steps on that position.
    */
   registerMovement(creep) {
+      /*
     const gridPos = this.movementGrid[creep.pos.y][creep.pos.x];
     gridPos.steps += gridPos.cost;
     gridPos.totalSteps += gridPos.cost;
     return gridPos.steps;
+    */
   }
 
 
