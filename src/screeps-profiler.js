@@ -1,5 +1,4 @@
 let usedOnStart = 0;
-let enabled = false;
 let depth = 0;
 
 
@@ -7,19 +6,6 @@ function resetMemory() {
   Memory.profiler = null;
 }
 
-function setupMemory(profileType, duration, filter) {
-  resetMemory();
-  if (!Memory.profiler) {
-    Memory.profiler = {
-      map: {},
-      totalTime: 0,
-      enabledTick: Game.time,
-      disableTick: Game.time + duration,
-      type: profileType,
-      filter,
-    };
-  }
-}
 
 function overloadCPUCalc() {
   if (Game.rooms.sim) {
@@ -28,24 +14,6 @@ function overloadCPUCalc() {
       return performance.now() - usedOnStart;
     };
   }
-}
-
-function setupProfiler() {
-  depth = 0; // reset depth, this needs to be done each tick.
-  Game.profiler = {
-    stream(duration, filter) {
-      setupMemory('stream', duration || 10, filter);
-    },
-    email(duration, filter) {
-      setupMemory('email', duration || 100, filter);
-    },
-    profile(duration, filter) {
-      setupMemory('profile', duration || 100, filter);
-    },
-    reset: resetMemory,
-  };
-
-  overloadCPUCalc();
 }
 
 
@@ -122,7 +90,8 @@ const Profiler = {
   },
 
   endTick() {
-    if (Game.time >= Memory.profiler.enabledTick) {
+    if (Memory.profiler.enabledTick > 0 &&
+          Game.time >= Memory.profiler.enabledTick) {
       const cpuUsed = Game.cpu.getUsed();
       Memory.profiler.totalTime += cpuUsed;
       Profiler.report();
@@ -138,7 +107,7 @@ const Profiler = {
   },
 
   isProfiling() {
-    return enabled && !!Memory.profiler && Game.time <= Memory.profiler.disableTick;
+    return !!Memory.profiler && Game.time <= Memory.profiler.disableTick;
   },
 
   type() {
@@ -159,25 +128,32 @@ const Profiler = {
 
 function wrapFunction(name, originalFunction) {
   return function wrappedFunction() {
-    if (Profiler.isProfiling()) {
-      const nameMatchesFilter = name === getFilter();
-      const start = Game.cpu.getUsed();
-      if (nameMatchesFilter) {
-        depth++;
-      }
-      const result = originalFunction.apply(this, arguments);
-      if (depth > 0 || !getFilter()) {
-        const end = Game.cpu.getUsed();
-        Profiler.record(name, end - start);
-      }
-      if (nameMatchesFilter) {
-        depth--;
-      }
-      return result;
+    const nameMatchesFilter = name === getFilter();
+    const start = Game.cpu.getUsed();
+    if (nameMatchesFilter) {
+      depth++;
     }
-
-    return originalFunction.apply(this, arguments);
+    const result = originalFunction.apply(this, arguments);
+    if (depth > 0 || !getFilter()) {
+      const end = Game.cpu.getUsed();
+      Profiler.record(name, end - start);
+    }
+    if (nameMatchesFilter) {
+      depth--;
+    }
+    return result;
   };
+}
+
+function unprofileFunction(fn, functionName) {
+  const fnName = functionName || fn.name;
+  if (!fnName) {
+    console.log('Couldn\'t find a function name for - ', fn);
+    console.log('Will not profile this function.');
+    return fn;
+  }
+
+  return unwrapFunction(fnName, fn);
 }
 
 function profileFunction(fn, functionName) {
@@ -189,6 +165,30 @@ function profileFunction(fn, functionName) {
   }
 
   return wrapFunction(fnName, fn);
+}
+
+function unprofileObjectFunctions(object, label) {
+  const objectToWrap = object.prototype ? object.prototype : object;
+
+  Object.getOwnPropertyNames(objectToWrap).forEach(functionName => {
+    const descriptor = Object.getOwnPropertyDescriptor(objectToWrap, functionName);
+    const extendedLabel = `${label}.${functionName}`;
+    if (descriptor.get) {
+      descriptor.get = unprofileFunction(descriptor.get, extendedLabel);
+    } else if (descriptor.set) {
+      descriptor.set = unprofileFunction(descriptor.set, extendedLabel);
+    } else {
+      if (!descriptor.value ||
+            typeof descriptor.value !== 'function' ||
+            functionName === 'getUsed') {
+        return;
+      }
+      objectToWrap[functionName] =
+        unprofileFunction(objectToWrap[functionName], extendedLabel);
+    }
+  });
+
+  return objectToWrap;
 }
 
 function profileObjectFunctions(object, label) {
@@ -216,50 +216,90 @@ function profileObjectFunctions(object, label) {
 }
 
 function hookUpPrototypes() {
-  Profiler.prototypes.forEach(proto => {
-    profileObjectFunctions(proto.val, proto.name);
-  });
+  _.each(Profiler.prototypes, (proto) =>
+    profileObjectFunctions(proto.val, proto.name)
+  );
+  _.each(Memory.profiler.registeredObjects, (r) =>
+    profileObjectFunctions(r.val, r.name)
+  );
+  _.each(Memory.profiler.registeredFunctions, (r) =>
+    profileFunction(r.val, r.name)
+  );
 }
+
+function setupMemory(profileType, duration, filter) {
+  if (!Memory.profiler) {
+    hookUpPrototypes();
+  }
+
+  resetMemory();
+  depth = 0; // reset depth, this needs to be done each tick.
+  const startTime = Game.time + 1;
+  Memory.profiler = {
+    map: {},
+    totalTime: 0,
+    enabledTick: startTime,
+    disableTick: startTime + duration,
+    type: profileType,
+    filter,
+  };
+}
+
+function setupProfiler() {
+  Game.profiler = {
+    stream(duration, filter) {
+      setupMemory('stream', duration || 10, filter);
+    },
+    email(duration, filter) {
+      setupMemory('email', duration || 100, filter);
+    },
+    profile(duration, filter) {
+      setupMemory('profile', duration || 100, filter);
+    },
+    reset: resetMemory,
+  };
+
+  overloadCPUCalc();
+}
+
+setupProfiler();
 
 module.exports = {
   wrap(callback) {
-    if (enabled) {
-      setupProfiler();
-    }
+    const callbackStart = Game.cpu.getUsed();
+    const returnVal = callback();
+    const callbackEnd = Game.cpu.getUsed();
+    const callbackTime = callbackEnd - callbackStart;
+    console.log(`CPU: callbackUsed=${callbackTime}`);
 
-    if (Profiler.isProfiling()) {
-      usedOnStart = Game.cpu.getUsed();
-
-      // Commented lines are part of an on going experiment to keep the profiler
-      // performant, and measure certain types of overhead.
-
-      const callbackStart = Game.cpu.getUsed();
-      const returnVal = callback();
-      const callbackEnd = Game.cpu.getUsed();
+    if (Memory.profiler.enabledTick > 0) {
       Profiler.endTick();
-      const end = Game.cpu.getUsed();
-
-      const profilerTime = (end - usedOnStart) - (callbackEnd - callbackStart);
-      const callbackTime = callbackEnd - callbackStart;
-      const unaccounted = end - profilerTime - callbackTime;
-      console.log('total-', end, 'profiler-', profilerTime, 'callbacktime-',
-      callbackTime, 'start-', usedOnStart, 'unaccounted', unaccounted);
-      return returnVal;
+      const profilerEnd = Game.cpu.getUsed();
+      // const profilerTime = (profilerEnd - callbackEnd) + Memory.profiler.overhead;
+      console.log(`CPU: profilerUsed=${profilerTime}`);
     }
 
-    return callback();
+    return returnVal;
   },
-
+/*
   enable() {
     enabled = true;
-    hookUpPrototypes();
+    //hookUpPrototypes();
+  },
+*/
+  registerObject(obj, label) {
+    if (!Memory.profiler.registeredObjects) {
+      Memory.profiler.registeredObjects = [];
+    }
+    Memory.profiler.registeredObjects.push({ val: obj, name: label });
+    // return profileObjectFunctions(object, label);
   },
 
-  registerObject(object, label) {
-    return profileObjectFunctions(object, label);
-  },
-
-  registerFN(fn, functionName) {
-    return profileFunction(fn, functionName);
+  registerFN(fn, label) {
+    if (!Memory.profiler.registeredFunctions) {
+      Memory.profiler.registeredFunctions = [];
+    }
+    Memory.profiler.registeredFunctions.push({ val: fn, name: label });
+    // return profileFunction(fn, functionName);
   },
 };

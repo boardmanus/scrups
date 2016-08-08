@@ -102,18 +102,10 @@ function oldlogic(country) {
   });
 }
 
-function updateProfiling() {
-  if (!Memory.control) {
-    Memory.control = { profile: false };
-  }
-
-    // Enable the profiler if controlled to do so.
-  if (Memory.control.profile) {
+function initProfiling() {
     /**
      * Enable the profiler to see where we're wasting cpu...
      */
-    console.log('!!!!! ENABLING PROFILER !!!!!');
-    Profiler.enable();
     Profiler.registerObject(Country, 'Country');
     Profiler.registerObject(City, 'City');
     Profiler.registerObject(Boss, 'Boss');
@@ -122,20 +114,16 @@ function updateProfiling() {
     Profiler.registerObject(Job, 'Job');
     Profiler.registerFN(oldlogic);
   }
-}
 
-updateProfiling();
+initProfiling();
+Country.monkeyPatch();
+
 
 /**
   * Mainloop of the screeps application
   */
 module.exports.loop = function mainLoop() {
-  const startUsed = Game.cpu.getUsed();
-  const startLimit = Game.cpu.tickLimit;
-  const startBucket = Game.cpu.bucket;
-  Country.monkeyPatch();
-
-  //Profiler.wrap(() => {
+  Profiler.wrap(() => {
     Object.keys(Memory.creeps).forEach((name) => {
       if (!Game.creeps[name]) {
         delete Memory.creeps[name];
@@ -148,12 +136,5 @@ module.exports.loop = function mainLoop() {
     country.audit();
     country.run();
     oldlogic(country);
-    
-  //});
-  const endUsed = Game.cpu.getUsed();
-  const endLimit = Game.cpu.tickLimit;
-  const endBucket = Game.cpu.bucket;
-  console.log(`CPU: end=${endUsed} - start=${startUsed} = totalUsed=${endUsed - startUsed}`);
-  console.log(`CPU: startLimit=${startLimit} - endLimit=${endLimit} = usedLimit=${startLimit - endLimit}`);
-  console.log(`CPU: startBucket=${startBucket} - endBucket=${endBucket} = usedBucket=${startBucket - endBucket}`);
+  });
 };
