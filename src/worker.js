@@ -197,6 +197,10 @@ const Worker = {
       return worker;
     }
 
+    if (Game.time % 5 >= 0) {
+        worker.say(`${worker.memory.operation}`);
+    }
+    
     switch (worker.memory.operation) {
       case Waiter.OPERATION:
         return Worker.wait(worker);

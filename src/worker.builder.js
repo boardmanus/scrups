@@ -34,7 +34,8 @@ const Builder = {
         case STRUCTURE_EXTENSION: return 21;
         case STRUCTURE_RAMPART: return 9;
         case STRUCTURE_STORAGE: return 25;
-        case STRUCTURE_LAB: return 26;
+        case STRUCTURE_LINK: return 26;
+        case STRUCTURE_LAB: return 27;
         case STRUCTURE_ROAD: return 30;
         default: break;
       }

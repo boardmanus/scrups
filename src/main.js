@@ -132,6 +132,7 @@ updateProfiling();
 module.exports.loop = function mainLoop() {
   const startUsed = Game.cpu.getUsed();
   const startLimit = Game.cpu.tickLimit;
+  const startBucket = Game.cpu.bucket;
   Country.monkeyPatch();
 
   //Profiler.wrap(() => {
@@ -151,6 +152,8 @@ module.exports.loop = function mainLoop() {
   //});
   const endUsed = Game.cpu.getUsed();
   const endLimit = Game.cpu.tickLimit;
+  const endBucket = Game.cpu.bucket;
   console.log(`CPU: end=${endUsed} - start=${startUsed} = totalUsed=${endUsed - startUsed}`);
   console.log(`CPU: startLimit=${startLimit} - endLimit=${endLimit} = usedLimit=${startLimit - endLimit}`);
+  console.log(`CPU: startBucket=${startBucket} - endBucket=${endBucket} = usedBucket=${startBucket - endBucket}`);
 };
