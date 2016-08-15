@@ -28,12 +28,16 @@ module.exports = {
     return `unknown-${obj}`;
   },
 
-  Cache: function Cache() {
-    this.getValue = function getValue(key, fn) {
+  Cache: class Cache {
+    getValue(key, fn) {
       if (!this[key]) {
         this[key] = fn();
       }
       return this[key];
-    };
-  },
+    }
+
+    reset(key) {
+      this[key] = null;
+    }
+  }
 };
