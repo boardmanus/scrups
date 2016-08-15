@@ -15,34 +15,28 @@
     "node": ">= 0.8.0"
   },
   "scripts": {
-    "test": "./node_modules/.bin/mocha --require screeps/mocha-requires.js",
-    "mocha": "./node_modules/.bin/mocha --require screeps/mocha-requires.js"
-  },
-  "devDependencies": {
-    "eslint-config-airbnb": "*",
-    "eslint-plugin-lodash-fp": "^2.0.0",
-    "grunt": "*",
-    "grunt-contrib-clean": "*",
-    "grunt-contrib-nodeunit": "*",
-    "grunt-eslint": "*",
-    "grunt-git": "*",
-    "grunt-screeps": "*",
-    "nock": "*",
-    "underscore": "*"
+    "test": "./node_modules/.bin/mocha",
+    "mocha": "./node_modules/.bin/mocha"
   },
   "keywords": [
     "screeps"
   ],
   "main": "Gruntfile.js",
   "dependencies": {
+    "app-module-path": "^1.1.0",
     "babel-register": "^6.9.0",
     "chai": "^3.5.0",
+    "eslint": "^3.3.0",
+    "eslint-config-google": "^0.6.0",
     "eslint-plugin-chai-expect": "^1.1.1",
     "grunt": "*",
     "grunt-contrib-clean": "*",
+    "grunt-contrib-nodeunit": "*",
+    "grunt-eslint": "*",
     "grunt-git": "*",
     "grunt-screeps": "*",
-    "mocha": "^2.5.3",
-    "underscore": "*"
+    "lodash": "^3.10.0",
+    "mocha": "^3.0.0",
+    "sinon": "^1.17.5"
   }
 }
