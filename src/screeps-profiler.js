@@ -16,7 +16,7 @@ function setupMemory(profileType, duration, filter) {
       enabledTick: Game.time,
       disableTick: Game.time + duration,
       type: profileType,
-      filter,
+      filter
     };
   }
 }
@@ -42,12 +42,11 @@ function setupProfiler() {
     profile(duration, filter) {
       setupMemory('profile', duration || 100, filter);
     },
-    reset: resetMemory,
+    reset: resetMemory
   };
 
   overloadCPUCalc();
 }
-
 
 function getFilter() {
   return Memory.profiler.filter;
@@ -69,8 +68,7 @@ const Profiler = {
       `Avg: ${(Memory.profiler.totalTime / elapsedTicks).toFixed(2)}`,
       `Total: ${Memory.profiler.totalTime.toFixed(2)}`,
       `Ticks: ${elapsedTicks}`,
-      `Percentage: ${Memory.profiler.totalTime / elapsedTicks
-        / Game.cpu.limit.toFixed(2)}`,
+      `Percentage: ${Memory.profiler.totalTime / elapsedTicks / Game.cpu.limit.toFixed(2)}`
     ].join('\t');
     return [].concat(header, Profiler.lines().slice(0, 50), footer).join('\n');
   },
@@ -84,7 +82,7 @@ const Profiler = {
         calls: functionCalls.calls,
         totalTime: functionCalls.time,
         averageTime: functionCalls.time / functionCalls.calls,
-        percentage: functionCalls.time / Game.cpu.limit * 100,
+        percentage: functionCalls.time / Game.cpu.limit * 100
       };
     }).sort((val1, val2) => val2.totalTime - val1.totalTime);
 
@@ -93,28 +91,28 @@ const Profiler = {
       data.totalTime.toFixed(1),
       data.averageTime.toFixed(3),
       data.percentage.toFixed(2),
-      data.name,
+      data.name
     ].join('\t\t'));
 
     return lines;
   },
 
   prototypes: [
-    { name: 'Game', val: Game },
-    { name: 'Room', val: Room },
-    { name: 'Structure', val: Structure },
-    { name: 'Spawn', val: Spawn },
-    { name: 'Creep', val: Creep },
-    { name: 'RoomPosition', val: RoomPosition },
-    { name: 'Source', val: Source },
-    { name: 'Flag', val: Flag },
+    {name: 'Game', val: Game},
+    {name: 'Room', val: Room},
+    {name: 'Structure', val: Structure},
+    {name: 'Spawn', val: Spawn},
+    {name: 'Creep', val: Creep},
+    {name: 'RoomPosition', val: RoomPosition},
+    {name: 'Source', val: Source},
+    {name: 'Flag', val: Flag}
   ],
 
   record(functionName, time) {
     if (!Memory.profiler.map[functionName]) {
       Memory.profiler.map[functionName] = {
         time: 0,
-        calls: 0,
+        calls: 0
       };
     }
     Memory.profiler.map[functionName].calls++;
@@ -154,7 +152,7 @@ const Profiler = {
 
   shouldEmail() {
     return Profiler.type() === 'email' && Memory.profiler.disableTick === Game.time;
-  },
+  }
 };
 
 function wrapFunction(name, originalFunction) {
@@ -261,5 +259,5 @@ module.exports = {
 
   registerFN(fn, functionName) {
     return profileFunction(fn, functionName);
-  },
+  }
 };

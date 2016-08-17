@@ -4,6 +4,15 @@
 
 const Job = require('job');
 
+Creep.proto.energy = function() {
+  return this.carry[RESOURCE_ENERGY];
+};
+
+Creep.proto.energyCapacity = function() {
+  return this.carryCapacity;
+};
+
+
 
 function adjustPriority(instance, priority) {
   let newPriority = priority;
@@ -115,10 +124,16 @@ const JobRepair = class JobRepair extends Job {
   /**
    * The ratio of work remaining to repair.
    */
-  completionRatio() {
+  completion() {
     return damageRatio(this.site);
   }
 
+  workerCompletion() {
+    if (worker === null) {
+      return 1.0;
+    }
+    return 1.0 - this.worker.energy() / this.worker.energyCapacity();
+  }
 
   /**
    * Determine the energy required to finish repairs

@@ -5,6 +5,23 @@
 const Job = require('job');
 
 
+Mineral.prototype.completion = function() {
+  return this.store / this.storeCapacity;
+};
+
+Mineral.prototype.available = function() {
+  return this.store;
+};
+
+Source.prototype.completion = function() {
+  return this.energy / this.energyCapacity;
+};
+
+Source.prototype.available = function() {
+  return this.energy;
+};
+
+
 /**
  * Determines the priority based on a generic ratio
  * @param ratio where 0.0 is low importance, 1.0 is high.
@@ -22,38 +39,6 @@ function ratioPriority(ratio) {
 }
 
 
-function mineralCompletion(mineral) {
-  return mineral.store / mineral.storeCapacity;
-}
-
-
-function sourceCompletion(source) {
-  return source.energy / source.energyCapacity;
-}
-
-
-/**
- * Determines the priority of a job at a mineral source.
- * @param mineral the mineral site for the job
- * @param harvestRatio the proportion available for harvest
- * @return the priority of harvesting the mineral
- */
-function mineralPriority(mineral, harvestRatio) {
-  return ratioPriority(mineralCompletion(mineral) * harvestRatio);
-}
-
-
-/**
- * Determines the priority of a job at an energy source.
- * @param source the source site for the job
- * @param harvestRatio the proportion available for harvest
- * @return the priority of harvesting the source
- */
-function sourcePriority(source, harvestRatio) {
-  return ratioPriority(sourceCompletion(source) * harvestRatio);
-}
-
-
 const JobHarvest = class JobHarvest extends Job {
 
   /**
@@ -64,15 +49,6 @@ const JobHarvest = class JobHarvest extends Job {
    */
   constructor(site, instance, worker = null) {
     super(JobHarvest.TYPE, site, instance, worker);
-    if (this.site instanceof Mineral) {
-      this.harvestRatio = (1.0 - mineralCompletion(site)) / instance;
-      this.fPriority = mineralPriority;
-    } else if (this.site instanceof Source) {
-      this.harvestRatio = (1.0 - sourceCompletion(site)) / instance;
-      this.fPriority = sourcePriority;
-    } else {
-      this.fPriority = () => Job.Priority.IGNORE;
-    }
   }
 
 
@@ -80,12 +56,13 @@ const JobHarvest = class JobHarvest extends Job {
   * Determines the priority of the job with respect to the game state.
   */
   priority() {
-    return this.fPriority(this.site, this.harvestRatio);
+    const completion = this.site.completion();
+    return ratioPriority(completion * (1.0 - completion) / this.instance);
   }
 
 
   /**
-   * No energy is required to harvest energy.
+   * No energy is required to harvest.
    */
   energyRequired() {
     return 0.0;
@@ -94,13 +71,23 @@ const JobHarvest = class JobHarvest extends Job {
 
   /**
    * Completion is determined by how much energy is left at the site
+   * @return {number} the job completion ratio
    */
-  completionRatio() {
-    if (this.worker == null) {
-      return 0.0;
+  completion() {
+    return this.site.completion();
+  }
+
+
+  /**
+   * Worker completion is when the worker is full of energy/minerals
+   * @return {number} the completion ratio (1.0 complete)
+   */
+  workerCompletion() {
+    if (this.worker === null) {
+      return 1.0;
     }
 
-    return this.worker.carryRatio();
+    return _.sum(this.worker.carry) / this.worker.carryCapacity;
   }
 };
 

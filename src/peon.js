@@ -3,7 +3,6 @@
  */
 const Job = require('./job.all');
 
-
 const Peon = class Peon {
 
   constructor(city, creep) {
@@ -14,7 +13,6 @@ const Peon = class Peon {
     this.phase = creep.memory.phase;
     this.jobId = creep.memory.jobId;
   }
-
 
   info() {
     return `peon-${this.creep.name}`;
@@ -33,14 +31,12 @@ const Peon = class Peon {
     }
   }
 
-
   /**
    * @return an array of job types the peon can work.
    */
   specialization() {
     return Peon.SPECIALIZATION;
   }
-
 
   /**
    * @return the ratio of carried energy to capacity.
@@ -53,7 +49,6 @@ const Peon = class Peon {
     return _.sum(this.creep.carry) / this.creep.carryCapacity;
   }
 
-
   /**
    * Determines whether the peon can work a particular job.
    * @param job the job to test
@@ -62,7 +57,6 @@ const Peon = class Peon {
   canWorkJob(job) {
     return this.specialization().indexOf(job.type) !== -1;
   }
-
 
   /**
    * Determines the best site to collect energy from for the job.
@@ -74,7 +68,6 @@ const Peon = class Peon {
 
     return this.city.bestCollectionSite(this.creep.pos);
   }
-
 
   /**
    * Determines whether the peon needs to collect extra energy to perform the
@@ -137,8 +130,7 @@ Peon.SPECIALIZATION = [
   Job.Harvest.TYPE,
   Job.Store.TYPE,
   Job.Repair.TYPE,
-  Job.Upgrade.TYPE,
+  Job.Upgrade.TYPE
 ];
-
 
 module.exports = Peon;

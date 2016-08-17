@@ -44,10 +44,34 @@ const Job = class Job {
   }
 
   /**
-   * Determines the completion ration of the job.
+   * Determines the completion ratio of the job.
    * @return {number} the completion ratio [0.0, 1.0]
    */
-  completionRatio() {
+  completion() {
+    return 0.0;
+  }
+
+  /**
+   * Determines the completion ratio of the worker job.
+   * If no worker is assigned, the ration is 1.0
+   * @return {number} the completion ratio [0.0, 1.0]
+   */
+  workerCompletion() {
+    return 1.0;
+  }
+
+  /**
+   * Determines how suitable a worker is for a particular job.
+   * @param {object} worker of some kind
+   * @return {number} suitability of the worker (0.0 - not suitable, 1.0, very sutiable)
+   */
+  workerSuitability(worker = null) {
+    let testWorker = worker || this.worker;
+    if (testWorker === null) {
+      return 0.0;
+    } else if (worker instanceof Creep) {
+      return 1.0;
+    }
     return 0.0;
   }
 
@@ -64,7 +88,7 @@ const Job = class Job {
    * @return {boolean} whether the job is complete
    */
   isComplete() {
-    return this.completionRatio() === 1.0;
+    return this.completion() === 1.0;
   }
 
   /**

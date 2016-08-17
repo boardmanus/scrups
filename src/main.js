@@ -16,29 +16,28 @@ const Job = require('job');
 const Profiler = require('screeps-profiler');
 const u = require('utils');
 
-
 function oldlogic(country) {
-  country.cities.forEach((city) => {
+  country.cities.forEach(city => {
   // RoomInfo.init(room);
-    const upgraders = city.citizens.filter((w) =>
+    const upgraders = city.citizens.filter(w =>
       w.memory.operation === Upgrader.OPERATION);
 
-    const claimers = city.citizens.filter((w) =>
+    const claimers = city.citizens.filter(w =>
       w.memory.operation === Claimer.OPERATION);
-    const builders = city.citizens.filter((w) =>
+    const builders = city.citizens.filter(w =>
       w.memory.operation === Builder.OPERATION);
-    const repairers = city.citizens.filter((w) =>
+    const repairers = city.citizens.filter(w =>
       w.memory.operation === Repairer.OPERATION);
-    const harvesters = city.citizens.filter((w) =>
+    const harvesters = city.citizens.filter(w =>
       w.memory.operation === Harvester.OPERATION);
-    const storers = city.citizens.filter((w) =>
+    const storers = city.citizens.filter(w =>
       w.memory.operation === Storer.OPERATION);
-    const waiters = city.citizens.filter((w) =>
+    const waiters = city.citizens.filter(w =>
       w.memory.operation === Waiter.OPERATION);
-    const dismantlers = city.citizens.filter((w) =>
+    const dismantlers = city.citizens.filter(w =>
       w.memory.operation === Dismantler.OPERATION);
 
-    city.spawners.forEach((spawner) => {
+    city.spawners.forEach(spawner => {
       if (spawner.spawning) {
         return;
       }
@@ -46,7 +45,7 @@ function oldlogic(country) {
       if (claimers.length === 0 &&
         Claimer.have_controller_to_claim()) {
         const w = Worker.create(spawner, {
-          claimer: true,
+          claimer: true
         });
         if (w) {
           console.log(`Adding new claimer ${u.name(w)}`);
@@ -64,9 +63,8 @@ function oldlogic(country) {
       }
     });
 
-
     console.log(`${u.name(city.room)} workers: ${claimers.length} claimers, ${upgraders.length} upgraders, ${builders.length} builders, ${repairers.length} repairers, ${harvesters.length} harvesters, ${storers.length} storers, ${dismantlers.length} dismantlers and ${waiters.length} waiters.`);
-    city.towers.forEach((t) => {
+    city.towers.forEach(t => {
       console.log(`${u.name(t)} has ${t.energy}/${t.energyCapacity} energy available (room has ${city.room.energyAvailable}/${city.room.energyCapacityAvailable}).`);
       if (t.energy === 0) {
         return;
@@ -81,7 +79,7 @@ function oldlogic(country) {
         }
 
         let rs = _.filter(city.repairableSites, Repairer.should_repair);
-        rs = _.sortBy(rs, (s) => Repairer.repair_weighting(t.pos, s));
+        rs = _.sortBy(rs, s => Repairer.repair_weighting(t.pos, s));
         console.log(`${u.name(t)} has ${rs.length} repairable structures`);
         if (rs.length > 0) {
           const s = rs[0];
@@ -98,13 +96,13 @@ function oldlogic(country) {
       }
     });
 
-    city.citizens.forEach((worker) => Worker.work(worker));
+    city.citizens.forEach(worker => Worker.work(worker));
   });
 }
 
 function updateProfiling() {
   if (!Memory.control) {
-    Memory.control = { profile: false };
+    Memory.control = {profile: false};
   }
 
     // Enable the profiler if controlled to do so.
@@ -135,21 +133,21 @@ module.exports.loop = function mainLoop() {
   const startBucket = Game.cpu.bucket;
   Country.monkeyPatch();
 
-  //Profiler.wrap(() => {
-    Object.keys(Memory.creeps).forEach((name) => {
-      if (!Game.creeps[name]) {
-        delete Memory.creeps[name];
-        console.log('Clearing non-existing creep memory:', name);
-      }
-    });
+  // Profiler.wrap(() => {
+  Object.keys(Memory.creeps).forEach(name => {
+    if (!Game.creeps[name]) {
+      delete Memory.creeps[name];
+      console.log('Clearing non-existing creep memory:', name);
+    }
+  });
 
-    const country = new Country();
-    Game.country = country;
-    country.audit();
-    country.run();
-    oldlogic(country);
-    
-  //});
+  const country = new Country();
+  Game.country = country;
+  country.audit();
+  country.run();
+  oldlogic(country);
+
+  // });
   const endUsed = Game.cpu.getUsed();
   const endLimit = Game.cpu.tickLimit;
   const endBucket = Game.cpu.bucket;
