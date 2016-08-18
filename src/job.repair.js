@@ -4,14 +4,61 @@
 
 const Job = require('job');
 
-Creep.proto.energy = function() {
-  return this.carry[RESOURCE_ENERGY];
+
+Creep.proto.repairSuitability = function(site) {
+  // Creeps are suitable for repair if it's a big job.
+  // Leave the small jobs to the towers.
+  const energyForRepair = this.energy;
+  if (energyForRepair === 0) {
+    return 0.0;
+  }
+
+  // If the creep is right next to the site, it's super suitable
+  const range = this.pos.rangeTo(site);
+  if (range <= 1) {
+    return 1.0;
+  }
+
+  const workParts = this.getActiveBodyparts(WORK);
+  const repairHitsRequired = (site.hitsMax - site.hits);
+  const repairHitsPerTick = 100 * workParts;
+  const repairEnergyRequired = repairHitsRequired / 100;
 };
 
-Creep.proto.energyCapacity = function() {
-  return this.carryCapacity;
-};
+StructureTower.proto.repairSuitability = function(site) {
+  // If the tower can't repair anything, it's not suitable for the job.
+  const energyForRepair = this.energyForRepair();
+  if (energyForRepair < 10) {
+    return 0.0;
+  }
 
+  // The tower repairs close things super-duper effectively
+  const range = this.pos.rangeTo(site);
+  if (range <= 5) {
+    return 1.0;
+  }
+
+  // If the tower can heal in one shot, it's rather effective.
+  const repairHitsRequired = site.hitsMax - site.hits;
+  const repairHitsPerTick = 200 + (range - 5) / 20 * 600;
+  if (repairHitsRequired < repairHitsPerTick) {
+    return 1.0;
+  }
+
+  // If the structure can be repaired by the tower, then base the suitability
+  // on it's effectiveness
+  const repairEffectiveness = repairHitsPerTick / 800;
+  if (energyForRepair > energyToRepair) {
+    return 0.5 + 0.5 * repairEffectiveness;
+  }
+
+  // Otherwise, the sutiability depends on the effectiveness, and how long it
+  // will take.
+  const ticksForRepair = Math.max(20, repairHitsRequired / repairHitsPerTick);
+  const energyToRepair = ticksForRepair * 10;
+  const timeEffectiveness = 1.0 - ticksForRepair / 20.0;
+  return 0.5 * (timeEffectiveness + repairEffectiveness);
+};
 
 
 function adjustPriority(instance, priority) {
@@ -94,6 +141,9 @@ const JobRepair = class JobRepair extends Job {
 
   constructor(site, instance, worker = null) {
     super(JobRepair.TYPE, site, instance, worker);
+    if (!site instanceof Structure) {
+      throw new TypeError(`Can only repair structures! (site is a ${typeof site})`);
+    }
   }
 
 
@@ -133,6 +183,21 @@ const JobRepair = class JobRepair extends Job {
       return 1.0;
     }
     return 1.0 - this.worker.energy() / this.worker.energyCapacity();
+  }
+
+  /**
+   * Determines the suitability of a worker for a repair job.
+   * @param {object} testWorker the worker to test (job worker if null)
+   * @return {number} the suitability of the worker
+   */
+  workerSuitability(testWorker = null) {
+    const worker = testWorker || this.worker;
+    if (!worker ||
+        (!(worker instanceof Creep) && !(worker instanceof StructureTower))) {
+      return 0.0;
+    }
+
+    return worker.repairSuitability(this.site);
   }
 
   /**

@@ -3,6 +3,30 @@
  */
 const u = require('utils');
 
+
+Creep.proto.weight = function weight() {
+  return (this.body.length -
+    this.getActiveBodyparts(MOVE) -
+    this.getActiveBodyparts(CARRY) +
+    _.sum(this.carry) / 50);
+};
+
+/**
+ * Define some extra properties for creeps to allow polymorphism.
+ */
+Object.defineProperty(Creep.proto, 'energy', {
+  get: function energy() {
+    return this.carry[RESOURCE_ENERGY];
+  }
+});
+
+Object.defineProperty(Creep.proto, 'energyCapacity', {
+  get: function energyCapacity() {
+    return this.carryCapacity;
+  }
+});
+
+
 const Job = class Job {
 
   /**
@@ -13,6 +37,9 @@ const Job = class Job {
    * @param {Creep} worker worker assigned to the job (optional)
    */
   constructor(type, site, instance, worker = null) {
+    if (!site) {
+      throw new RangeError(`The site of a job can not be null`);
+    }
     this.type = type;
     this.site = site;
     this.instance = instance;
@@ -131,5 +158,6 @@ Job.Priority = {
     return p - 1;
   }
 };
+
 
 module.exports = Job;
