@@ -4,23 +4,28 @@
 const u = require('utils');
 
 
-Creep.proto.weight = function weight() {
+/**
+ * Determine the weight of the creep
+ * @return {number} weight of the creep
+ */
+Creep.prototype.weight = function weight() {
   return (this.body.length -
     this.getActiveBodyparts(MOVE) -
     this.getActiveBodyparts(CARRY) +
     _.sum(this.carry) / 50);
 };
 
+
 /**
  * Define some extra properties for creeps to allow polymorphism.
  */
-Object.defineProperty(Creep.proto, 'energy', {
+Object.defineProperty(Creep.prototype, 'energy', {
   get: function energy() {
     return this.carry[RESOURCE_ENERGY];
   }
 });
 
-Object.defineProperty(Creep.proto, 'energyCapacity', {
+Object.defineProperty(Creep.prototype, 'energyCapacity', {
   get: function energyCapacity() {
     return this.carryCapacity;
   }
