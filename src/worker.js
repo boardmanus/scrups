@@ -113,13 +113,13 @@ const Worker = {
     } else if (city.citizens.length < 5) {
       maxCost = Math.max(maxCost / 3, 2 * minCost);
     } else if (city.citizens.length < 7) {
-      minCost = Math.min(2 * MIN_COST, maxCost);
+      minCost = Math.min(2 * MIN_COST, city.room.energyCapacityAvailable);
       maxCost = Math.max(maxCost / 2, minCost);
     } else if (city.citizens.length < 9) {
-      minCost = 3 * MIN_COST;
+      minCost = Math.min(3 * MIN_COST, city.room.energyCapacityAvailable);
       maxCost = 6 * MIN_COST;
     } else {
-      minCost = 4 * MIN_COST;
+      minCost = Math.min(4 * MIN_COST, city.room.energyCapacityAvailable);
     }
 
     console.log(`mincost=${minCost}, maxcost=${maxCost}`);
@@ -221,6 +221,7 @@ const Worker = {
       default:
         break;
     }
+
 
     return worker;
   },

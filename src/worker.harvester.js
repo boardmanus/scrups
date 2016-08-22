@@ -36,11 +36,21 @@ const Harvester = {
 
     sources = _.sortBy(sources, (s) => {
       let energyRatio = 1.0;
+      if (worker.memory.badSource) {
+          if (s.id == worker.memory.badSource) {
+              console.log(`IGNORING BAD SOURCE! ${u.name(s)}`)
+              return 1000000000000000000000000.0;
+          }
+      }
       if (s instanceof Structure) {
         energyRatio = s.store[RESOURCE_ENERGY] / s.storeCapacity * 0.25;
       } else if (s instanceof Resource) {
         console.log(`Energy to pickup ${u.name(s)}!`);
-        energyRatio = 10.0;
+        if (room.city.enemies.length > 0) {
+            energyRatio = 0.02;
+        } else {
+            energyRatio = 10.0;
+        }
       } else {
         energyRatio = s.energy / s.energyCapacity;
       }
@@ -118,9 +128,14 @@ const Harvester = {
       case ERR_NOT_IN_RANGE: {
         res = worker.moveTo(source);
         if (res === 0) {
+          worker.memory.badSource = null;
           worker.room.city.civilEngineer.registerMovement(worker);
-        } else if (res !== 0) {
+        } else if (res !== 0 && res != ERR_TIRED) {
           console.log(`${u.name(worker)} failed to move! (${res})`);
+          if (res === ERR_NO_PATH) {
+            worker.memory.site = null;
+            worker.memory.badSource = source.id;
+          }
           return Harvester.ERROR.FAILED_TO_MOVE;
         }
 

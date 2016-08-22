@@ -5,7 +5,7 @@ const Highways = {
     const spawners = room.find(FIND_MY_SPAWNS);
     const sources = room.find(FIND_SOURCES);
     let highways = [];
-    if (room.memory.highways && spawners.length === 0) {
+    if (spawners.length !== 0) {
       sources.forEach((source) => {
         highways.push(room.controller.pos.findPathTo(source));
         spawners.forEach((spawner) => {
@@ -14,7 +14,7 @@ const Highways = {
       });
 
       console.log(`Surveyed ${highways.length} highways.`);
-      room.memory.highways = highways;
+      //room.memory.highways = highways;
 
       highways.forEach((highway) => {
         highway.forEach((pos) => {

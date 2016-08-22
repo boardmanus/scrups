@@ -23,11 +23,9 @@ const Builder = {
      * @param room the room to search
      * @return an ordered array of construction sites
      */
-  find_sites(room, worker = null) {
-    const rooms = room.find(FIND_MY_CONSTRUCTION_SITES);
-    Game.country.spawnSites.forEach((ss) => rooms.push(ss));
-
-    return _.sortBy(rooms, (s) => {
+  find_sites(worker) {
+    const sites = worker.workRoom().find(FIND_MY_CONSTRUCTION_SITES);
+    return _.sortBy(sites, (s) => {
       let distance = 0;
       if (worker != null) {
         distance = worker.pos.getRangeTo(s);
@@ -67,7 +65,7 @@ const Builder = {
     }
 
     if (site == null && worker.memory.site == null) {
-      const sites = Builder.find_sites(worker.workRoom(), worker);
+      const sites = Builder.find_sites(worker);
       if (sites.length === 0) {
         console.log(`${u.name(worker)} found no construction sites to build on...`);
         return Builder.ERROR.NO_CONSTRUCTION_SITES;

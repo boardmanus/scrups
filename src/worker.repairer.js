@@ -190,7 +190,7 @@ const Repairer = {
         break;
       case ERR_NOT_IN_RANGE:
         res = worker.moveTo(site);
-        if (res !== 0) {
+        if (res !== 0 && res !== ERR_TIRED) {
           console.log(`${u.name(worker)} couldn't move to repair site (${res})`);
           return Repairer.ERROR.REPAIR_FAILED;
         }
