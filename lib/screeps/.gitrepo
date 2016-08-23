@@ -1,0 +1,11 @@
+; DO NOT EDIT (unless you know what you are doing)
+;
+; This subdirectory is a git "subrepo", and this file is maintained by the
+; git-subrepo command. See https://github.com/git-commands/git-subrepo#readme
+;
+[subrepo]
+	remote = git@github.com:boardmanus/ScreepsAutocomplete.git
+	branch = MOCHA
+	commit = f74b1fb63a69b7124b5b4b56f8de21959cc9a7c6
+	parent = e910cbc5874dfe736f221832c914e03e69ac6834
+	cmdver = 0.3.0
