@@ -78,6 +78,7 @@
     "FIND_SOURCES": false,
     "FIND_STRUCTURES": false,
     "RESOURCE_ENERGY": false,
+    RESOURCE_OXYGEN: false,
     REPAIR_POWER: false,
     "STRUCTURE_CONTAINER": false,
     "STRUCTURE_CONTROLLER": false,

@@ -3,50 +3,106 @@
  */
 
 const Job = require('job');
-const City = require('city');
 const u = require('utils');
 
 
 const CACHE = new u.Cache();
 
 
-Mineral.prototype.completion = function() {
-  return CACHE.getValue(`${this.id}-completion`, () => {
-    const availableMinerals = this.mineralAmount;
-    if (availableMinerals === 0) {
-      return 0;
-    }
-
-    let spots = 0;
-    for (let x = -1; x < 2; ++x) {
-      for (let y = -1; y < 2; ++y) {
-        const terrain = this.room.lookForAt(
-          LOOK_TERRAIN, this.pos.x + x, this.pos.y + y);
-        if (terrain !== 'wall') {
-          ++spots;
+/**
+ * Determines the number of harvestable sites at a position.
+ * @param {object} site the site to check
+ * @param {number} x the x pos
+ * @param {number} y the y pos
+ * @return {number} the number of harvestable positions
+ */
+function numberHarvestableSpaces(site, x, y) {
+  let spots = 0;
+  const stuff = site.room.lookAt(x, y);
+  _.each(stuff, thing => {
+    switch (thing.type) {
+      case 'terrain':
+        if (thing.terrain === 'wall') {
+          return;
         }
-      }
+        break;
+      case 'structure':
+        switch (thing.structure.structureType) {
+          case STRUCTURE_ROAD:
+            break;
+          case STRUCTURE_RAMPART:
+            if (!thing.structure.my) {
+              return;
+            }
+            break;
+          default:
+            return;
+        }
+        break;
+      default:
+        break;
     }
-    const creeps = this.pos.look(FIND_MY_CREEPS, 1);
-    if (creeps === 0) {
-      return 100000;
-    }
-
-    let workParts = 0;
-    _.each(creeps, c => {
-      workParts += c.getActiveBodyparts(WORK);
-    });
+    ++spots;
   });
+
+  return spots;
+}
+
+
+/**
+ * Determines the time to harvest the remaining resources of a site
+ * @param {object} site the site to check
+ * @return {number} the number of ticks to harvest
+ */
+function harvestTime(site) {
+  const available = site.available();
+  if (available === 0) {
+    return 0;
+  }
+
+  const creeps = site.pos.look(FIND_MY_CREEPS, 1);
+  if (creeps === 0) {
+    return 100000;
+  }
+
+  let workParts = 0;
+  _.each(creeps, c => {
+    workParts += c.getActiveBodyparts(WORK);
+  });
+
+  return available / (workParts * 2);
+}
+
+
+/**
+ * Determines the job completion time for a mineral extractor
+ * @return {number} the estimated number of ticks till complete
+ */
+Mineral.prototype.harvestCompletion = function() {
+  return CACHE.getValue(`${this.id}-completion`, () => harvestTime(this));
 };
 
+
+/**
+ * @return {number} the amount of available minerals
+ */
 Mineral.prototype.available = function() {
-  return this.store;
+  return this.mineralsAvailable;
 };
 
-Source.prototype.completion = function() {
-  return this.energy / this.energyCapacity;
+
+/**
+ * Determines the job completion time to extract all energy.
+ * @return {number} the estimated ticks to completion
+ */
+Source.prototype.harvestCompletion = function() {
+  return CACHE.getValue(`${this.id}-completion`, () => harvestTime(this));
 };
 
+
+/**
+ * @return {number} the amount of available energy
+ */
 Source.prototype.available = function() {
   return this.energy;
 };
@@ -54,8 +110,8 @@ Source.prototype.available = function() {
 
 /**
  * Determines the priority based on a generic ratio
- * @param ratio where 0.0 is low importance, 1.0 is high.
- * @return the priority based from the ratio
+ * @param {number} ratio where 0.0 is low importance, 1.0 is high.
+ * @return {number} the priority based from the ratio
  */
 function ratioPriority(ratio) {
   if (ratio < 0.2) {
@@ -73,9 +129,9 @@ const JobHarvest = class JobHarvest extends Job {
 
   /**
    * Constructs a new harvesting job.
-   * @param site the site at which to harvest
-   * @param instance the job number for harvesting
-   * @param worker the worker assigned
+   * @param {object} site the site at which to harvest
+   * @param {number} instance the job number for harvesting
+   * @param {object} worker the worker assigned
    */
   constructor(site, instance, worker = null) {
     super(JobHarvest.TYPE, site, instance, worker);
@@ -84,6 +140,7 @@ const JobHarvest = class JobHarvest extends Job {
 
  /**
   * Determines the priority of the job with respect to the game state.
+  * @return {priority} the priority of the job
   */
   priority() {
     const completion = this.site.completion();
@@ -93,6 +150,7 @@ const JobHarvest = class JobHarvest extends Job {
 
   /**
    * No energy is required to harvest.
+   * @return {number} 0
    */
   energyRequired() {
     return 0.0;
@@ -104,7 +162,7 @@ const JobHarvest = class JobHarvest extends Job {
    * @return {number} the job completion ratio
    */
   completion() {
-    return this.site.completion();
+    return this.site.harvestCompletion();
   }
 
 
@@ -118,14 +176,28 @@ const JobHarvest = class JobHarvest extends Job {
     }
 
     const spaceRemaining = this.worker.carryCapacity - _.sum(this.worker.carry);
+    const numWorkParts = this.worker.getActiveBodyparts(WORK);
+    const numTicks = Math.ceil(spaceRemaining / (2 * numWorkParts));
+
+    return numTicks;
   }
 };
 
 JobHarvest.TYPE = 'harvest';
 
+/**
+ * Determines the maximum workers that can harvest the site at the same time.
+ * @param {object} site the site to check
+ * @return {number} the max number of harvesters
+ */
 JobHarvest.maxWorkers = function maxWorkers(site) {
-  // TODO: look at location, and determine the desired number of harvest jobs
-  return 3;
+  let spots = 0;
+  for (let x = -1; x < 2; ++x) {
+    for (let y = -1; y < 2; ++y) {
+      spots += numberHarvestableSpaces(site, this.pos.x + x, this.pos.y + y);
+    }
+  }
+  return spots;
 };
 
 module.exports = JobHarvest;
