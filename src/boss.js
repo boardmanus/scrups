@@ -13,7 +13,7 @@ Creep.prototype.workRoom = function workRoom() {
 };
 
 function prioritize(jobs) {
-  return _.sortBy(jobs, (j) => j.priority());
+  return _.sortBy(jobs, j => j.priority());
 }
 
 
@@ -21,7 +21,7 @@ function jobOptions(options = null) {
   return _.defaults(options || {}, {
     sendEmail: false,
     numJobs: 10,
-    jobType: 'All Jobs',
+    jobType: 'All Jobs'
   });
 }
 
@@ -36,7 +36,7 @@ const Boss = class Boss {
   get constructionJobs() {
     return this.cache.getValue('constructionJobs', () => {
       const jobs = [];
-      _.each(this.city.constructionSites, (cs) => {
+      _.each(this.city.constructionSites, cs => {
         const maxJobs = Job.Build.maxWorkers(cs);
         for (let instance = 0; instance < maxJobs; ++instance) {
           jobs.push(new Job.Build(cs, instance));
@@ -49,7 +49,7 @@ const Boss = class Boss {
   get repairJobs() {
     return this.cache.getValue('repairJobs', () => {
       const jobs = [];
-      _.each(this.city.repairableSites, (s) => {
+      _.each(this.city.repairableSites, s => {
         const maxJobs = Job.Repair.maxWorkers(s);
         for (let instance = 0; instance < maxJobs; ++instance) {
           jobs.push(new Job.Repair(s, instance));
@@ -62,7 +62,7 @@ const Boss = class Boss {
   get harvestJobs() {
     return this.cache.getValue('harvestJobs', () => {
       const jobs = [];
-      this.city.sources.forEach((s) => {
+      this.city.sources.forEach(s => {
         const maxJobs = Job.Harvest.maxWorkers(s);
         for (let instance = 0; instance < maxJobs; ++instance) {
           jobs.push(new Job.Harvest(s, instance));
@@ -75,7 +75,7 @@ const Boss = class Boss {
   get storeJobs() {
     return this.cache.getValue('harvestJobs', () => {
       const jobs = [];
-      this.city.energyStorage.forEach((s) => {
+      this.city.energyStorage.forEach(s => {
         const maxJobs = Job.Store.maxWorkers(s);
         for (let instance = 0; instance < maxJobs; ++instance) {
           jobs.push(new Job.Store(s, instance));
@@ -87,33 +87,82 @@ const Boss = class Boss {
 
   get upgradeJobs() {
     return this.cache.getValue('upgradeJobs', () => {
+      const workers = this.workers;
       const jobs = [];
       const maxJobs = Job.Upgrade.maxWorkers(this.city.controller);
       for (let instance = 0; instance < maxJobs; ++instance) {
-        jobs.push(new Job.Upgrade(this.city.controller, instance));
+        const job = new Job.Upgrade(this.city.controller, instance);
+        jobs.push(job);
       }
       return prioritize(jobs);
     });
   }
 
   get allJobs() {
-    return this.cache.getValue('allJobs', () =>
-      prioritize(this.upgradeJobs.concat(
+    return this.cache.getValue('allJobs', () => {
+      const jobs = this.upgradeJobs.concat(
           this.storeJobs,
           this.harvestJobs,
           // this.repairJobs,
-          this.constructionJobs)));
+          // this.buildJobs,
+          this.constructionJobs);
+
+      // Find jobs that are already being worked...
+      const workers = this.workers;
+      _.each(workers, w => {
+        const jobId = w.memory.jobId;
+        if (!jobId) {
+          return;
+        }
+
+        let job = _.find(jobs, j => j.id() === jobId);
+        if (job) {
+          // Ok, this worker is is performing the job - update the reference
+          job.assign(w);
+        } else {
+          // No job exists that matches the workers... nuke the workers job
+          w.memory.jobId = null;
+        }
+      });
+
+      prioritize(jobs);
+    });
+  }
+
+  get workers() {
+    return this.cache.getValue('workers', () => {
+      const workers = _.map(
+        _.filter(
+          Object.keys(Game.creeps),
+          k =>
+            (Game.creeps[k].memory.city === this.room.name &&
+              !Game.creeps[k].memory.transferCity) ||
+                (Game.creeps[k].memory.transferCity === this.room.name)),
+        k => {
+          const c = Game.creeps[k];
+          if (c.memory.transferCity) {
+            if (c.room.name === c.memory.transferCity) {
+              console.log(`${u.name(c)} is working in transfer location room=${c.room.name})`);
+            } else {
+              console.log(`${u.name(c)} is in the wrong room (city=${this.room.name}, room=${c.room.name}, transferRoom=${c.memory.transferCity})`);
+            }
+          }
+          return c;
+        });
+
+      return workers;
+    });
   }
 
   get peons() {
     return this.cache.getValue('peons', () => {
       const peons = _.map(
         _.filter(Object.keys(Game.creeps),
-          (k) =>
+          k =>
             (Game.creeps[k].memory.city === this.room.name &&
               !Game.creeps[k].memory.transferCity) ||
                 (Game.creeps[k].memory.transferCity === this.room.name)),
-        (k) => {
+        k => {
           const c = Game.creeps[k];
           c.city = this;
           if (c.room !== c.city.room) {
@@ -126,11 +175,11 @@ const Boss = class Boss {
           return new Peon(this.city, c);
         });
 
-      _.each(peons, (p) => {
+      _.each(peons, p => {
         if (!p.jobId) {
           return;
         }
-        let job = _.find(this.allJobs, (j) => j.id() === p.jobId);
+        let job = _.find(this.allJobs, j => j.id() === p.jobId);
         if (!job) {
           const components = p.jobId.split('-');
           console.log(`components: ${components}`);
@@ -150,7 +199,7 @@ const Boss = class Boss {
 
   get idlePeons() {
     return this.cache.getValue('idlePeons', () =>
-      _.filter(this.peons, (p) => p.job === null));
+      _.filter(this.peons, p => p.job === null));
   }
 
 
@@ -204,7 +253,7 @@ const Boss = class Boss {
   run() {
     // Allocate jobs to workers
     const idleWorkers = this.idlePeons;
-    _.each(this.allJobs, (job) => {
+    _.each(this.allJobs, job => {
       if (idleWorkers.length === 0) {
         return;
       }

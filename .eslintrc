@@ -11,7 +11,7 @@
   "settings": {
     "import/resolver": {
       "node": {
-        "moduleDirectory": ["src", "node_modules", "screeps" ]
+        "moduleDirectory": ["src", "node_modules", "lib/screeps" ]
       }
     }
   },

@@ -3,10 +3,40 @@
  */
 
 const Job = require('job');
+const City = require('city');
+const u = require('utils');
+
+
+const CACHE = new u.Cache();
 
 
 Mineral.prototype.completion = function() {
-  return this.store / this.storeCapacity;
+  return CACHE.getValue(`${this.id}-completion`, () => {
+    const availableMinerals = this.mineralAmount;
+    if (availableMinerals === 0) {
+      return 0;
+    }
+
+    let spots = 0;
+    for (let x = -1; x < 2; ++x) {
+      for (let y = -1; y < 2; ++y) {
+        const terrain = this.room.lookForAt(
+          LOOK_TERRAIN, this.pos.x + x, this.pos.y + y);
+        if (terrain !== 'wall') {
+          ++spots;
+        }
+      }
+    }
+    const creeps = this.pos.look(FIND_MY_CREEPS, 1);
+    if (creeps === 0) {
+      return 100000;
+    }
+
+    let workParts = 0;
+    _.each(creeps, c => {
+      workParts += c.getActiveBodyparts(WORK);
+    });
+  });
 };
 
 Mineral.prototype.available = function() {
@@ -79,15 +109,15 @@ const JobHarvest = class JobHarvest extends Job {
 
 
   /**
-   * Worker completion is when the worker is full of energy/minerals
-   * @return {number} the completion ratio (1.0 complete)
+   * Number of ticks until the worker is full of energy/minerals
+   * @return {number} the number of ticks required
    */
   workerCompletion() {
     if (this.worker === null) {
-      return 1.0;
+      return 0;
     }
 
-    return _.sum(this.worker.carry) / this.worker.carryCapacity;
+    const spaceRemaining = this.worker.carryCapacity - _.sum(this.worker.carry);
   }
 };
 

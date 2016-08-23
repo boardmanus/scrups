@@ -76,20 +76,20 @@ const Job = class Job {
   }
 
   /**
-   * Determines the completion ratio of the job.
-   * @return {number} the completion ratio [0.0, 1.0]
+   * Determines the estimated number of ticks till completion
+   * @return {number} the number of ticks before the job will be completed
    */
   completion() {
-    return 0.0;
+    return 0;
   }
 
   /**
    * Determines the completion ratio of the worker job.
    * If no worker is assigned, the ration is 1.0
-   * @return {number} the completion ratio [0.0, 1.0]
+   * @return {number} the number of ticks before the worker will be finished
    */
   workerCompletion() {
-    return 1.0;
+    return 0;
   }
 
   /**
@@ -137,6 +137,7 @@ const Job = class Job {
    */
   assign(worker) {
     this.worker = worker;
+    worker.memory.jobId = this.id();
   }
 };
 

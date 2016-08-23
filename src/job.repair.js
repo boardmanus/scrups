@@ -4,8 +4,9 @@
 
 const Job = require('job');
 
+const TRAVEL_TIME_MODIFIER = 2;
 
-Creep.proto.repairSuitability = function(site) {
+Creep.prototype.repairSuitability = function(site) {
   // Creeps are suitable for repair if it's a big job.
   // Leave the small jobs to the towers.
   const energyForRepair = this.energy;
@@ -13,19 +14,35 @@ Creep.proto.repairSuitability = function(site) {
     return 0.0;
   }
 
+  const workParts = this.getActiveBodyparts(WORK);
+  if (workParts === 0) {
+    // Can't repair with no work-parts
+    return 0.0;
+  }
+
   // If the creep is right next to the site, it's super suitable
   const range = this.pos.rangeTo(site);
-  if (range <= 1) {
+  if (range <= 3) {
     return 1.0;
   }
 
-  const workParts = this.getActiveBodyparts(WORK);
+  // Approx ticks to get to site
+  const moveParts = this.getActiveBodyparts(MOVE);
   const repairHitsRequired = (site.hitsMax - site.hits);
-  const repairHitsPerTick = 100 * workParts;
   const repairEnergyRequired = repairHitsRequired / 100;
+  const weight = this.weight();
+  const timeBetweenMoves = Math.ceil(weight / moveParts);
+  const travelTime = TRAVEL_TIME_MODIFIER * timeBetweenMoves * range;
+  const repairTime = repairEnergyRequired / workParts;
+
+  // If the travel time for the creep is greater than so many ticks,
+  // the repair time will be less than half the travel-time, it's not suitable.
+  if (travelTime > 9 && repairTime < travelTime / 2) {
+    return 0.0;
+  }
 };
 
-StructureTower.proto.repairSuitability = function(site) {
+StructureTower.prototype.repairSuitability = function(site) {
   // If the tower can't repair anything, it's not suitable for the job.
   const energyForRepair = this.energyForRepair();
   if (energyForRepair < 10) {
@@ -47,6 +64,8 @@ StructureTower.proto.repairSuitability = function(site) {
 
   // If the structure can be repaired by the tower, then base the suitability
   // on it's effectiveness
+  const ticksForRepair = Math.max(20, repairHitsRequired / repairHitsPerTick);
+  const energyToRepair = ticksForRepair * 10;
   const repairEffectiveness = repairHitsPerTick / 800;
   if (energyForRepair > energyToRepair) {
     return 0.5 + 0.5 * repairEffectiveness;
@@ -54,8 +73,6 @@ StructureTower.proto.repairSuitability = function(site) {
 
   // Otherwise, the sutiability depends on the effectiveness, and how long it
   // will take.
-  const ticksForRepair = Math.max(20, repairHitsRequired / repairHitsPerTick);
-  const energyToRepair = ticksForRepair * 10;
   const timeEffectiveness = 1.0 - ticksForRepair / 20.0;
   return 0.5 * (timeEffectiveness + repairEffectiveness);
 };

@@ -74,4 +74,42 @@ describe('Screep Job', function() {
       assert(job.worker === worker, 'The worker is different to that assigned!');
     });
   });
+
+  describe('Creep patching', function() {
+    const creep = new Creep();
+
+    it('should compute the correct weight', function() {
+      creep.body = _.map(
+        [WORK, WORK, CARRY, CARRY, MOVE, ATTACK, RANGED_ATTACK, TOUGH, HEAL, CLAIM],
+        p => {
+          return {type: p};
+        });
+
+      creep.carry[RESOURCE_ENERGY] = 50;
+
+      const weight = creep.weight();
+      assert(weight === 8, `Weight ${weight} !== 8`);
+    });
+
+    it('should report the correct energy being carried', function() {
+      const TEST_ENERGY_AMOUNT = 57;
+      creep.carry[RESOURCE_ENERGY] = TEST_ENERGY_AMOUNT;
+      creep.carry[RESOURCE_OXYGEN] = 23;
+
+      const energy = creep.energy;
+      assert(
+        energy === TEST_ENERGY_AMOUNT,
+        `Energy different to carry (${energy} !== ${TEST_ENERGY_AMOUNT})`);
+    });
+
+    it('should have same energy capacity as carry capacity', function() {
+      const TEST_ENERGY_CAPACITY = 157;
+      creep.carryCapacity = TEST_ENERGY_CAPACITY;
+
+      const energyCapacity = creep.energyCapacity;
+      assert(
+        energyCapacity === TEST_ENERGY_CAPACITY,
+        `Energy capacity different to carry capacity (${energyCapacity} !== ${TEST_ENERGY_CAPACITY})`);
+    });
+  });
 });

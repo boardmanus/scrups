@@ -21,10 +21,21 @@ const JobBuild = class JobBuild extends Job {
 
 
   /**
-   * The ratio of work remaining to repair.
+   * Determines the estimated number of ticks till completion
+   * @return {number} the number of ticks before the job will be completed
    */
-  completionRatio() {
+  completion() {
     return 0.0;
+  }
+
+
+  /**
+   * Determines the completion ratio of the worker job.
+   * If no worker is assigned, the ration is 1.0
+   * @return {number} the number of ticks before the worker will be finished
+   */
+  workerCompletion() {
+    return 0;
   }
 
 

@@ -1,6 +1,8 @@
 const assert = require('chai').assert;
+const sinon = require('sinon');
 const JobHarvest = require('job.harvest');
 const u = require('utils');
+
 
 describe('Screep Harvest Job', () => {
   // Test parameters...
@@ -22,7 +24,6 @@ describe('Screep Harvest Job', () => {
 
   describe('Reports the the expected priority', function() {
     it('has lower priority if the site has less resources', function() {
-
     });
   });
 });
