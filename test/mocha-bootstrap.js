@@ -6,9 +6,10 @@ AppModulePath.addPath(`${Path.resolve()}/lib`);
 
 global._ = require('lodash');
 global.Creep = require('screeps/Creep.js');
-global.Structure = require('screeps/Structure.js');
 global.Mineral = require('screeps/Mineral.js');
+global.Resource = require('screeps/Resource.js');
 global.RoomPosition = require('screeps/RoomPosition.js');
 global.Source = require('screeps/Source.js');
+global.Structure = require('screeps/Structure.js');
 global.StructureTower = require('screeps/Structures/StructureTower.js');
 require('screeps/Global/Constants.js');

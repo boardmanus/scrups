@@ -16,14 +16,13 @@ const CACHE = new u.Cache();
  * @param {number} y the y pos
  * @return {number} the number of harvestable positions
  */
-function numberHarvestableSpaces(site, x, y) {
-  let spots = 0;
+function harvestable(site, x, y) {
   const stuff = site.room.lookAt(x, y);
-  _.each(stuff, thing => {
+  const thing = _.find(stuff, thing => {
     switch (thing.type) {
       case 'terrain':
         if (thing.terrain === 'wall') {
-          return;
+          return true;
         }
         break;
       case 'structure':
@@ -42,10 +41,9 @@ function numberHarvestableSpaces(site, x, y) {
       default:
         break;
     }
-    ++spots;
   });
 
-  return spots;
+  return Boolean(thing);
 }
 
 
@@ -135,6 +133,13 @@ const JobHarvest = class JobHarvest extends Job {
    */
   constructor(site, instance, worker = null) {
     super(JobHarvest.TYPE, site, instance, worker);
+
+    if (!(site instanceof Source ||
+            site instanceof Mineral ||
+            site instanceof Resource)) {
+      throw new TypeError(
+        `Can only harvest from sources, minerals or resources! (site is a ${typeof site})`);
+    }
   }
 
 
@@ -143,6 +148,11 @@ const JobHarvest = class JobHarvest extends Job {
   * @return {priority} the priority of the job
   */
   priority() {
+    if (this.site.energy === 0) {
+      return Job.Priority.IGNORE;
+    }
+
+
     const completion = this.site.completion();
     return ratioPriority(completion * (1.0 - completion) / this.instance);
   }
@@ -194,7 +204,7 @@ JobHarvest.maxWorkers = function maxWorkers(site) {
   let spots = 0;
   for (let x = -1; x < 2; ++x) {
     for (let y = -1; y < 2; ++y) {
-      spots += numberHarvestableSpaces(site, this.pos.x + x, this.pos.y + y);
+      if (harvestable(site, this.pos.x + x, this.pos.y + y)) ++spots;
     }
   }
   return spots;

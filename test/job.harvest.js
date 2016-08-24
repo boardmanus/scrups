@@ -9,6 +9,16 @@ describe('Screep Harvest Job', () => {
   const mineral = new Mineral();
   const job = new JobHarvest(source, 0, null);
 
+  describe('Construction', function() {
+    it('can only have a source, mineral or resource site', function() {
+      assert.throws(() => new JobHarvest(new Creep(), 0), TypeError);
+      assert.throws(() => new JobHarvest(0, 0), RangeError);
+      assert.throws(() => new JobHarvest(null, 0), RangeError);
+      assert.doesNotThrow(() => new JobHarvest(new Source(), 0), TypeError);
+      assert.doesNotThrow(() => new JobHarvest(new Mineral(), 0), TypeError);
+      assert.doesNotThrow(() => new JobHarvest(new Resource(), 0), TypeError);
+    });
+  });
   describe('After Construction', function() {
     it('is of harvest type', () => {
       assert(job.type === JobHarvest.TYPE, "Unexpected Job type after construction");
