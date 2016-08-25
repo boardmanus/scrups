@@ -9,19 +9,18 @@ describe('Screep Job', function() {
   const TEST_TYPE2 = 'my-job-type-2';
   const TEST_SITE = new Structure();
   const TEST_SITE2 = new Structure();
+  const TEST_PRIORITY = Job.Priority.NORMAL;
+  const TEST_PRIORITY2 = Job.Priority.HIGH;
   TEST_SITE2.id = 'unique-id';
-  const TEST_INSTANCE = 0;
-  const TEST_INSTANCE2 = 1;
-  const TEST_WORKER = null;
 
-  const job = new Job(TEST_TYPE, TEST_SITE, TEST_INSTANCE, TEST_WORKER);
+  const job = new Job(TEST_TYPE, TEST_SITE, TEST_PRIORITY);
 
   describe('After Construction', function() {
     it('has the expected properties', () => {
       expect(job.type).to.equal(TEST_TYPE);
       expect(job.site).to.equal(TEST_SITE);
-      expect(job.instance).to.equal(TEST_INSTANCE);
-      expect(job.worker).to.equal(TEST_WORKER);
+      expect(job.priority).to.equal(TEST_PRIORITY);
+      expect(job.workers.length).to.equal(0);
     });
 
     it('has an info value with the type and site name', function() {
@@ -31,23 +30,61 @@ describe('Screep Job', function() {
     });
 
     it('has the same key as a job with the same details', function() {
-      const otherJob = new Job(TEST_TYPE, TEST_SITE, TEST_INSTANCE, TEST_WORKER);
+      const otherJob = new Job(TEST_TYPE, TEST_SITE, TEST_PRIORITY);
       expect(otherJob.key).to.equal(job.key);
     });
 
+    it('has the same key as id', function() {
+      assert(job.id() === job.key, 'Unexpected key value');
+    });
+
     it('has a different key to a job with different details', function() {
-      let job2 = new Job(TEST_TYPE2, TEST_SITE, TEST_INSTANCE, TEST_WORKER);
+      let job2 = new Job(TEST_TYPE2, TEST_SITE, TEST_PRIORITY);
       assert(job.key !== job2.key, "Same key even though different types!");
 
-      job2 = new Job(TEST_TYPE, TEST_SITE2, TEST_INSTANCE, TEST_WORKER);
+      job2 = new Job(TEST_TYPE, TEST_SITE2, TEST_PRIORITY);
       assert(job.key !== job2.key, "Same key even though different sites!");
 
-      job2 = new Job(TEST_TYPE, TEST_SITE, TEST_INSTANCE2, TEST_WORKER);
-      assert(job.key !== job2.key, "Same key even though different instances!");
+      job2 = new Job(TEST_TYPE, TEST_SITE, TEST_PRIORITY2);
+      assert(job.key === job2.key, "Same key even though different instances!");
+    });
+  });
+
+  describe('Assigning a worker', function() {
+    it('has no workers before assignement', function() {
+      assert(job.workers.length === 0, 'The job isAssigned without a worker!');
+    });
+    it('has worker is present after assigning', function() {
+      const worker1 = new Creep();
+      const worker2 = new Creep();
+      const worker3 = new Creep();
+
+      job.assignWorker(worker1);
+      job.assignWorker(worker2);
+      assert(_.indexOf(job.workers, worker1) >= 0,
+        'The worker wasnt recognised after assignment!');
+      assert(_.indexOf(job.workers, worker2) >= 0,
+        'The worker wasnt recognised after assignment!');
+      assert(_.indexOf(job.workers, worker3) === -1,
+        'Found an unassigned worker!');
+    });
+  });
+
+  describe('Overridable method operation', function() {
+    it('energy required should always be 0.0', function() {
+      assert(job.energyRequired() === 0.0, 'Unexpected energy');
     });
   });
 
   describe('Job Priority', function() {
+    it('provides a higher priority when higher is called', function() {
+      assert(Job.Priority.higher(Job.Priority.NORMAL) < Job.Priority.NORMAL,
+        'Priority not higher!');
+    });
+    it('provides a lower priority when lower is called', function() {
+      assert(Job.Priority.lower(Job.Priority.NORMAL) > Job.Priority.NORMAL,
+        'Priority not lower!');
+    });
     it('doesn\'t allow a higher priority than Critical', function() {
       assert(
         Job.Priority.higher(Job.Priority.CRITICAL) === Job.Priority.CRITICAL,
@@ -57,21 +94,6 @@ describe('Screep Job', function() {
       assert(
         Job.Priority.lower(Job.Priority.IGNORE) === Job.Priority.IGNORE,
         'Allowed a lower priority than Idle!');
-    });
-  });
-
-  describe('Assigning a worker', function() {
-    const worker = new Creep();
-    it('is unassigned before a worker has been assigned', function() {
-      assert(!job.isAssigned(), 'The job isAssigned without a worker!');
-    });
-    it('isAssigned after assigning a worker', function() {
-      job.assign(worker);
-      assert(job.isAssigned(), 'The job is not assigned after assigning a worker!');
-    });
-    it('is the same worker returned when querying', function() {
-      job.assign(worker);
-      assert(job.worker === worker, 'The worker is different to that assigned!');
     });
   });
 
@@ -110,6 +132,27 @@ describe('Screep Job', function() {
       assert(
         energyCapacity === TEST_ENERGY_CAPACITY,
         `Energy capacity different to carry capacity (${energyCapacity} !== ${TEST_ENERGY_CAPACITY})`);
+    });
+
+    describe('Creep job assignment', function() {
+      it('should have no jobs after creation', function() {
+        assert(creep.memory.jobs === undefined, 'Had a job when initially created');
+      });
+      it('throws an exception when calling with a non-job', function() {
+        assert.throws(() => creep.assignJob(8), TypeError);
+      });
+      it('should accumulate jobs as they are assigned', function() {
+        const job1 = new Job(TEST_TYPE, TEST_SITE, TEST_PRIORITY);
+        const job2 = new Job(TEST_TYPE2, TEST_SITE2, TEST_PRIORITY2);
+        const job3 = new Job(TEST_TYPE, TEST_SITE2, TEST_PRIORITY2);
+        creep.assignJob(job1);
+        creep.assignJob(job2);
+        assert(creep.memory.jobs.length === 2,
+          'Had unexpected number of jobs assigned');
+        assert(_.indexOf(creep.memory.jobs, job1) >= 0, 'Couldnt find assigned job');
+        assert(_.indexOf(creep.memory.jobs, job2) >= 0, 'Couldnt find assigned job');
+        assert(_.indexOf(creep.memory.jobs, job3) === -1, 'Found an unexpected job');
+      });
     });
   });
 });

@@ -5,51 +5,25 @@ const u = require('utils');
 
 
 /**
- * Determine the weight of the creep
- * @return {number} weight of the creep
+ * Base job
  */
-Creep.prototype.weight = function weight() {
-  return (this.body.length -
-    this.getActiveBodyparts(MOVE) -
-    this.getActiveBodyparts(CARRY) +
-    _.sum(this.carry) / 50);
-};
-
-
-/**
- * Define some extra properties for creeps to allow polymorphism.
- */
-Object.defineProperty(Creep.prototype, 'energy', {
-  get: function energy() {
-    return this.carry[RESOURCE_ENERGY];
-  }
-});
-
-Object.defineProperty(Creep.prototype, 'energyCapacity', {
-  get: function energyCapacity() {
-    return this.carryCapacity;
-  }
-});
-
-
 const Job = class Job {
 
   /**
    * Constructs a new job to be worked.
    * @param {string} type the type of job
    * @param {Structure} site the site of the will take place at
-   * @param {integer} instance the job instance value (integer)
-   * @param {Creep} worker worker assigned to the job (optional)
+   * @param {Job.Priority} priority the priority of the job
    */
-  constructor(type, site, instance, worker = null) {
+  constructor(type, site, priority) {
     if (!site) {
       throw new RangeError(`The site of a job can not be null`);
     }
     this.type = type;
     this.site = site;
-    this.instance = instance;
-    this.worker = worker;
-    this.key = `${type}-${instance}-${site.id}`;
+    this.priority = priority;
+    this.workers = [];
+    this.key = `${type}-${site.id}`;
   }
 
   /**
@@ -64,47 +38,7 @@ const Job = class Job {
    * @return {string} an info string representing the job
    */
   info() {
-    return `job-${this.type}[${this.priority()}] @ ${u.name(this.site)}`;
-  }
-
- /**
-  * Determines the priority of the job with respect to the game state.
-  * @return {number} the priority
-  */
-  priority() {
-    return Job.Priority.IGNORE;
-  }
-
-  /**
-   * Determines the estimated number of ticks till completion
-   * @return {number} the number of ticks before the job will be completed
-   */
-  completion() {
-    return 0;
-  }
-
-  /**
-   * Determines the completion ratio of the worker job.
-   * If no worker is assigned, the ration is 1.0
-   * @return {number} the number of ticks before the worker will be finished
-   */
-  workerCompletion() {
-    return 0;
-  }
-
-  /**
-   * Determines how suitable a worker is for a particular job.
-   * @param {object} worker of some kind
-   * @return {number} suitability of the worker (0.0 - not suitable, 1.0, very sutiable)
-   */
-  workerSuitability(worker = null) {
-    let testWorker = worker || this.worker;
-    if (testWorker === null) {
-      return 0.0;
-    } else if (worker instanceof Creep) {
-      return 1.0;
-    }
-    return 0.0;
+    return `job-${this.type}[${this.priority}]@${u.name(this.site)}`;
   }
 
   /**
@@ -116,28 +50,11 @@ const Job = class Job {
   }
 
   /**
-   * Determines whether the job is complete
-   * @return {boolean} whether the job is complete
-   */
-  isComplete() {
-    return this.completion() === 1.0;
-  }
-
-  /**
-   * Determines whether the job has been assigned to a worker.
-   * @return {boolean} whether the job is assigned
-   */
-  isAssigned() {
-    return this.worker !== null;
-  }
-
-  /**
    * Assign a worker to the job.
    * @param {Creep} worker the worker to assign the job to.
    */
-  assign(worker) {
-    this.worker = worker;
-    worker.memory.jobId = this.id();
+  assignWorker(worker) {
+    this.workers.push(worker);
   }
 };
 
@@ -164,6 +81,50 @@ Job.Priority = {
     return p - 1;
   }
 };
+
+
+/**
+ * Determine the weight of the creep
+ * @return {number} weight of the creep
+ */
+Creep.prototype.weight = function weight() {
+  return (this.body.length -
+    this.getActiveBodyparts(MOVE) -
+    this.getActiveBodyparts(CARRY) +
+    _.sum(this.carry) / 50);
+};
+
+
+/**
+ * Assign a new job to the worker.
+ * Workers can have multiple jobs.
+ * @param {Job} job the new job
+ */
+Creep.prototype.assignJob = function assignJob(job) {
+  if (!(job instanceof Job)) {
+    throw new TypeError(`Tried to assign a non-job to ${u.name(this)}`);
+  }
+  if (!this.memory.jobs) {
+    this.memory.jobs = [];
+  }
+  this.memory.jobs.push(job);
+};
+
+
+/**
+ * Define some extra properties for creeps to allow polymorphism.
+ */
+Object.defineProperty(Creep.prototype, 'energy', {
+  get: function energy() {
+    return this.carry[RESOURCE_ENERGY];
+  }
+});
+
+Object.defineProperty(Creep.prototype, 'energyCapacity', {
+  get: function energyCapacity() {
+    return this.carryCapacity;
+  }
+});
 
 
 module.exports = Job;

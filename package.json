@@ -15,7 +15,7 @@
     "node": ">= 0.8.0"
   },
   "scripts": {
-    "test": "./node_modules/.bin/mocha",
+    "test": "./node_modules/.bin/istanbul cover ./node_modules/mocha/bin/_mocha",
     "mocha": "./node_modules/.bin/mocha"
   },
   "keywords": [
@@ -35,6 +35,7 @@
     "grunt-eslint": "*",
     "grunt-git": "*",
     "grunt-screeps": "*",
+    "istanbul": "^0.4.5",
     "lodash": "^3.10.0",
     "mocha": "^3.0.0",
     "sinon": "^1.17.5"
