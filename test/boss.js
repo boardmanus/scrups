@@ -1,6 +1,7 @@
 const assert = require('chai').assert;
 const Sinon = require('sinon');
 const Boss = require('boss');
+const Job = require('job.all');
 
 describe('A Boss', function() {
   const TEST_ROOM_NAME = 'E34S32';
@@ -39,7 +40,7 @@ describe('A Boss', function() {
         new ConstructionSite()
       ];
 
-      Sinon.stub(room, "find", (type, opts) => {
+      const stub = Sinon.stub(room, "find", (type, opts) => {
         if (type === FIND_CONSTRUCTION_SITES) {
           return TEST_CONSTRUCTION_SITES;
         }
@@ -47,6 +48,13 @@ describe('A Boss', function() {
       });
 
       const jobs = boss.constructionJobs;
+
+      it('should only return build jobs', function() {
+        _.each(jobs, j => {
+          assert(j.type === Job.Build.TYPE,
+            `${j.info()} not of type ${Job.Build.TYPE}`);
+        });
+      });
 
       it('should return all the construction sites as construction jobs', function() {
         assert(jobs.length === TEST_CONSTRUCTION_SITES.length,
@@ -61,6 +69,46 @@ describe('A Boss', function() {
         const jobs2 = boss.constructionJobs;
         assert(jobs === jobs2, "Construction jobs are different on different calls");
       });
+
+      stub.restore();
+    });
+    describe('retrieving repair jobs', function() {
+      const TEST_REPAIR_SITES = [
+        new Structure(),
+        new Structure(),
+        new Structure()
+      ];
+
+      const stub = Sinon.stub(room, "find", (type, opts) => {
+        if (type === FIND_MY_STRUCTURES) {
+          return TEST_REPAIR_SITES;
+        }
+        return [];
+      });
+
+      const jobs = boss.repairJobs;
+
+      it('should only return repair jobs', function() {
+        _.each(jobs, j => {
+          assert(j.type === Job.Repair.TYPE,
+            `${j.info()} not of type ${Job.Repair.TYPE}`);
+        });
+      });
+      it('should return all the repair sites as repair jobs', function() {
+        assert(jobs.length === TEST_REPAIR_SITES.length,
+          `More or less jobs than there are construction sites (${jobs.length} !== ${TEST_REPAIR_SITES.length})`);
+        for (let i = 0; i < jobs.length; ++i) {
+          assert(Boolean(_.find(jobs, j => j.site === TEST_REPAIR_SITES[i])),
+            `Jobs did not contain repair site[${i}]`);
+        }
+      });
+
+      it('should cache the repair jobs', function() {
+        const jobs2 = boss.repairJobs;
+        assert(jobs === jobs2, "Repair jobs are different on different calls");
+      });
+
+      stub.restore();
     });
   });
 });

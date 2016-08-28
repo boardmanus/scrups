@@ -29,6 +29,13 @@ function buildPriority(cs) {
   return Job.Priority.NORMAL;
 }
 
+function repairPriority(s) {
+  return Job.Priority.NORMAL;
+}
+function shouldRepair(s) {
+  return s.hits < s.hitsMax;
+}
+
 const Boss = class Boss {
 
   constructor(room) {
@@ -70,11 +77,9 @@ const Boss = class Boss {
   get repairJobs() {
     return this.cache.getValue('repairJobs', () => {
       const jobs = [];
-      _.each(this.city.repairableSites, s => {
-        const maxJobs = Job.Repair.maxWorkers(s);
-        for (let instance = 0; instance < maxJobs; ++instance) {
-          jobs.push(new Job.Repair(s, instance));
-        }
+      const repairSites = this.room.find(FIND_MY_STRUCTURES, shouldRepair);
+      _.each(repairSites, s => {
+        jobs.push(new Job.Repair(s, repairPriority(s)));
       });
       return prioritize(jobs);
     });
