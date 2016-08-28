@@ -1,13 +1,15 @@
 const assert = require('chai').assert;
 const sinon = require('sinon');
+const Job = require('job');
 const JobHarvest = require('job.harvest');
 
 
 describe('Screep Harvest Job', () => {
   // Test parameters...
+  const TEST_PRIORITY = Job.Priority.NORMAL;
   const source = new Source();
   const mineral = new Mineral();
-  const job = new JobHarvest(source, 0, null);
+  const job = new JobHarvest(source, TEST_PRIORITY);
 
   describe('Construction', function() {
     it('can only have a source, mineral or resource site', function() {
@@ -19,6 +21,7 @@ describe('Screep Harvest Job', () => {
       assert.doesNotThrow(() => new JobHarvest(new Resource(), 0), TypeError);
     });
   });
+
   describe('After Construction', function() {
     it('is of harvest type', () => {
       assert(job.type === JobHarvest.TYPE, "Unexpected Job type after construction");
@@ -26,13 +29,11 @@ describe('Screep Harvest Job', () => {
     it('has the expected structure', function() {
       assert(job.site === source, "Unexpected site after construction");
     });
-    it('has the expected instance', function() {
-      assert(job.instance === 0, "Unexpected instance after construction");
+    it('has the expected priority', function() {
+      assert(job.priority === TEST_PRIORITY, "Unexpected priority after construction");
     });
-  });
-
-  describe('Reports the the expected priority', function() {
-    it('has lower priority if the site has less resources', function() {
+    it('never requires energy to harvest', function() {
+      assert(job.energyRequired() === 0.0, "Harvest job required energy");
     });
   });
 

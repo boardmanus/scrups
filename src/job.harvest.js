@@ -131,8 +131,8 @@ const JobHarvest = class JobHarvest extends Job {
    * @param {number} instance the job number for harvesting
    * @param {object} worker the worker assigned
    */
-  constructor(site, instance, worker = null) {
-    super(JobHarvest.TYPE, site, instance, worker);
+  constructor(site, priority) {
+    super(JobHarvest.TYPE, site, priority);
 
     if (!(site instanceof Source ||
             site instanceof Mineral ||
@@ -143,21 +143,6 @@ const JobHarvest = class JobHarvest extends Job {
   }
 
 
- /**
-  * Determines the priority of the job with respect to the game state.
-  * @return {priority} the priority of the job
-  */
-  priority() {
-    if (this.site.energy === 0) {
-      return Job.Priority.IGNORE;
-    }
-
-
-    const completion = this.site.completion();
-    return ratioPriority(completion * (1.0 - completion) / this.instance);
-  }
-
-
   /**
    * No energy is required to harvest.
    * @return {number} 0
@@ -165,49 +150,9 @@ const JobHarvest = class JobHarvest extends Job {
   energyRequired() {
     return 0.0;
   }
-
-
-  /**
-   * Completion is determined by how much energy is left at the site
-   * @return {number} the job completion ratio
-   */
-  completion() {
-    return this.site.harvestCompletion();
-  }
-
-
-  /**
-   * Number of ticks until the worker is full of energy/minerals
-   * @return {number} the number of ticks required
-   */
-  workerCompletion() {
-    if (this.worker === null) {
-      return 0;
-    }
-
-    const spaceRemaining = this.worker.carryCapacity - _.sum(this.worker.carry);
-    const numWorkParts = this.worker.getActiveBodyparts(WORK);
-    const numTicks = Math.ceil(spaceRemaining / (2 * numWorkParts));
-
-    return numTicks;
-  }
 };
 
 JobHarvest.TYPE = 'harvest';
 
-/**
- * Determines the maximum workers that can harvest the site at the same time.
- * @param {object} site the site to check
- * @return {number} the max number of harvesters
- */
-JobHarvest.maxWorkers = function maxWorkers(site) {
-  let spots = 0;
-  for (let x = -1; x < 2; ++x) {
-    for (let y = -1; y < 2; ++y) {
-      if (harvestable(site, this.pos.x + x, this.pos.y + y)) ++spots;
-    }
-  }
-  return spots;
-};
 
 module.exports = JobHarvest;

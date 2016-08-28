@@ -13,7 +13,7 @@ Creep.prototype.workRoom = function workRoom() {
 };
 
 function prioritize(jobs) {
-  return _.sortBy(jobs, j => j.priority());
+  return _.sortBy(jobs, j => j.priority);
 }
 
 
@@ -25,22 +25,43 @@ function jobOptions(options = null) {
   });
 }
 
+function buildPriority(cs) {
+  return Job.Priority.NORMAL;
+}
+
 const Boss = class Boss {
 
-  constructor(city) {
-    this.city = city;
-    this.room = city.room;
+  constructor(room) {
+    if (!room) {
+      throw new RangeError(`Room for boss cannot be undefined/null`);
+    }
+    if (!(room instanceof Room)) {
+      throw new TypeError('room must be a Room');
+    }
+    if (room.boss) {
+      // The boss of the room should not have been set yet!
+      // We only allow one boss per room.
+      throw new Error(`${u.name(room)} already has a boss (${this.info()})`);
+    }
+
+    // Ok, the room appears ok.
+    this.room = room;
     this.cache = new u.Cache();
+    room.boss = this;
   }
+
+
+  info() {
+    return `boss-${this.room.name}`;
+  }
+
 
   get constructionJobs() {
     return this.cache.getValue('constructionJobs', () => {
       const jobs = [];
-      _.each(this.city.constructionSites, cs => {
-        const maxJobs = Job.Build.maxWorkers(cs);
-        for (let instance = 0; instance < maxJobs; ++instance) {
-          jobs.push(new Job.Build(cs, instance));
-        }
+      const constructionSites = this.room.find(FIND_CONSTRUCTION_SITES);
+      _.each(constructionSites, cs => {
+        jobs.push(new Job.Build(cs, buildPriority(cs)));
       });
       return prioritize(jobs);
     });
@@ -207,11 +228,6 @@ const Boss = class Boss {
     // Determine all the construction jobs to be worked
     console.log(`${this.info()} has ${this.peons.length} peons to work with.`);
     console.log(`${this.info()} has ${this.idlePeons.length} idle peons`);
-  }
-
-
-  info() {
-    return `boss-${this.city.room.name}`;
   }
 
 
