@@ -110,5 +110,55 @@ describe('A Boss', function() {
 
       stub.restore();
     });
+    describe('retrieving harvest jobs', function() {
+      const TEST_SITES = [
+        new Source(),
+        new Source(),
+        new Mineral()
+      ];
+
+      const stubs = [];
+      stubs.push(Sinon.stub(room, "find", (type, opts) => {
+        let filter = (opts && opts.filter) ? opts.filter : s => s;
+        if (type === FIND_SOURCES) {
+          return _.filter(TEST_SITES, s =>
+            s instanceof Source && filter(s));
+        }
+        if (type === FIND_MINERALS) {
+          return _.filter(TEST_SITES, s =>
+            s instanceof Mineral && filter(s));
+        }
+        return [];
+      }));
+
+      stubs.push(Sinon.stub(Mineral.prototype, "hasExtractor", () => {
+        return true;
+      }));
+
+      const jobs = boss.harvestJobs;
+
+      it('should only return harvest jobs', function() {
+        _.each(jobs, j => {
+          assert(j.type === Job.Harvest.TYPE,
+            `${j.info()} not of type ${Job.Harvest.TYPE}`);
+        });
+      });
+
+      it('should return all the harvest sites as harvest jobs', function() {
+        assert(jobs.length === TEST_SITES.length,
+          `More or less jobs than there are construction sites (${jobs.length} !== ${TEST_SITES.length})`);
+        for (let i = 0; i < jobs.length; ++i) {
+          assert(Boolean(_.find(jobs, j => j.site === TEST_SITES[i])),
+            `Jobs did not contain harvest site[${i}]`);
+        }
+      });
+
+      it('should cache the harvest jobs', function() {
+        const jobs2 = boss.harvestJobs;
+        assert(jobs === jobs2, "Harvest jobs are different on different calls");
+      });
+
+      _.each(stubs, s => s.restore());
+    });
   });
 });

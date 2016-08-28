@@ -152,7 +152,13 @@ const JobHarvest = class JobHarvest extends Job {
   }
 };
 
+
 JobHarvest.TYPE = 'harvest';
+
+
+Mineral.prototype.hasExtractor = function hasExtractor() {
+  return this.pos.lookFor(LOOK_STRUCTURES).length > 0;
+};
 
 
 module.exports = JobHarvest;

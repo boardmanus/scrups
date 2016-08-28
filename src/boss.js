@@ -36,6 +36,10 @@ function shouldRepair(s) {
   return s.hits < s.hitsMax;
 }
 
+function sourcePriority(s) {
+  return Job.Priority.NORMAL;
+}
+
 const Boss = class Boss {
 
   constructor(room) {
@@ -88,12 +92,14 @@ const Boss = class Boss {
   get harvestJobs() {
     return this.cache.getValue('harvestJobs', () => {
       const jobs = [];
-      this.city.sources.forEach(s => {
-        const maxJobs = Job.Harvest.maxWorkers(s);
-        for (let instance = 0; instance < maxJobs; ++instance) {
-          jobs.push(new Job.Harvest(s, instance));
-        }
+      const sources = this.room.find(FIND_SOURCES);
+      const minerals = this.room.find(FIND_MINERALS, {
+        filter: m => m.hasExtractor()
       });
+
+      _.each(sources, s => jobs.push(new Job.Harvest(s, sourcePriority)));
+      _.each(minerals, m => jobs.push(new Job.Harvest(m, sourcePriority)));
+
       return prioritize(jobs);
     });
   }
