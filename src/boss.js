@@ -94,7 +94,7 @@ const Boss = class Boss {
       const jobs = [];
       const sources = this.room.find(FIND_SOURCES);
       const minerals = this.room.find(FIND_MINERALS, {
-        filter: m => m.hasExtractor()
+        filter: m => m.isHarvestable()
       });
 
       _.each(sources, s => jobs.push(new Job.Harvest(s, sourcePriority)));

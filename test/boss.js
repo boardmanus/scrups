@@ -131,7 +131,7 @@ describe('A Boss', function() {
         return [];
       }));
 
-      stubs.push(Sinon.stub(Mineral.prototype, "hasExtractor", () => {
+      stubs.push(Sinon.stub(Mineral.prototype, "isHarvestable", () => {
         return true;
       }));
 

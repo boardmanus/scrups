@@ -20,7 +20,7 @@ const JobBuild = class JobBuild extends Job {
    * @return {number} the energy required
    */
   energyRequired() {
-    return site;
+    return this.site.progressTotal / BUILD_POWER;
   }
 };
 

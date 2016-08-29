@@ -20,7 +20,7 @@
     "no-multiple-empty-lines": "off",
     "linebreak-style": "off",
     "no-param-reassign": ["error", { "props": false }],
-    "max-len": ["error", 88, { "ignorePattern": "^\\s*console.log|^\\s*`.*`\\s*" }]
+    "max-len": ["error", 88, { "ignorePattern": "^\\s*console.log|^\\s*`.*`\\s*" }],
   },
   "globals": {
     "chai": true,

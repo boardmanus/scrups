@@ -54,6 +54,12 @@ describe('Screep Job', function() {
     it('has no workers before assignement', function() {
       assert(job.workers.length === 0, 'The job isAssigned without a worker!');
     });
+    it('only accepts creeps as worker', function() {
+      assert.doesNotThrow(() => job.assignWorker(new Creep()));
+      assert.throws(() => job.assignWorker(new Structure()), TypeError);
+      assert.throws(() => job.assignWorker(null), RangeError);
+      assert.throws(() => job.assignWorker(undefined), RangeError);
+    });
     it('has worker is present after assigning', function() {
       const worker1 = new Creep();
       const worker2 = new Creep();

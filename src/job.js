@@ -54,6 +54,12 @@ const Job = class Job {
    * @param {Creep} worker the worker to assign the job to.
    */
   assignWorker(worker) {
+    if (!worker) {
+      throw new RangeError('Must pass a valid object');
+    }
+    if (!(worker instanceof Creep)) {
+      throw new TypeError('Job only expects creeps');
+    }
     this.workers.push(worker);
   }
 };

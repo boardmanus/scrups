@@ -6,6 +6,56 @@ const Job = require('job');
 
 const TRAVEL_TIME_MODIFIER = 2;
 
+
+/**
+ * A job to repair a structure
+ */
+const JobRepair = class JobRepair extends Job {
+
+  /**
+   * Constructs a new repair job.
+   * @param {Structure} site the site to be repaired
+   * @param {Job.Priority} priority the priority of the job
+   */
+  constructor(site, priority) {
+    super(JobRepair.TYPE, site, priority);
+    if (!(site instanceof Structure)) {
+      throw new TypeError(`Can only repair structures! (site is a ${typeof site})`);
+    }
+  }
+
+
+  /**
+   * Determine the energy required to finish repairs
+   * @return {number} the energy required
+   */
+  energyRequired() {
+    const damage = this.site.hitsMax - this.site.hits;
+    return damage / REPAIR_POWER;
+  }
+
+
+  /**
+   * Assigns a Tower or Creep to repair the site
+   * @param {Creep|Tower} worker the worker used to repair
+   */
+  assignWorker(worker) {
+    if (!worker) {
+      throw new RangeError('Worker must be a valid Tower or Creep');
+    }
+    if (!(worker instanceof Creep) && !(worker instanceof StructureTower)) {
+      throw new TypeError('Worker must be a Creep or StructureTower');
+    }
+
+    this.workers.push(worker);
+  }
+};
+
+
+JobRepair.TYPE = 'repair';
+
+
+/*
 Creep.prototype.repairSuitability = function(site) {
   // Creeps are suitable for repair if it's a big job.
   // Leave the small jobs to the towers.
@@ -76,168 +126,7 @@ StructureTower.prototype.repairSuitability = function(site) {
   const timeEffectiveness = 1.0 - ticksForRepair / 20.0;
   return 0.5 * (timeEffectiveness + repairEffectiveness);
 };
+*/
 
-
-function adjustPriority(instance, priority) {
-  let newPriority = priority;
-  for (let i = 0; i < instance; ++i) {
-    newPriority = Job.Priority.lower(priority);
-  }
-  return newPriority;
-}
-
-function damageRatio(site) {
-  return site.hits / site.hitsMax;
-}
-
-function decayPriority(job) {
-  const decay = job.site.ticksToDecay;
-  if (decay < 10) {
-    return Job.Priority.CRITICAL;
-  } else if (decay < 20) {
-    return Job.Priority.HIGH;
-  } else if (decay < 40) {
-    return Job.Priority.NORMAL;
-  } else if (decay < 80) {
-    return Job.Priority.LOW;
-  }
-
-  return Job.Priority.IGNORE;
-}
-
-function defensePriority(job) {
-  const dr = damageRatio(job.site);
-  if (dr < 0.002) {
-    return Job.Priority.CRITICAL;
-  } else if (dr < 0.004) {
-    return Job.Priority.HIGH;
-  } else if (dr < 0.008) {
-    return Job.Priority.NORMAL;
-  } else if (dr < 0.01) {
-    return Job.Priority.LOW;
-  } else if (dr < 0.09) {
-    return Job.Priority.IDLE;
-  }
-
-  return Job.Priority.IGNORE;
-}
-
-function damageRatioPriority(job) {
-  const dr = damageRatio(job.site);
-  if (dr < 0.25) {
-    return Job.Priority.HIGH;
-  } else if (dr < 0.5) {
-    return Job.Priority.NORMAL;
-  } else if (dr < 0.75) {
-    return Job.Priority.LOW;
-  } else if (dr < 0.9) {
-    return Job.Priority.IDLE;
-  }
-  return Job.Priority.IGNORE;
-}
-
-function roadPriority(job) {
-  return Math.min(decayPriority(job), damageRatioPriority(job));
-}
-
-function rampartPriority(job) {
-  return Math.min(defensePriority(job), decayPriority(job));
-}
-
-function wallPriority(job) {
-  return defensePriority(job);
-}
-
-function energyRequiredForSite(site) {
-  const damage = site.hitsMax - site.hits;
-  return damage / REPAIR_POWER;
-}
-
-
-const JobRepair = class JobRepair extends Job {
-
-  constructor(site, instance, worker = null) {
-    super(JobRepair.TYPE, site, instance, worker);
-    if (!site instanceof Structure) {
-      throw new TypeError(`Can only repair structures! (site is a ${typeof site})`);
-    }
-  }
-
-
- /**
-  * Determines the priority of the job with respect to the game state.
-  */
-  priority() {
-    let p;
-    switch (this.site.structureType) {
-      case STRUCTURE_ROAD:
-        p = roadPriority(this);
-        break;
-      case STRUCTURE_RAMPART:
-        p = rampartPriority(this);
-        break;
-      case STRUCTURE_WALL:
-        p = wallPriority(this);
-        break;
-      default:
-        p = damageRatioPriority(this);
-        break;
-    }
-
-    return adjustPriority(this.instance, p);
-  }
-
-
-  /**
-   * The ratio of work remaining to repair.
-   */
-  completion() {
-    return damageRatio(this.site);
-  }
-
-  workerCompletion() {
-    if (worker === null) {
-      return 1.0;
-    }
-    return 1.0 - this.worker.energy() / this.worker.energyCapacity();
-  }
-
-  /**
-   * Determines the suitability of a worker for a repair job.
-   * @param {object} testWorker the worker to test (job worker if null)
-   * @return {number} the suitability of the worker
-   */
-  workerSuitability(testWorker = null) {
-    const worker = testWorker || this.worker;
-    if (!worker ||
-        (!(worker instanceof Creep) && !(worker instanceof StructureTower))) {
-      return 0.0;
-    }
-
-    return worker.repairSuitability(this.site);
-  }
-
-  /**
-   * Determine the energy required to finish repairs
-   * @return the energy required
-   */
-  energyRequired() {
-    return energyRequiredForSite(this.site);
-  }
-};
-
-JobRepair.TYPE = 'repair';
-
-JobRepair.maxWorkers = function maxWorkers(site) {
-  const energyRequired = energyRequiredForSite(site);
-  if (energyRequired < 200) {
-    return 1;
-  } else if (energyRequired < 1000) {
-    return 2;
-  } else if (energyRequired < 5000) {
-    return 3;
-  }
-  return 4;
-};
 
 module.exports = JobRepair;
