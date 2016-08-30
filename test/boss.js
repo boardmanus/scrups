@@ -8,6 +8,7 @@ describe('A Boss', function() {
   const room = new Room();
   const boss = new Boss(room);
 
+
   describe('Construction', function() {
     it('should be created with expected defaults', function() {
       assert(boss.room === room, "City wasn't expected value");
@@ -25,6 +26,7 @@ describe('A Boss', function() {
     });
   });
 
+
   describe('General methods', function() {
     it('should report appropriate info', function() {
       room.name = TEST_ROOM_NAME;
@@ -32,6 +34,7 @@ describe('A Boss', function() {
       assert(info.includes(TEST_ROOM_NAME),
         `Room name (${TEST_ROOM_NAME}) not in info (${info})`);
     });
+
 
     describe('retrieving build jobs', function() {
       const TEST_CONSTRUCTION_SITES = [
@@ -49,12 +52,14 @@ describe('A Boss', function() {
 
       const jobs = boss.constructionJobs;
 
+
       it('should only return build jobs', function() {
         _.each(jobs, j => {
           assert(j.type === Job.Build.TYPE,
             `${j.info()} not of type ${Job.Build.TYPE}`);
         });
       });
+
 
       it('should return all the construction sites as construction jobs', function() {
         assert(jobs.length === TEST_CONSTRUCTION_SITES.length,
@@ -65,6 +70,7 @@ describe('A Boss', function() {
         }
       });
 
+
       it('should cache the construction jobs', function() {
         const jobs2 = boss.constructionJobs;
         assert(jobs === jobs2, "Construction jobs are different on different calls");
@@ -72,6 +78,8 @@ describe('A Boss', function() {
 
       stub.restore();
     });
+
+
     describe('retrieving repair jobs', function() {
       const TEST_REPAIR_SITES = [
         new Structure(),
@@ -94,6 +102,8 @@ describe('A Boss', function() {
             `${j.info()} not of type ${Job.Repair.TYPE}`);
         });
       });
+
+
       it('should return all the repair sites as repair jobs', function() {
         assert(jobs.length === TEST_REPAIR_SITES.length,
           `More or less jobs than there are construction sites (${jobs.length} !== ${TEST_REPAIR_SITES.length})`);
@@ -103,6 +113,7 @@ describe('A Boss', function() {
         }
       });
 
+
       it('should cache the repair jobs', function() {
         const jobs2 = boss.repairJobs;
         assert(jobs === jobs2, "Repair jobs are different on different calls");
@@ -110,6 +121,8 @@ describe('A Boss', function() {
 
       stub.restore();
     });
+
+
     describe('retrieving harvest jobs', function() {
       const TEST_SITES = [
         new Source(),
@@ -137,12 +150,14 @@ describe('A Boss', function() {
 
       const jobs = boss.harvestJobs;
 
+
       it('should only return harvest jobs', function() {
         _.each(jobs, j => {
           assert(j.type === Job.Harvest.TYPE,
             `${j.info()} not of type ${Job.Harvest.TYPE}`);
         });
       });
+
 
       it('should return all the harvest sites as harvest jobs', function() {
         assert(jobs.length === TEST_SITES.length,
@@ -153,9 +168,77 @@ describe('A Boss', function() {
         }
       });
 
+
       it('should cache the harvest jobs', function() {
         const jobs2 = boss.harvestJobs;
         assert(jobs === jobs2, "Harvest jobs are different on different calls");
+      });
+
+      _.each(stubs, s => s.restore());
+    });
+
+
+    describe('retrieving pickup jobs', function() {
+      const TEST_PICKUP_SITES = [
+        new StructureStorage(),
+        new StructureContainer(),
+        new StructureLink()
+      ];
+      const TEST_RESOURCE_SITES = [
+        new Resource(),
+        new Resource()
+      ];
+      const TEST_HARVESTER_WORKERS = [
+        new Creep(),
+        new Creep()
+      ];
+      const TEST_ALL_SITES = TEST_PICKUP_SITES
+        .concat(TEST_RESOURCE_SITES)
+        .concat(TEST_HARVESTER_WORKERS);
+
+      const stubs = [];
+
+      stubs.push(Sinon.stub(room, "find", (type, filter) => {
+        switch (type) {
+          case FIND_DROPPED_RESOURCES:
+            console.log('found resources');
+            return TEST_RESOURCE_SITES;
+          case FIND_MY_CREEPS:
+            console.log('found creeps');
+            return TEST_HARVESTER_WORKERS;
+          case FIND_STRUCTURES:
+          case FIND_MY_STRUCTURES:
+            console.log('found structures');
+            return TEST_PICKUP_SITES;
+          default: break;
+        }
+        return [];
+      }));
+
+      const jobs = boss.pickupJobs;
+
+
+      it('should only return pickup jobs', function() {
+        _.each(jobs, j => {
+          assert(j.type === Job.Pickup.TYPE,
+            `${j.info()} not of type ${Job.Pickup.TYPE}`);
+        });
+      });
+
+
+      it('should return expected sites as pickup jobs', function() {
+        assert(jobs.length === TEST_ALL_SITES.length,
+          `More or less jobs than there are pickup sites (${jobs.length} !== ${TEST_ALL_SITES.length})`);
+        for (let i = 0; i < jobs.length; ++i) {
+          assert(Boolean(_.find(jobs, j => j.site === TEST_ALL_SITES[i])),
+            `Jobs did not contain pickup site[${i}]`);
+        }
+      });
+
+
+      it('should cache the pickup jobs', function() {
+        const jobs2 = boss.constructionJobs;
+        assert(jobs === jobs2, "Construction jobs are different on different calls");
       });
 
       _.each(stubs, s => s.restore());

@@ -40,6 +40,10 @@ function sourcePriority(s) {
   return Job.Priority.NORMAL;
 }
 
+function pickupPriority(s) {
+  return Job.Priority.NORMAL;
+}
+
 const Boss = class Boss {
 
   constructor(room) {
@@ -101,6 +105,19 @@ const Boss = class Boss {
       _.each(minerals, m => jobs.push(new Job.Harvest(m, sourcePriority)));
 
       return prioritize(jobs);
+    });
+  }
+
+  get pickupJobs() {
+    return this.cache.getValue('pickupJobs', () => {
+      const jobs = [];
+      const resources = this.room.find(FIND_DROPPED_RESOURCES);
+      _.each(resources, r => jobs.push(new Job.Pickup(r, pickupPriority(r))));
+      const sites = this.room.find(FIND_STRUCTURES, {filter: s => s.hasPickup()});
+      _.each(sites, s => jobs.push(new Job.Pickup(s, pickupPriority(s))));
+      const creeps = this.room.find(FIND_MY_CREEPS, {filter: c => c.hasPickup()});
+      _.each(creeps, c => jobs.push(new Job.Pickup(c, pickupPriority(c))));
+      return jobs;
     });
   }
 
