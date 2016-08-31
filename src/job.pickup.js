@@ -3,6 +3,7 @@
  */
 
 const Job = require('job');
+const JobHarvest = require('job.harvest');
 
 
 const JobPickup = class JobPickup extends Job {
@@ -37,7 +38,7 @@ RoomObject.prototype.hasPickup = function hasPickup() {
 };
 
 Creep.prototype.hasPickup = function hasPickup() {
-  return false;
+  return this.job && this.job.type === JobHarvest.TYPE && _.sum(this.carry) > 0;
 };
 
 Resource.prototype.hasPickup = function hasPickup() {

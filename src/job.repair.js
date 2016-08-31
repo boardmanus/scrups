@@ -4,8 +4,6 @@
 
 const Job = require('job');
 
-const TRAVEL_TIME_MODIFIER = 2;
-
 
 /**
  * A job to repair a structure

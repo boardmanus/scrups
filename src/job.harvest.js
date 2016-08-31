@@ -3,10 +3,7 @@
  */
 
 const Job = require('job');
-const u = require('utils');
 
-
-const CACHE = new u.Cache();
 
 
 const JobHarvest = class JobHarvest extends Job {
@@ -14,8 +11,7 @@ const JobHarvest = class JobHarvest extends Job {
   /**
    * Constructs a new harvesting job.
    * @param {object} site the site at which to harvest
-   * @param {number} instance the job number for harvesting
-   * @param {object} worker the worker assigned
+   * @param {number} priority the job number for harvesting
    */
   constructor(site, priority) {
     super(JobHarvest.TYPE, site, priority);

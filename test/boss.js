@@ -132,7 +132,7 @@ describe('A Boss', function() {
 
       const stubs = [];
       stubs.push(Sinon.stub(room, "find", (type, opts) => {
-        let filter = (opts && opts.filter) ? opts.filter : s => s;
+        let filter = (opts && opts.filter) ? opts.filter : _.identity;
         if (type === FIND_SOURCES) {
           return _.filter(TEST_SITES, s =>
             s instanceof Source && filter(s));
@@ -236,6 +236,64 @@ describe('A Boss', function() {
       it('should cache the pickup jobs', function() {
         const jobs2 = boss.pickupJobs;
         assert(jobs === jobs2, "Construction jobs are different on different calls");
+      });
+
+      _.each(stubs, s => s.restore());
+    });
+
+
+    describe('retrieving storing jobs', function() {
+      const TEST_STORAGE_SITES = [
+        new StructureExtension(),
+        new StructureSpawn(),
+        new StructureContainer(),
+        new StructureLink(),
+        new StructureStorage()
+      ];
+
+      const TEST_STORAGE_CREEPS = [
+        new Creep(),
+        new Creep()
+      ];
+
+      const TEST_ALL_SITES = TEST_STORAGE_SITES.concat(TEST_STORAGE_CREEPS);
+
+      const stubs = [];
+      stubs.push(Sinon.stub(RoomObject.prototype, "isStorable", () => true));
+
+      stubs.push(Sinon.stub(room, "find", (type, opts) => {
+        let filter = (opts && opts.filter) ? opts.filter : _.identity;
+        if (type === FIND_MY_STRUCTURES) {
+          return _.filter(TEST_STORAGE_SITES, filter);
+        } else if (type === FIND_MY_CREEPS) {
+          return _.filter(TEST_STORAGE_CREEPS, filter);
+        }
+        return [];
+      }));
+
+      const jobs = boss.storeJobs;
+
+      it('should only return storage jobs', function() {
+        _.each(jobs, j => {
+          assert(j.type === Job.Store.TYPE,
+            `${j.info()} not of type ${Job.Store.TYPE}`);
+        });
+      });
+
+
+      it('should return all the storage sites as storage jobs', function() {
+        assert(jobs.length === TEST_ALL_SITES.length,
+          `More or less jobs than there are storage sites (${jobs.length} !== ${TEST_ALL_SITES.length})`);
+        for (let i = 0; i < jobs.length; ++i) {
+          assert(Boolean(_.find(jobs, j => j.site === TEST_ALL_SITES[i])),
+            `Jobs did not contain storage site[${i}]`);
+        }
+      });
+
+
+      it('should cache the storage jobs', function() {
+        const jobs2 = boss.storeJobs;
+        assert(jobs === jobs2, "Storage jobs are different on different calls");
       });
 
       _.each(stubs, s => s.restore());

@@ -4,6 +4,7 @@
 
 const Job = require('job');
 
+/*
 function towerPriority(job) {
   const energyRatio = job.completionRatio();
   const enemiesPresent = (job.site.room.city.enemies.length > 0);
@@ -42,7 +43,7 @@ function spawnerPriority(job) {
   let spawnPriority = Job.Priority.IGNORE;
   if (spawnQueue.length > 0) {
     spawnPriority = spawnQueue[0].priority();
-    spawnQueue.forEach((j) => { requiredEnergy += j.requiredEnergy(); });
+    spawnQueue.forEach(j => { requiredEnergy += j.requiredEnergy(); });
   } else {
     requiredEnergy = job.site.energy;
   }
@@ -88,70 +89,33 @@ function energyRequiredForSite(site) {
   }
   return 0;
 }
-
+*/
 
 const JobStore = class JobStore extends Job {
 
-  constructor(site, instance, worker = null) {
-    super(JobStore.TYPE, site, instance, worker);
+  constructor(site, priority) {
+    super(JobStore.TYPE, site, priority);
   }
-
-
- /**
-  * Determines the priority of the job with respect to the game state.
-  */
-  priority() {
-    switch (this.site.structureType) {
-      case STRUCTURE_TOWER: return towerPriority(this);
-      case STRUCTURE_LINK: return linkPriority(this);
-      case STRUCTURE_SPAWN:
-      case STRUCTURE_EXTENSION: return spawnerPriority(this);
-      case STRUCTURE_CONTAINER: return containerPriority(this);
-      case STRUCTURE_STORAGE: return storagePriority(this);
-      default: break;
-    }
-    return Job.Priority.IGNORE;
-  }
-
-
-  /**
-   * Completion ratio is how full the site is.
-   */
-  completionRatio() {
-    switch (this.site.structureType) {
-      case STRUCTURE_TOWER:
-      case STRUCTURE_LINK:
-      case STRUCTURE_SPAWN:
-      case STRUCTURE_EXTENSION:
-        return this.site.energyAvailable / this.site.energyCapacity;
-      case STRUCTURE_CONTAINER:
-      case STRUCTURE_STORAGE:
-        return _.sum(this.site.store) / this.site.storeCapacity;
-      default: break;
-    }
-    return 1.0;
-  }
-
 
   /**
    * Determines the energy required to finish storing.
    * @return the energy required.
    */
   energyRequired() {
-    return energyRequiredForSite(this.site);
+    return this.site.storableSpace();
   }
 };
 
 JobStore.TYPE = 'store';
 
-JobStore.maxWorkers = function maxWorkers(site) {
-  const energyRequired = energyRequiredForSite(site);
-  if (energyRequired < 200) {
-    return 1;
-  } else if (energyRequired < 1000) {
-    return 2;
-  }
-  return 3;
+
+RoomObject.prototype.isStorable = function isStorable() {
+  return false;
 };
+
+RoomObject.prototype.storableSpace = function storableSpace() {
+  return 0;
+};
+
 
 module.exports = JobStore;

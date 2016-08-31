@@ -44,6 +44,15 @@ function pickupPriority(s) {
   return Job.Priority.NORMAL;
 }
 
+function storePriority(s) {
+  return Job.Priority.NORMAL;
+}
+
+function upgradePriority(s) {
+  return Job.Priority.NORMAL;
+}
+
+
 const Boss = class Boss {
 
   constructor(room) {
@@ -117,33 +126,26 @@ const Boss = class Boss {
       _.each(sites, s => jobs.push(new Job.Pickup(s, pickupPriority(s))));
       const creeps = this.room.find(FIND_MY_CREEPS, {filter: c => c.hasPickup()});
       _.each(creeps, c => jobs.push(new Job.Pickup(c, pickupPriority(c))));
-      return jobs;
+      return prioritize(jobs);
     });
   }
 
   get storeJobs() {
-    return this.cache.getValue('harvestJobs', () => {
+    return this.cache.getValue('storeJobs', () => {
       const jobs = [];
-      this.city.energyStorage.forEach(s => {
-        const maxJobs = Job.Store.maxWorkers(s);
-        for (let instance = 0; instance < maxJobs; ++instance) {
-          jobs.push(new Job.Store(s, instance));
-        }
-      });
+      const sites = this.room.find(FIND_MY_STRUCTURES, {filter: s => s.isStorable()});
+      _.each(sites, s => jobs.push(new Job.Store(s, storePriority(s))));
+      const creeps = this.room.find(FIND_MY_CREEPS, {filter: s => s.isStorable()});
+      _.each(creeps, c => jobs.push(new Job.Store(c, storePriority(c))));
       return prioritize(jobs);
     });
   }
 
   get upgradeJobs() {
     return this.cache.getValue('upgradeJobs', () => {
-      const workers = this.workers;
-      const jobs = [];
-      const maxJobs = Job.Upgrade.maxWorkers(this.city.controller);
-      for (let instance = 0; instance < maxJobs; ++instance) {
-        const job = new Job.Upgrade(this.city.controller, instance);
-        jobs.push(job);
-      }
-      return prioritize(jobs);
+      const controller = this.room.controller;
+      const jobs = [new Job.Upgrade(controller, upgradePriority(controller))];
+      return jobs;
     });
   }
 

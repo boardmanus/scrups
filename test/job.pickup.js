@@ -2,7 +2,7 @@ const assert = require('chai').assert;
 const Sinon = require('sinon');
 const Job = require('job');
 const JobPickup = require('job.pickup');
-const JobHarvester = require('job.harvest');
+const JobHarvest = require('job.harvest');
 
 
 describe('Screep Pickup Job', () => {
@@ -76,9 +76,9 @@ describe('Screep Pickup Job', () => {
       it('should only allow pickup from harvester creeps', function() {
         const creep = new Creep();
         const harvesterCreep = new Creep();
-        harvesterCreep.memory.job = new JobHarvester(new Source(), 0);
-        harvesterCreep.store = {};
-        harvesterCreep.store[RESOURCE_ENERGY] = 50;
+        harvesterCreep.job = new JobHarvest(new Source(), 0);
+        harvesterCreep.carry = {};
+        harvesterCreep.carry[RESOURCE_ENERGY] = 50;
 
         assert(!creep.hasPickup(), "shouldn't be able to pickup from a non-harvester creep");
         assert(harvesterCreep.hasPickup(), "should be able to pickup from a harvester creep with energy");

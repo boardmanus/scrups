@@ -21,7 +21,10 @@ global.Structure = require('screeps/Structure.js');
 global.OwnedStructure = require('screeps/OwnedStructure.js');
 
 global.StructureContainer = require('screeps/Structures/StructureContainer.js');
+global.StructureController = require('screeps/Structures/StructureController.js');
+global.StructureExtension = require('screeps/Structures/StructureExtension.js');
 global.StructureLink = require('screeps/Structures/StructureLink.js');
+global.StructureSpawn = require('screeps/Structures/StructureSpawn.js');
 global.StructureStorage = require('screeps/Structures/StructureStorage.js');
 global.StructureTower = require('screeps/Structures/StructureTower.js');
 
