@@ -53,7 +53,9 @@ StructureStorage.prototype.hasPickup = function hasPickup() {
 };
 
 StructureLink.prototype.hasPickup = function hasPickup() {
-  return false;
+  return this.room.find(FIND_MY_STRUCTURES, {
+    filter: s => (s.structureType === STRUCTURE_LINK) && (s.energy > 0)
+  }).length > 0;
 };
 
 module.exports = JobPickup;

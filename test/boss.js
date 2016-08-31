@@ -201,14 +201,11 @@ describe('A Boss', function() {
       stubs.push(Sinon.stub(room, "find", (type, filter) => {
         switch (type) {
           case FIND_DROPPED_RESOURCES:
-            console.log('found resources');
             return TEST_RESOURCE_SITES;
           case FIND_MY_CREEPS:
-            console.log('found creeps');
             return TEST_HARVESTER_WORKERS;
           case FIND_STRUCTURES:
           case FIND_MY_STRUCTURES:
-            console.log('found structures');
             return TEST_PICKUP_SITES;
           default: break;
         }
@@ -237,7 +234,7 @@ describe('A Boss', function() {
 
 
       it('should cache the pickup jobs', function() {
-        const jobs2 = boss.constructionJobs;
+        const jobs2 = boss.pickupJobs;
         assert(jobs === jobs2, "Construction jobs are different on different calls");
       });
 
