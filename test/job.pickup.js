@@ -55,13 +55,21 @@ describe('Screep Pickup Job', () => {
         assert(resource.hasPickup(), "Couldn't pick up resource!");
       });
 
-      it('should only allow pickup from contains with resources', function() {
+      it('should only allow pickup from containers with resources', function() {
         const container = new StructureContainer();
         assert(!container.hasPickup(), "Container was empty, but had pickup");
 
         container.store[RESOURCE_ENERGY] = 50;
         container.store[RESOURCE_OXYGEN] = 20;
         assert(container.hasPickup(), "Container wasn't empty, but didn't have pickup");
+      });
+
+      it('should only allow pickup from storage with resources', function() {
+        const storage = new StructureStorage();
+        assert(!storage.hasPickup(), "storage was empty, but had pickup");
+
+        storage.store[RESOURCE_OXYGEN] = 20;
+        assert(storage.hasPickup(), "storage wasn't empty, but didn't have pickup");
       });
     });
   });

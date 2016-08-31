@@ -14,6 +14,8 @@ describe('Screep Repair Job', () => {
       assert.throws(() => new JobRepair(0, TEST_PRIORITY), RangeError);
       assert.throws(() => new JobRepair(null, TEST_PRIORITY), RangeError);
       assert.doesNotThrow(() => new JobRepair(new Structure(), TEST_PRIORITY));
+      assert.doesNotThrow(() => new JobRepair(new StructureStorage(), TEST_PRIORITY));
+      assert.doesNotThrow(() => new JobRepair(new StructureContainer(), TEST_PRIORITY));
     });
   });
 
