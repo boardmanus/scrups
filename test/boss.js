@@ -298,5 +298,37 @@ describe('A Boss', function() {
 
       _.each(stubs, s => s.restore());
     });
+
+
+    describe('retrieving upgrade jobs', function() {
+      const stubs = [];
+
+      room.controller = new StructureController();
+      const jobs = boss.upgradeJobs;
+
+
+      it('should only return upgrade jobs', function() {
+        _.each(jobs, j => {
+          assert(j.type === Job.Upgrade.TYPE,
+            `${j.info()} not of type ${Job.Upgrade.TYPE}`);
+        });
+      });
+
+
+      it('should return all the upgrade sites as upgrade jobs', function() {
+        assert(jobs.length === 1,
+          `There should always be one upgrade job (${jobs.length} !== 1)`);
+        for (let i = 0; i < jobs.length; ++i) {
+          assert(Boolean(_.find(jobs, j => j.site === room.controller),
+            `Jobs did not contain upgrade site[${i}]`));
+        }
+      });
+
+
+      it('should cache the upgrade jobs', function() {
+        const jobs2 = boss.upgradeJobs;
+        assert(jobs === jobs2, "Upgrade jobs are different on different calls");
+      });
+    });
   });
 });

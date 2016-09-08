@@ -7,54 +7,19 @@ const Job = require('job');
 
 const JobUpgrade = class JobUpgrade extends Job {
 
-  constructor(site, instance, worker = null) {
-    super(JobUpgrade.TYPE, site, instance, worker);
-  }
-
-
- /**
-  * Determines the priority of the job with respect to the game state.
-  */
-  priority() {
-    const controller = this.site;
-    const numUpgraders = this.instance;
-    const downgradeRatio =
-    controller.ticksToLive / CONTROLLER_DOWNGRADE[controller.level];
-    if (numUpgraders === 0) {
-      if (downgradeRatio < 0.1) {
-        return Job.Priority.CRITICAL;
-      } else if (downgradeRatio < 0.5) {
-        return Job.Priority.HIGH;
-      }
-      return Job.Priority.NORMAL;
-    } else if (numUpgraders <= 2) {
-      return Job.Priority.NORMAL;
-    }
-
-    return Job.Priority.IDLE;
+  constructor(site, priority) {
+    super(JobUpgrade.TYPE, site, priority);
   }
 
   /**
-   * Completion is relative to the next controller level.
-   */
-  completionRatio() {
-    return this.site.progress / (this.site.progress + this.site.progressTotal);
-  }
-
-
-  /**
-   * Determines the energy required to take the controller to the next level
-   * @return the energy required
+   * Always require energy to upgrade a controller
+   * @return {number} energy required
    */
   energyRequired() {
-    return this.site.progressTotal;
+    return 1000;
   }
 };
 
 JobUpgrade.TYPE = 'upgrade';
-
-JobUpgrade.maxWorkers = function maxWorkers(site) {
-  return 5;
-};
 
 module.exports = JobUpgrade;
