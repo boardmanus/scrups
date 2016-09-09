@@ -9,16 +9,20 @@ const JobUpgrade = class JobUpgrade extends Job {
 
   constructor(site, priority) {
     super(JobUpgrade.TYPE, site, priority);
+    if (!(site instanceof StructureController)) {
+      throw new TypeError("Hey, that's got a be a Controller mate!");
+    }
   }
 
   /**
-   * Always require energy to upgrade a controller
-   * @return {number} energy required
+   * Determines the energy required to take the controller to the next level
+   * @return the energy required
    */
   energyRequired() {
     return 1000;
   }
 };
+
 
 JobUpgrade.TYPE = 'upgrade';
 
