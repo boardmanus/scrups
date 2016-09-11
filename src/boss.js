@@ -3,7 +3,6 @@
  * creeps
  */
 const Job = require('job.all');
-const Peon = require('peon');
 const u = require('utils');
 
 
@@ -32,8 +31,13 @@ function buildPriority(cs) {
 function repairPriority(s) {
   return Job.Priority.NORMAL;
 }
+
 function shouldRepair(s) {
-  return s.hits < s.hitsMax;
+  return (s.hits < s.hitsMax) &&
+      (s.my ||
+        (s.structureType === STRUCTURE_ROAD) ||
+        (s.structureType === STRUCTURE_WALL) ||
+        (s.structureType === STRUCTURE_RAMPART));
 }
 
 function sourcePriority(s) {
@@ -91,10 +95,11 @@ const Boss = class Boss {
     });
   }
 
+
   get repairJobs() {
     return this.cache.getValue('repairJobs', () => {
       const jobs = [];
-      const repairSites = this.room.find(FIND_MY_STRUCTURES, shouldRepair);
+      const repairSites = this.room.find(FIND_STRUCTURES, shouldRepair);
       _.each(repairSites, s => {
         jobs.push(new Job.Repair(s, repairPriority(s)));
       });
@@ -153,117 +158,108 @@ const Boss = class Boss {
     return this.cache.getValue('allJobs', () => {
       const jobs = this.upgradeJobs.concat(
           this.storeJobs,
+          this.upgradeJobs,
           this.harvestJobs,
-          // this.repairJobs,
-          // this.buildJobs,
+          this.pickupJobs,
+          this.repairJobs,
           this.constructionJobs);
-
-      // Find jobs that are already being worked...
-      const workers = this.workers;
-      _.each(workers, w => {
-        const jobId = w.memory.jobId;
-        if (!jobId) {
-          return;
-        }
-
-        let job = _.find(jobs, j => j.id() === jobId);
-        if (job) {
-          // Ok, this worker is is performing the job - update the reference
-          job.assign(w);
-        } else {
-          // No job exists that matches the workers... nuke the workers job
-          w.memory.jobId = null;
-        }
-      });
 
       prioritize(jobs);
     });
   }
 
+  /**
+   * The workers assigned to the city
+   * @return {creep[]} creeps assigned to the city, and boss
+   */
   get workers() {
     return this.cache.getValue('workers', () => {
-      const workers = _.map(
-        _.filter(
-          Object.keys(Game.creeps),
-          k =>
-            (Game.creeps[k].memory.city === this.room.name &&
-              !Game.creeps[k].memory.transferCity) ||
-                (Game.creeps[k].memory.transferCity === this.room.name)),
-        k => {
-          const c = Game.creeps[k];
-          if (c.memory.transferCity) {
-            if (c.room.name === c.memory.transferCity) {
-              console.log(`${u.name(c)} is working in transfer location room=${c.room.name})`);
-            } else {
-              console.log(`${u.name(c)} is in the wrong room (city=${this.room.name}, room=${c.room.name}, transferRoom=${c.memory.transferCity})`);
-            }
-          }
-          return c;
-        });
-
-      return workers;
+      return _.filter(Game.creeps, c => c.memory.cityName === this.room.name);
     });
   }
 
-  get peons() {
-    return this.cache.getValue('peons', () => {
-      const peons = _.map(
-        _.filter(Object.keys(Game.creeps),
-          k =>
-            (Game.creeps[k].memory.city === this.room.name &&
-              !Game.creeps[k].memory.transferCity) ||
-                (Game.creeps[k].memory.transferCity === this.room.name)),
-        k => {
-          const c = Game.creeps[k];
-          c.city = this;
-          if (c.room !== c.city.room) {
-            if (c.room.name !== c.memory.transferCity) {
-              console.log(`${u.name(c)} is in the wrong room (city=${this.room.name}, room=${c.room.name}, transferRoom=${c.memory.transferCity})`);
-            } else {
-              console.log(`${u.name(c)} is working in transfer location room=${c.room.name})`);
-            }
-          }
-          return new Peon(this.city, c);
-        });
+  determineExistingJobs() {
 
-      _.each(peons, p => {
-        if (!p.jobId) {
-          return;
-        }
-        let job = _.find(this.allJobs, j => j.id() === p.jobId);
-        if (!job) {
-          const components = p.jobId.split('-');
-          console.log(`components: ${components}`);
-          const type = components[0];
-          const instance = Number(components[1]);
-          const site = Game.getObjectById(components[2]);
-          if (site != null) {
-            job = new Job(type, site, instance, p);
-          }
-        }
-        p.assign(job);
-      });
+    // Find jobs that are already being worked...
+    const workers = this.workers;
+    const jobs = this.allJobs;
 
-      return peons;
+    _.each(workers, w => {
+      const jobId = w.memory.jobId;
+      if (!jobId) {
+        return;
+      }
+
+      let job = _.find(jobs, j => j.id() === jobId);
+      if (job) {
+        // Ok, this worker is is performing the job - update the reference
+        job.assign(w);
+      } else {
+        // No job exists that matches the workers... nuke the workers job
+        w.memory.jobId = null;
+      }
     });
   }
 
-  get idlePeons() {
-    return this.cache.getValue('idlePeons', () =>
-      _.filter(this.peons, p => p.job === null));
-  }
-
-
-  audit() {
-    // Determine all the construction jobs to be worked
-    console.log(`${this.info()} has ${this.peons.length} peons to work with.`);
-    console.log(`${this.info()} has ${this.idlePeons.length} idle peons`);
+  /**
+   * Prepare the boss for the days work
+   */
+  prepare() {
+    this.determineExistingJobs();
   }
 
 
   /**
+   * Delegate jobs to the workers without any
+   */
+  delegate() {
+    // Allocate jobs to workers
+    const idleWorkers = _.filter(this.workers, w => !w.memory.jobId);
+    if (idleWorkers.length === 0) {
+      console.log('No idle workers...');
+      return;
+    }
+
+    const vacancies = _.filter(this.allJobs, j => j.workers.length === 0);
+    if (vacancies.length === 0) {
+      console.log('No job vacancies...');
+      return;
+    }
+
+    _.each(vacancies, job => {
+      if (idleWorkers.length === 0) {
+        return;
+      }
+
+      // Find best peon for the job
+      let efficiency = 0.0;
+      let bestIdx = 0;
+      const worker = _.reduce(idleWorkers, (bestPeon, peon, idx) => {
+        if (peon.job) {
+          return bestPeon;
+        }
+        const efficiency2 = peon.efficiency(job);
+        if (efficiency2 > efficiency) {
+          efficiency = efficiency2;
+          bestIdx = idx;
+          return peon;
+        }
+        return bestPeon;
+      }, null);
+      if (worker) {
+        job.assign(worker);
+        idleWorkers.splice(bestIdx, 1);
+      } else {
+        console.log(`Weird - no creep can work ${job.info()}`);
+      }
+    });
+
+    console.log(`${this.info()} has ${this.idlePeons.length} idle peons after assigning jobs.`);
+  }
+
+  /**
    * Report job information based on the options provided.
-   * @param options the options to modify the report
+   * @param {object} options the options to modify the report
    */
   jobReport(options = null) {
     const opts = jobOptions(options);
@@ -290,45 +286,6 @@ const Boss = class Boss {
     }
 
     console.log(report);
-  }
-
-
-  /**
-   * Get the boss to assign jobs to the peons.
-   */
-  run() {
-    // Allocate jobs to workers
-    const idleWorkers = this.idlePeons;
-    _.each(this.allJobs, job => {
-      if (idleWorkers.length === 0) {
-        return;
-      }
-
-      // Find best peon for the job
-      let efficiency = 0.0;
-      let bestIdx = 0;
-      const worker = _.reduce(idleWorkers, (bestPeon, peon, idx) => {
-        if (peon.job) {
-          return bestPeon;
-        }
-        const efficiency2 = peon.efficiency(job);
-        if (efficiency2 > efficiency) {
-          efficiency = efficiency2;
-          bestIdx = idx;
-          return peon;
-        }
-        return bestPeon;
-      }, null);
-      if (worker) {
-        job.assign(worker);
-        worker.assign(job);
-        idleWorkers.splice(bestIdx, 1);
-      } else {
-        // console.log(`Weird - no peon can work ${job.info()}`);
-      }
-    });
-
-    console.log(`${this.info()} has ${this.idlePeons.length} idle peons after assigning jobs.`);
   }
 };
 

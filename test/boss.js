@@ -8,6 +8,7 @@ describe('A Boss', function() {
   const room = new Room();
   const boss = new Boss(room);
 
+  room.name = TEST_ROOM_NAME;
 
   describe('Construction', function() {
     it('should be created with expected defaults', function() {
@@ -29,7 +30,6 @@ describe('A Boss', function() {
 
   describe('General methods', function() {
     it('should report appropriate info', function() {
-      room.name = TEST_ROOM_NAME;
       const info = boss.info();
       assert(info.includes(TEST_ROOM_NAME),
         `Room name (${TEST_ROOM_NAME}) not in info (${info})`);
@@ -88,7 +88,7 @@ describe('A Boss', function() {
       ];
 
       const stub = Sinon.stub(room, "find", (type, opts) => {
-        if (type === FIND_MY_STRUCTURES) {
+        if (type === FIND_STRUCTURES) {
           return TEST_REPAIR_SITES;
         }
         return [];
@@ -328,6 +328,39 @@ describe('A Boss', function() {
       it('should cache the upgrade jobs', function() {
         const jobs2 = boss.upgradeJobs;
         assert(jobs === jobs2, "Upgrade jobs are different on different calls");
+      });
+    });
+
+    describe('retrieving workers', function() {
+      const creeps = [];
+      let creep = new Creep();
+      creep.memory.cityName = room.name;
+      creeps.push(creep);
+      creep = new Creep();
+      creep.memory.cityName = 'xxxx';
+      creeps.push(creep);
+      creep = new Creep();
+      creep.memory.cityName = room.name;
+      creeps.push(creep);
+      creep = new Creep();
+      creep.memory.cityName = 'W1N1';
+      creeps.push(creep);
+      creep = new Creep();
+      creep.memory.cityName = 'W2N1';
+      creeps.push(creep);
+
+      Game.creeps = creeps;
+
+      const workers = boss.workers;
+
+      it('all workers should have the same room as the boss', function() {
+        assert(workers.length === 2, `Unexpected number of workers (${workers.length} !== 2)`);
+        _.each(workers, w => assert(w.memory.cityName === boss.room.name));
+      });
+
+      it('should cache the wokers', function() {
+        const workers2 = boss.workers;
+        assert(workers === workers2, "Workers are different on different calls");
       });
     });
   });

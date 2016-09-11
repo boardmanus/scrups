@@ -6,6 +6,7 @@ AppModulePath.addPath(`${Path.resolve()}/lib`);
 
 global._ = require('lodash');
 
+global.Game = require('screeps/Game.js');
 global.Room = require('screeps/Room.js');
 global.RoomObject = require('screeps/RoomObject.js');
 global.RoomPosition = require('screeps/RoomPosition.js');

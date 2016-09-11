@@ -5,8 +5,8 @@
 module.exports = {
   /**
    * Creates a good name for a screeps objects
-   * @param obj the screep object to generate a name for
-   * @return an nice name for the object
+   * @param {RoomObj} obj the screep object to generate a name for
+   * @return {string} name for the object
    */
   name(obj) {
     if (obj instanceof Structure) {
@@ -28,7 +28,13 @@ module.exports = {
     return `unknown-${obj}`;
   },
 
-  Cache: class Cache {
+  Cache: class {
+    /**
+     * Retrieve the cached value, or invoke the retrieval function
+     * @param {string} key the key of the cached value
+     * @param {function} fn the function to invoke
+     * @return {*} the cached value
+     */
     getValue(key, fn) {
       if (!this[key]) {
         this[key] = fn();
@@ -36,6 +42,10 @@ module.exports = {
       return this[key];
     }
 
+    /**
+     * Resets the cached value, so the function will be invoked on next retrieval
+     * @param {string} key the cached item to reset
+     */
     reset(key) {
       this[key] = null;
     }
