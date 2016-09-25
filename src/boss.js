@@ -178,6 +178,17 @@ const Boss = class Boss {
     });
   }
 
+  /**
+   * Retrieves the workers not currently assigned a job
+   * @return {creep[]} workers not curently assigned jobs
+   */
+  get idleWorkers() {
+    return _.filter(this.workers, w => !w.memory.jobId);
+  }
+
+  /**
+   * Determine the jobs that are already being worked
+   */
   determineExistingJobs() {
 
     // Find jobs that are already being worked...
@@ -214,7 +225,7 @@ const Boss = class Boss {
    */
   delegate() {
     // Allocate jobs to workers
-    const idleWorkers = _.filter(this.workers, w => !w.memory.jobId);
+    const idleWorkers = this.idleWorkers;
     if (idleWorkers.length === 0) {
       console.log('No idle workers...');
       return;
@@ -238,7 +249,7 @@ const Boss = class Boss {
         if (peon.job) {
           return bestPeon;
         }
-        const efficiency2 = peon.efficiency(job);
+        const efficiency2 = job.efficiency(peon);
         if (efficiency2 > efficiency) {
           efficiency = efficiency2;
           bestIdx = idx;
@@ -254,7 +265,7 @@ const Boss = class Boss {
       }
     });
 
-    console.log(`${this.info()} has ${this.idlePeons.length} idle peons after assigning jobs.`);
+    console.log(`${this.info()} has ${idleWorkers.length} idle peons after assigning jobs.`);
   }
 
   /**
