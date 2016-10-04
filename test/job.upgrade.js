@@ -6,21 +6,20 @@ const JobUpgrade = require('job.upgrade');
 
 describe('Screep Upgrade Job', () => {
     // Test parameters...
-    const TEST_PRIORITY = Job.Priority.NORMAL;
 
     describe('Construction', function() {
         it('can only upgrade a controller', function() {
-            assert.throws(() => new JobUpgrade(new Structure(), TEST_PRIORITY), TypeError);
-            assert.throws(() => new JobUpgrade(new Creep(), TEST_PRIORITY), TypeError);
-            assert.throws(() => new JobUpgrade(0, TEST_PRIORITY), RangeError);
-            assert.throws(() => new JobUpgrade(null, TEST_PRIORITY), RangeError);
-            assert.doesNotThrow(() => new JobUpgrade(new StructureController(), TEST_PRIORITY));
+            assert.throws(() => new JobUpgrade(new Structure()), TypeError);
+            assert.throws(() => new JobUpgrade(new Creep()), TypeError);
+            assert.throws(() => new JobUpgrade(0), RangeError);
+            assert.throws(() => new JobUpgrade(null), RangeError);
+            assert.doesNotThrow(() => new JobUpgrade(new StructureController()));
         });
     });
 
     describe('After Construction', function() {
         const site = new StructureController();
-        const job = new JobUpgrade(site, TEST_PRIORITY);
+        const job = new JobUpgrade(site);
 
         it('is of upgrade type', () => {
             assert(job.type === JobUpgrade.TYPE, "Unexpected Job type after construction");
@@ -29,7 +28,8 @@ describe('Screep Upgrade Job', () => {
             assert(job.site === site, "Unexpected site after construction");
         });
         it('has the expected priority', function() {
-            assert(job.priority === TEST_PRIORITY, "Unexpected priority after construction");
+            assert(job.priority() !== Job.Priority.IGNORE, "Unexpected priority after construction");
+            assert(Job.Priority.valid(job.priority()), "Invalid priority");
         });
 
         describe('General methods', function() {

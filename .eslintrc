@@ -25,6 +25,7 @@
   "globals": {
     "chai": true,
     "_": false,
+    "BUILD_POWER": false,
     CONTROLLER_DOWNGRADE: false,
     COLOR_BLUE: false,
     COLOR_RED: false,
@@ -42,6 +43,7 @@
     "LOOK_CREEPS": false,
     Resource: false,
     RoomObject: false,
+    "ConstructionSite": false,
     "StructureController": false,
     "StructureStorage": false,
     "StructureContainer": false,

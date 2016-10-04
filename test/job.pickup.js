@@ -11,21 +11,21 @@ describe('Screep Pickup Job', () => {
 
   describe('Construction', function() {
     it('can only pickup from expected sites', function() {
-      assert.throws(() => new JobPickup(new ConstructionSite(), TEST_PRIORITY), TypeError);
-      assert.throws(() => new JobPickup(new Structure(), TEST_PRIORITY), TypeError);
-      assert.throws(() => new JobPickup(undefined, TEST_PRIORITY), RangeError);
-      assert.throws(() => new JobPickup(null, TEST_PRIORITY), RangeError);
-      assert.doesNotThrow(() => new JobPickup(new StructureContainer(), TEST_PRIORITY));
-      assert.doesNotThrow(() => new JobPickup(new StructureStorage(), TEST_PRIORITY));
-      assert.doesNotThrow(() => new JobPickup(new StructureLink(), TEST_PRIORITY));
-      assert.doesNotThrow(() => new JobPickup(new Creep(), TEST_PRIORITY));
-      assert.doesNotThrow(() => new JobPickup(new Resource(), TEST_PRIORITY));
+      assert.throws(() => new JobPickup(new ConstructionSite()), TypeError);
+      assert.throws(() => new JobPickup(new Structure()), TypeError);
+      assert.throws(() => new JobPickup(undefined), RangeError);
+      assert.throws(() => new JobPickup(null), RangeError);
+      assert.doesNotThrow(() => new JobPickup(new StructureContainer()));
+      assert.doesNotThrow(() => new JobPickup(new StructureStorage()));
+      assert.doesNotThrow(() => new JobPickup(new StructureLink()));
+      assert.doesNotThrow(() => new JobPickup(new Creep()));
+      assert.doesNotThrow(() => new JobPickup(new Resource()));
     });
   });
 
   describe('After Construction', function() {
     const site = new StructureContainer();
-    const job = new JobPickup(site, TEST_PRIORITY);
+    const job = new JobPickup(site);
 
     it('is of Pickup type', () => {
       assert(job.type === JobPickup.TYPE, "Unexpected Job type after construction");
@@ -34,7 +34,8 @@ describe('Screep Pickup Job', () => {
       assert(job.site === site, "Unexpected site after construction");
     });
     it('has the expected priority', function() {
-      assert(job.priority === TEST_PRIORITY, "Unexpected priority after construction");
+      assert(job.priority() !== Job.Priority.IGNORE, "Unexpected priority after construction");
+      assert(Job.Priority.valid(job.priority()), "Invalid priority");
     });
 
     describe('General methods', function() {

@@ -13,13 +13,12 @@ describe('Screep Job', function() {
   const TEST_PRIORITY2 = Job.Priority.HIGH;
   TEST_SITE2.id = 'unique-id';
 
-  const job = new Job(TEST_TYPE, TEST_SITE, TEST_PRIORITY);
+  const job = new Job(TEST_TYPE, TEST_SITE);
 
   describe('After Construction', function() {
     it('has the expected properties', () => {
       expect(job.type).to.equal(TEST_TYPE);
       expect(job.site).to.equal(TEST_SITE);
-      expect(job.priority).to.equal(TEST_PRIORITY);
       expect(job.workers.length).to.equal(0);
     });
 
@@ -39,14 +38,14 @@ describe('Screep Job', function() {
     });
 
     it('has a different key to a job with different details', function() {
-      let job2 = new Job(TEST_TYPE2, TEST_SITE, TEST_PRIORITY);
+      let job2 = new Job(TEST_TYPE2, TEST_SITE);
       assert(job.key !== job2.key, "Same key even though different types!");
 
-      job2 = new Job(TEST_TYPE, TEST_SITE2, TEST_PRIORITY);
+      job2 = new Job(TEST_TYPE, TEST_SITE2);
       assert(job.key !== job2.key, "Same key even though different sites!");
 
-      job2 = new Job(TEST_TYPE, TEST_SITE, TEST_PRIORITY2);
-      assert(job.key === job2.key, "Same key even though different instances!");
+      job2 = new Job(TEST_TYPE, TEST_SITE);
+      assert(job.key === job2.key, "Different key even though same details!");
     });
   });
 

@@ -8,8 +8,12 @@ const JobHarvest = require('job.harvest');
 
 const JobPickup = class JobPickup extends Job {
 
-  constructor(site, priority) {
-    super(JobPickup.TYPE, site, priority);
+  /**
+   * Constructs a new pickup job
+   * @param {Object} site to pickup from
+   */
+  constructor(site) {
+    super(JobPickup.TYPE, site);
     if (!(site instanceof StructureContainer ||
           site instanceof StructureStorage ||
           site instanceof StructureLink ||
@@ -17,6 +21,15 @@ const JobPickup = class JobPickup extends Job {
           site instanceof Creep)) {
       throw new TypeError(`Invalid pickup site`);
     }
+  }
+
+
+  /**
+   * Determines the priority of the pickup job
+   * @return {number} priority of the job
+   */
+  priority() {
+    return Job.Priority.IDLE;
   }
 
 
@@ -29,8 +42,20 @@ const JobPickup = class JobPickup extends Job {
   }
 };
 
+
 JobPickup.TYPE = 'pickup';
 
+/**
+ * Factory function to construct pickup jobs
+ * @param {array} components the components from the job id
+ * @return {JobPickup} pickup job representing the components
+ */
+Job.Factory[JobPickup.TYPE] = function(components) {
+  if (components.length !== 2) {
+    throw new RangeError(`'${components}' had too many bits`);
+  }
+  return new JobPickup(components[1]);
+}
 
 
 RoomObject.prototype.hasPickup = function hasPickup() {

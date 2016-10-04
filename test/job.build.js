@@ -10,16 +10,16 @@ describe('Screep Build Job', () => {
 
   describe('Construction', function() {
     it('can only build on construction sites', function() {
-      assert.throws(() => new JobBuild(new Structure(), TEST_PRIORITY), TypeError);
-      assert.throws(() => new JobBuild(undefined, TEST_PRIORITY), RangeError);
-      assert.throws(() => new JobBuild(null, TEST_PRIORITY), RangeError);
-      assert.doesNotThrow(() => new JobBuild(new ConstructionSite(), TEST_PRIORITY));
+      assert.throws(() => new JobBuild(new Structure()), TypeError);
+      assert.throws(() => new JobBuild(undefined), RangeError);
+      assert.throws(() => new JobBuild(null), RangeError);
+      assert.doesNotThrow(() => new JobBuild(new ConstructionSite()));
     });
   });
 
   describe('After Construction', function() {
     const site = new ConstructionSite();
-    const job = new JobBuild(site, TEST_PRIORITY);
+    const job = new JobBuild(site);
 
     it('is of Build type', () => {
       assert(job.type === JobBuild.TYPE, "Unexpected Job type after construction");
@@ -28,7 +28,8 @@ describe('Screep Build Job', () => {
       assert(job.site === site, "Unexpected site after construction");
     });
     it('has the expected priority', function() {
-      assert(job.priority === TEST_PRIORITY, "Unexpected priority after construction");
+      assert(job.priority() !== Job.Priority.IGNORE, "Unexpected priority after construction");
+      assert(Job.Priority.valid(job.priority()), "Invalid priority");
     });
 
     describe('General methods', function() {

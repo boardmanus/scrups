@@ -13,13 +13,20 @@ const JobRepair = class JobRepair extends Job {
   /**
    * Constructs a new repair job.
    * @param {Structure} site the site to be repaired
-   * @param {Job.Priority} priority the priority of the job
    */
-  constructor(site, priority) {
-    super(JobRepair.TYPE, site, priority);
+  constructor(site) {
+    super(JobRepair.TYPE, site);
     if (!(site instanceof Structure)) {
       throw new TypeError(`Can only repair structures! (site is a ${typeof site})`);
     }
+  }
+
+  /**
+   * Determines the priority of a repair job
+   * @return {number} priority of the job
+   */
+  priority() {
+    return Job.Priority.IDLE;
   }
 
 
@@ -51,6 +58,19 @@ const JobRepair = class JobRepair extends Job {
 
 
 JobRepair.TYPE = 'repair';
+
+
+/**
+ * Factory function to construct repair jobs
+ * @param {array} components the components from the job id
+ * @return {JobRepair} repair job representing the components
+ */
+Job.Factory[JobRepair.TYPE] = function(components) {
+  if (components.length !== 2) {
+    throw new RangeError(`'${components}' had too many bits`);
+  }
+  return new JobRepair(components[1]);
+}
 
 
 /*

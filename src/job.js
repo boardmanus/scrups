@@ -12,16 +12,14 @@ const Job = class Job {
   /**
    * Constructs a new job to be worked.
    * @param {string} type the type of job
-   * @param {Structure} site the site of the will take place at
-   * @param {Job.Priority} priority the priority of the job
+   * @param {Object} site the site of the will take place at
    */
-  constructor(type, site, priority) {
+  constructor(type, site) {
     if (!site) {
       throw new RangeError(`The site of a job can not be null`);
     }
     this.type = type;
     this.site = site;
-    this.priority = priority;
     this.workers = [];
     this.key = `${type}-${site.id}`;
   }
@@ -31,6 +29,13 @@ const Job = class Job {
   */
   id() {
     return this.key;
+  }
+
+  /**
+   * @return {number} priority of the job
+   */
+  priority() {
+    return Job.Priority.IDLE;
   }
 
   /**
@@ -64,6 +69,34 @@ const Job = class Job {
   }
 };
 
+
+/**
+ * Factory hash populated as job types are imported
+ * @type {function}
+ */
+Job.Factory = {
+};
+
+
+/**
+ * Creates a job based on a passed in job-id
+ * @param {string} id the id of the job to construct
+ * @return {Job} job created
+ */
+Job.create = function(id) {
+  const components = id.split('-');
+  const creator = Job.Factory[components[0]];
+  if (creator === null) {
+    throw new RangeError(`'${id}' doesn't have a valid creation function`);
+  }
+  return creator(components);
+}
+
+
+/**
+ * Possible job priorities.
+ * @type {{CRITICAL: number, HIGH: number, NORMAL: number, LOW: number, IDLE: number, IGNORE: number, lower: ((p)), higher: ((p))}}
+ */
 Job.Priority = {
 
   CRITICAL: 0,
@@ -85,6 +118,10 @@ Job.Priority = {
       return Job.Priority.CRITICAL;
     }
     return p - 1;
+  },
+
+  valid(p) {
+    return p >= Job.Priority.CRITICAL && p <= Job.Priority.IGNORE;
   }
 };
 

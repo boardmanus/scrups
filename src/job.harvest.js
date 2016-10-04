@@ -11,10 +11,9 @@ const JobHarvest = class JobHarvest extends Job {
   /**
    * Constructs a new harvesting job.
    * @param {object} site the site at which to harvest
-   * @param {number} priority the job number for harvesting
    */
-  constructor(site, priority) {
-    super(JobHarvest.TYPE, site, priority);
+  constructor(site) {
+    super(JobHarvest.TYPE, site);
 
     if (!(site instanceof Source || site instanceof Mineral)) {
       throw new TypeError(
@@ -24,6 +23,15 @@ const JobHarvest = class JobHarvest extends Job {
     if (!site.isHarvestable()) {
       throw new RangeError('Sites must be harvestable');
     }
+  }
+
+
+  /**
+   * Determines the priority of the harvest job
+   * @return {number} priority of the job
+   */
+  priority() {
+    return Job.Priority.NORMAL;
   }
 
 
@@ -38,6 +46,18 @@ const JobHarvest = class JobHarvest extends Job {
 
 
 JobHarvest.TYPE = 'harvest';
+
+/**
+ * Factory function to construct build jobs
+ * @param {array} components the components from the job id
+ * @return {JobHarvest} build job representing the components
+ */
+Job.Factory[JobHarvest.TYPE] = function(components) {
+  if (components.length !== 2) {
+    throw new RangeError(`'${components}' had too many bits`);
+  }
+  return new JobHarvest(components[1]);
+}
 
 
 /**

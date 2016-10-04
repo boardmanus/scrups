@@ -17,13 +17,13 @@ describe('Screep Harvest Job', () => {
 
   describe('Construction', function() {
     it('can only have a source or mineral site', function() {
-      assert.throws(() => new JobHarvest(new Creep(), TEST_PRIORITY), TypeError);
-      assert.throws(() => new JobHarvest(new Resource(), TEST_PRIORITY), TypeError);
-      assert.throws(() => new JobHarvest(0, TEST_PRIORITY), RangeError);
-      assert.throws(() => new JobHarvest(null, TEST_PRIORITY), RangeError);
-      assert.doesNotThrow(() => new JobHarvest(source, TEST_PRIORITY));
-      assert.doesNotThrow(() => new JobHarvest(mineral, TEST_PRIORITY));
-      assert.throws(() => new JobHarvest(unharvestableMineral, TEST_PRIORITY), RangeError);
+      assert.throws(() => new JobHarvest(new Creep()), TypeError);
+      assert.throws(() => new JobHarvest(new Resource()), TypeError);
+      assert.throws(() => new JobHarvest(0), RangeError);
+      assert.throws(() => new JobHarvest(null), RangeError);
+      assert.doesNotThrow(() => new JobHarvest(source));
+      assert.doesNotThrow(() => new JobHarvest(mineral));
+      assert.throws(() => new JobHarvest(unharvestableMineral), RangeError);
     });
   });
 
@@ -35,7 +35,8 @@ describe('Screep Harvest Job', () => {
       assert(job.site === source, "Unexpected site after construction");
     });
     it('has the expected priority', function() {
-      assert(job.priority === TEST_PRIORITY, "Unexpected priority after construction");
+      assert(job.priority() !== Job.Priority.IGNORE, "Unexpected priority after construction");
+      assert(Job.Priority.valid(job.priority()), "Invalid priority");
     });
     it('never requires energy to harvest', function() {
       assert(job.energyRequired() === 0.0, "Harvest job required energy");

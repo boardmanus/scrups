@@ -93,13 +93,25 @@ function energyRequiredForSite(site) {
 
 const JobStore = class JobStore extends Job {
 
-  constructor(site, priority) {
-    super(JobStore.TYPE, site, priority);
+  /**
+   * Constructs a new repair job.
+   * @param {Structure} site the site to be repaired
+   */
+  constructor(site) {
+    super(JobStore.TYPE, site);
+  }
+
+  /**
+   * Determines the priority of a storing job
+   * @return {number} priority of the job
+   */
+  priority() {
+    return Job.Priority.IDLE;
   }
 
   /**
    * Determines the energy required to finish storing.
-   * @return the energy required.
+   * @return {number} the energy required.
    */
   energyRequired() {
     return this.site.storableSpace();
@@ -108,6 +120,17 @@ const JobStore = class JobStore extends Job {
 
 JobStore.TYPE = 'store';
 
+/**
+ * Factory function to construct storage jobs
+ * @param {array} components the components from the job id
+ * @return {JobStore} storage job representing the components
+ */
+Job.Factory[JobStore.TYPE] = function(components) {
+  if (components.length !== 2) {
+    throw new RangeError(`'${components}' had too many bits`);
+  }
+  return new JobStore(components[1]);
+}
 
 RoomObject.prototype.isStorable = function isStorable() {
   return false;

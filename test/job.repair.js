@@ -21,7 +21,7 @@ describe('Screep Repair Job', () => {
 
   describe('After Construction', function() {
     const site = new Structure();
-    const job = new JobRepair(site, TEST_PRIORITY);
+    const job = new JobRepair(site);
 
     it('is of repair type', () => {
       assert(job.type === JobRepair.TYPE, "Unexpected Job type after construction");
@@ -30,7 +30,8 @@ describe('Screep Repair Job', () => {
       assert(job.site === site, "Unexpected site after construction");
     });
     it('has the expected priority', function() {
-      assert(job.priority === TEST_PRIORITY, "Unexpected priority after construction");
+      assert(job.priority() !== Job.Priority.IGNORE, "Unexpected priority after construction");
+      assert(Job.Priority.valid(job.priority()), "Invalid priority");
     });
 
     describe('General methods', function() {
