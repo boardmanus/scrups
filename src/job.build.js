@@ -46,8 +46,8 @@ Job.Factory[JobBuild.TYPE] = function(components) {
   if (components.length !== 2) {
     throw new RangeError(`'${components}' had too many bits`);
   }
-  return new JobBuild(components[1]);
-}
+  return new JobBuild(Game.getObjectById(components[1]));
+};
 
 
 module.exports = JobBuild;

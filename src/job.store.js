@@ -130,7 +130,8 @@ Job.Factory[JobStore.TYPE] = function(components) {
     throw new RangeError(`'${components}' had too many bits`);
   }
   return new JobStore(components[1]);
-}
+};
+
 
 RoomObject.prototype.isStorable = function isStorable() {
   return false;
