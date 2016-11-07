@@ -1,11 +1,12 @@
 const assert = require('chai').assert;
-// const sinon = require('sinon');
 const Job = require('job');
 const JobUpgrade = require('job.upgrade');
+const Helpers = require('./helpers');
 
 
 describe('Screep Upgrade Job', () => {
     // Test parameters...
+    const TEST_SITE_ID = '12345'
 
     describe('Construction', function() {
         it('can only upgrade a controller', function() {
@@ -14,6 +15,15 @@ describe('Screep Upgrade Job', () => {
             assert.throws(() => new JobUpgrade(0), RangeError);
             assert.throws(() => new JobUpgrade(null), RangeError);
             assert.doesNotThrow(() => new JobUpgrade(new StructureController()));
+        });
+        it('can be constructed from the factory', function() {
+          Helpers.stubGetObjectById(TEST_SITE_ID, new StructureController());
+
+          const job = Job.create(`${JobUpgrade.TYPE}-${TEST_SITE_ID}`);
+          assert(job.type === JobUpgrade.TYPE, "Unexptected type");
+          assert(job.site.id === TEST_SITE_ID);
+
+          Helpers.unstubGetObjectById();
         });
     });
 

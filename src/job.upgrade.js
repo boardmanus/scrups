@@ -49,8 +49,8 @@ Job.Factory[JobUpgrade.TYPE] = function(components) {
   if (components.length !== 2) {
     throw new JobUpgrade(`'${components}' had too many bits`);
   }
-  return new JobUpgrade(components[1]);
-}
+  return new JobUpgrade(Game.getObjectById(components[1]));
+};
 
 
 module.exports = JobUpgrade;

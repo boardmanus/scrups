@@ -2,11 +2,13 @@ const assert = require('chai').assert;
 const Sinon = require('Sinon');
 const Job = require('job');
 const JobHarvest = require('job.harvest');
+const Helpers = require('./helpers');
 
 
 describe('Screep Harvest Job', () => {
   // Test parameters...
   const TEST_PRIORITY = Job.Priority.NORMAL;
+  const TEST_SITE_ID = "12345"
   const source = new Source();
   const mineral = new Mineral();
   const unharvestableMineral = new Mineral();
@@ -24,6 +26,16 @@ describe('Screep Harvest Job', () => {
       assert.doesNotThrow(() => new JobHarvest(source));
       assert.doesNotThrow(() => new JobHarvest(mineral));
       assert.throws(() => new JobHarvest(unharvestableMineral), RangeError);
+    });
+
+    it('can be constructed from the factory', function() {
+      Helpers.stubGetObjectById(TEST_SITE_ID, new Source());
+
+      const job = Job.create(`${JobHarvest.TYPE}-${TEST_SITE_ID}`);
+      assert(job.type === JobHarvest.TYPE, "Unexptected type");
+      assert(job.site.id === TEST_SITE_ID);
+
+      Helpers.unstubGetObjectById();
     });
   });
 

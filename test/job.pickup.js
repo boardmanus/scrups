@@ -3,11 +3,13 @@ const Sinon = require('sinon');
 const Job = require('job');
 const JobPickup = require('job.pickup');
 const JobHarvest = require('job.harvest');
+const Helpers = require('./helpers');
 
 
 describe('Screep Pickup Job', () => {
   // Test parameters...
   const TEST_PRIORITY = Job.Priority.NORMAL;
+  const TEST_SITE_ID = "abcde";
 
   describe('Construction', function() {
     it('can only pickup from expected sites', function() {
@@ -20,6 +22,17 @@ describe('Screep Pickup Job', () => {
       assert.doesNotThrow(() => new JobPickup(new StructureLink()));
       assert.doesNotThrow(() => new JobPickup(new Creep()));
       assert.doesNotThrow(() => new JobPickup(new Resource()));
+    });
+
+
+    it('can be constructed from the factory', function() {
+      Helpers.stubGetObjectById(TEST_SITE_ID, new Resource());
+
+      const job = Job.create(`${JobPickup.TYPE}-${TEST_SITE_ID}`);
+      assert(job.type === JobPickup.TYPE, "Unexptected type");
+      assert(job.site.id === TEST_SITE_ID);
+
+      Helpers.unstubGetObjectById();
     });
   });
 

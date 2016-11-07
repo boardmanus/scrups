@@ -84,13 +84,22 @@ Job.Factory = {
  * @return {Job} job created
  */
 Job.create = function(id) {
+  if (id === null) {
+    throw new RangeError("id can't be null");
+  }
+
   const components = id.split('-');
+  if (!components instanceof Array) {
+    throw new RangeError("Couldn't split id into components");
+  }
+
   const creator = Job.Factory[components[0]];
   if (creator === null) {
     throw new RangeError(`'${id}' doesn't have a valid creation function`);
   }
+
   return creator(components);
-}
+};
 
 
 /**

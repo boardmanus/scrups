@@ -17,6 +17,12 @@ describe('Screep Job', function() {
       it('Should fail if the job type is uknown', function() {
         assert.throws(() => Job.create(`${TEST_TYPE}-12345`));
       });
+      it('Should fail if the id is null', function() {
+        assert.throws(() => Job.create(null));
+      });
+      it("Should fail if the id can't be split", function() {
+        assert.throws(() => Job.create(TEST_TYPE));
+      });
       it('Should succeed if the job type is known', function() {
 
         Job.Factory[TEST_TYPE] = function(components) {

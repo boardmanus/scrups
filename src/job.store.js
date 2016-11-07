@@ -129,7 +129,7 @@ Job.Factory[JobStore.TYPE] = function(components) {
   if (components.length !== 2) {
     throw new RangeError(`'${components}' had too many bits`);
   }
-  return new JobStore(components[1]);
+  return new JobStore(Game.getObjectById(components[1]));
 };
 
 

@@ -54,8 +54,8 @@ Job.Factory[JobPickup.TYPE] = function(components) {
   if (components.length !== 2) {
     throw new RangeError(`'${components}' had too many bits`);
   }
-  return new JobPickup(components[1]);
-}
+  return new JobPickup(Game.getObjectById(components[1]));
+};
 
 
 RoomObject.prototype.hasPickup = function hasPickup() {

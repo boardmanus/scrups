@@ -1,8 +1,8 @@
 const assert = require('chai').assert;
-// const sinon = require('sinon');
 const Job = require('job');
 const JobBuild = require('job.build');
 const Sinon = require('sinon');
+const Helpers = require('./helpers.js');
 
 
 describe('Screep Build Job', () => {
@@ -19,19 +19,13 @@ describe('Screep Build Job', () => {
     });
 
     it('can be constructed from the factory', function() {
-      const stub = Sinon.stub(Game, 'getObjectById', (id) => {
-        if (id !== TEST_SITE_ID) {
-          return null;
-        }
-        const cs = new ConstructionSite();
-        cs.id = id;
-        return cs;
-      });
+      Helpers.stubGetObjectById(TEST_SITE_ID, new ConstructionSite());
+
       const job = Job.create(`${JobBuild.TYPE}-${TEST_SITE_ID}`);
       assert(job.type === JobBuild.TYPE, "Unexptected type");
       assert(job.site.id === TEST_SITE_ID);
 
-      Game.getObjectById.restore();
+      Helpers.unstubGetObjectById();
     });
   });
 

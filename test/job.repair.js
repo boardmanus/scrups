@@ -1,12 +1,13 @@
 const assert = require('chai').assert;
-// const sinon = require('sinon');
 const Job = require('job');
 const JobRepair = require('job.repair');
+const Helpers = require('./helpers');
 
 
 describe('Screep Repair Job', () => {
   // Test parameters...
   const TEST_PRIORITY = Job.Priority.NORMAL;
+  const TEST_SITE_ID = '12345'
 
   describe('Construction', function() {
     it('can only repair structures', function() {
@@ -16,6 +17,16 @@ describe('Screep Repair Job', () => {
       assert.doesNotThrow(() => new JobRepair(new Structure(), TEST_PRIORITY));
       assert.doesNotThrow(() => new JobRepair(new StructureStorage(), TEST_PRIORITY));
       assert.doesNotThrow(() => new JobRepair(new StructureContainer(), TEST_PRIORITY));
+    });
+
+    it('can be constructed from the factory', function() {
+      Helpers.stubGetObjectById(TEST_SITE_ID, new Structure());
+
+      const job = Job.create(`${JobRepair.TYPE}-${TEST_SITE_ID}`);
+      assert(job.type === JobRepair.TYPE, "Unexptected type");
+      assert(job.site.id === TEST_SITE_ID);
+
+      Helpers.unstubGetObjectById();
     });
   });
 

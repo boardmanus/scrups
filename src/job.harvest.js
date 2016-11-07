@@ -56,8 +56,8 @@ Job.Factory[JobHarvest.TYPE] = function(components) {
   if (components.length !== 2) {
     throw new RangeError(`'${components}' had too many bits`);
   }
-  return new JobHarvest(components[1]);
-}
+  return new JobHarvest(Game.getObjectById(components[1]));
+};
 
 
 /**
