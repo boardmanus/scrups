@@ -28,5 +28,6 @@ global.StructureLink = require('screeps/Structures/StructureLink.js');
 global.StructureSpawn = require('screeps/Structures/StructureSpawn.js');
 global.StructureStorage = require('screeps/Structures/StructureStorage.js');
 global.StructureTower = require('screeps/Structures/StructureTower.js');
+global.StructureTerminal = require('screeps/Structures/StructureTerminal.js');
 
 require('screeps/Global/Constants.js');

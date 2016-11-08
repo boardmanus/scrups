@@ -99,6 +99,9 @@ const JobStore = class JobStore extends Job {
    */
   constructor(site) {
     super(JobStore.TYPE, site);
+    if (!site.isStorable()) {
+      throw new TypeError(`Site not storable - ${site.id}`);
+    }
   }
 
   /**
@@ -133,13 +136,42 @@ Job.Factory[JobStore.TYPE] = function(components) {
 };
 
 
-RoomObject.prototype.isStorable = function isStorable() {
+const allStorable = function(resourceType) {
+  return true;
+};
+const isntStorable = function(resourceType) {
   return false;
 };
-
-RoomObject.prototype.storableSpace = function storableSpace() {
-  return 0;
+const energyStorable = function(resourceType) {
+  return resourceType === undefined || resourceType === RESOURCE_ENERGY;
 };
 
+RoomObject.prototype.isStorable = isntStorable;
+StructureExtension.prototype.isStorable = energyStorable;
+StructureSpawn.prototype.isStorable = energyStorable;
+StructureLink.prototype.isStorable = energyStorable;
+StructureTower.prototype.isStorable = energyStorable;
+StructureStorage.prototype.isStorable = allStorable;
+StructureContainer.prototype.isStorable = allStorable;
+StructureTerminal.prototype.isStorable = allStorable;
+
+const noSpace = function() {
+  return 0;
+};
+const allSpace = function() {
+  return this.storeCapacity - _.sum(this.store);
+};
+const energySpace = function() {
+  return this.energyCapacity - this.energy;
+};
+
+RoomObject.prototype.storableSpace = noSpace;
+StructureExtension.prototype.storableSpace = energySpace;
+StructureSpawn.prototype.storableSpace = energySpace;
+StructureLink.prototype.storableSpace = energySpace;
+StructureTower.prototype.storableSpace = energySpace;
+StructureStorage.prototype.storableSpace = allSpace;
+StructureContainer.prototype.storableSpace = allSpace;
+StructureTerminal.prototype.storableSpace = allSpace;
 
 module.exports = JobStore;
