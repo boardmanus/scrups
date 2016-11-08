@@ -8,30 +8,20 @@ const JobHarvest = require('job.harvest');
 
 const JobPickup = class JobPickup extends Job {
 
-  /**
-   * Constructs a new pickup job
-   * @param {Object} site to pickup from
-   */
   constructor(site) {
     super(JobPickup.TYPE, site);
-    if (!(site instanceof StructureContainer ||
-          site instanceof StructureStorage ||
-          site instanceof StructureLink ||
-          site instanceof Resource ||
-          site instanceof Creep)) {
+    if (!site.hasPickup()) {
       throw new TypeError(`Invalid pickup site`);
     }
   }
 
-
   /**
-   * Determines the priority of the pickup job
+   * Determines the priority of a repair job
    * @return {number} priority of the job
    */
   priority() {
     return Job.Priority.IDLE;
   }
-
 
   /**
    * Energy required to pickup stuff
@@ -45,10 +35,11 @@ const JobPickup = class JobPickup extends Job {
 
 JobPickup.TYPE = 'pickup';
 
+
 /**
- * Factory function to construct pickup jobs
+ * Factory function to construct repair jobs
  * @param {array} components the components from the job id
- * @return {JobPickup} pickup job representing the components
+ * @return {JobRepair} repair job representing the components
  */
 Job.Factory[JobPickup.TYPE] = function(components) {
   if (components.length !== 2) {
@@ -58,30 +49,62 @@ Job.Factory[JobPickup.TYPE] = function(components) {
 };
 
 
+/**
+ * By default, all room objects do *not* have a pickup.
+ * @return {boolean} no pickups
+ */
 RoomObject.prototype.hasPickup = function hasPickup() {
   return false;
 };
 
+
+/**
+ * Creeps have a pickup if they are harvesting, and are carrying stuff.
+ * @return {boolean} can pickup
+ */
 Creep.prototype.hasPickup = function hasPickup() {
   return this.job && this.job.type === JobHarvest.TYPE && _.sum(this.carry) > 0;
 };
 
+
+/**
+ * Resources just lying around can be pickup
+ * @return {boolean} true always
+ */
 Resource.prototype.hasPickup = function hasPickup() {
   return true;
 };
 
+
+/**
+ * Containers with stuff in them can be picked from
+ * @return {boolean} can pickup
+ */
 StructureContainer.prototype.hasPickup = function hasPickup() {
   return _.sum(this.store) > 0;
 };
 
+
+/**
+ * Storage boxes with stuff in them can be picked from
+ * @return {boolean} can pickup
+ */
 StructureStorage.prototype.hasPickup = function hasPickup() {
   return _.sum(this.store) > 0;
 };
 
+
+/**
+ * Links with stuff can be picked from
+ * @return {boolean} can pickup
+ */
 StructureLink.prototype.hasPickup = function hasPickup() {
-  return this.room.find(FIND_MY_STRUCTURES, {
+  return this.energy > 0;
+  /*
+  return this.room.boss.find(FIND_MY_STRUCTURES, {
     filter: s => (s.structureType === STRUCTURE_LINK) && (s.energy > 0)
   }).length > 0;
+  */
 };
 
 module.exports = JobPickup;

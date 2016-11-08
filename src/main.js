@@ -17,40 +17,40 @@ const Profiler = require('screeps-profiler');
 const u = require('utils');
 
 function updateProfiling(force = false) {
-    if (!Memory.control) {
-        Memory.control = { profile: false, lastProfile: false };
-    }
+  if (!Memory.control) {
+    Memory.control = {profile: false, lastProfile: false};
+  }
 
     // Nothing has changed.
-    if (Memory.control.profile === Memory.control.lastProfile) {
-        return;
-    }
-    
+  if (Memory.control.profile === Memory.control.lastProfile) {
+    return;
+  }
+
     // Enable the profiler if controlled to do so.
-    if (Memory.control.profile) {
+  if (Memory.control.profile) {
       /**
        * Enable the profiler to see where we're wasting cpu...
        */
-      console.log('!!!!! ENABLING PROFILER !!!!!');
-      Profiler.enable();
-      Profiler.registerObject(Country, 'Country');
-      Profiler.registerObject(City, 'City');
-      Profiler.registerObject(Boss, 'Boss');
-      Profiler.registerObject(CivilEngineer, 'CivilEngineer');
-      Profiler.registerObject(Peon, 'Peon');
-      Profiler.registerObject(Job, 'Job');
-      Profiler.registerFN(oldlogic);
-    } else {
-      console.log('!!!!! ENABLING PROFILER !!!!!');
-      Profiler.disable();
-      Profiler.registerObject(Country, 'Country');
-      Profiler.registerObject(City, 'City');
-      Profiler.registerObject(Boss, 'Boss');
-      Profiler.registerObject(CivilEngineer, 'CivilEngineer');
-      Profiler.registerObject(Peon, 'Peon');
-      Profiler.registerObject(Job, 'Job');
-      Profiler.registerFN(oldlogic);
-    }
+    console.log('!!!!! ENABLING PROFILER !!!!!');
+    Profiler.enable();
+    Profiler.registerObject(Country, 'Country');
+    Profiler.registerObject(City, 'City');
+    Profiler.registerObject(Boss, 'Boss');
+    Profiler.registerObject(CivilEngineer, 'CivilEngineer');
+    Profiler.registerObject(Peon, 'Peon');
+    Profiler.registerObject(Job, 'Job');
+    Profiler.registerFN(oldlogic);
+  } else {
+    console.log('!!!!! ENABLING PROFILER !!!!!');
+    Profiler.disable();
+    Profiler.registerObject(Country, 'Country');
+    Profiler.registerObject(City, 'City');
+    Profiler.registerObject(Boss, 'Boss');
+    Profiler.registerObject(CivilEngineer, 'CivilEngineer');
+    Profiler.registerObject(Peon, 'Peon');
+    Profiler.registerObject(Job, 'Job');
+    Profiler.registerFN(oldlogic);
+  }
 }
 
 function oldlogic(country) {

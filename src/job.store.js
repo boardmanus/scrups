@@ -136,42 +136,40 @@ Job.Factory[JobStore.TYPE] = function(components) {
 };
 
 
-const allStorable = function(resourceType) {
-  return true;
-};
-const isntStorable = function(resourceType) {
-  return false;
-};
-const energyStorable = function(resourceType) {
-  return resourceType === undefined || resourceType === RESOURCE_ENERGY;
-};
+/**
+ * A generic room object can not store anything.
+ * @param {resource} resource the resource to check
+ * @return {boolean} false
+ */
+const noStorage = (resource = RESOURCE_ENERGY) => false;
+const energyOnlyStorage = (resource = RESOURCE_ENERGY) => resource === RESOURCE_ENERGY;
+const anyStorage = (resource = RESOURCE_ENERGY) => true;
 
-RoomObject.prototype.isStorable = isntStorable;
-StructureExtension.prototype.isStorable = energyStorable;
-StructureSpawn.prototype.isStorable = energyStorable;
-StructureLink.prototype.isStorable = energyStorable;
-StructureTower.prototype.isStorable = energyStorable;
-StructureStorage.prototype.isStorable = allStorable;
-StructureContainer.prototype.isStorable = allStorable;
-StructureTerminal.prototype.isStorable = allStorable;
+RoomObject.prototype.isStorable = noStorage;
+StructureTower.prototype.isStorable = energyOnlyStorage;
+StructureSpawn.prototype.isStorable = energyOnlyStorage;
+StructureExtension.prototype.isStorable = energyOnlyStorage;
+Creep.prototype.isStorable = anyStorage;
+StructureContainer.prototype.isStorable = anyStorage;
+StructureStorage.prototype.isStorable = anyStorage;
+StructureTerminal.prototype.isStorable = anyStorage;
 
-const noSpace = function() {
-  return 0;
-};
-const allSpace = function() {
-  return this.storeCapacity - _.sum(this.store);
-};
-const energySpace = function() {
-  return this.energyCapacity - this.energy;
-};
 
-RoomObject.prototype.storableSpace = noSpace;
-StructureExtension.prototype.storableSpace = energySpace;
-StructureSpawn.prototype.storableSpace = energySpace;
-StructureLink.prototype.storableSpace = energySpace;
-StructureTower.prototype.storableSpace = energySpace;
-StructureStorage.prototype.storableSpace = allSpace;
-StructureContainer.prototype.storableSpace = allSpace;
-StructureTerminal.prototype.storableSpace = allSpace;
+/**
+ * Retrieves the amount of space available to store stuff.
+ * @return {integer} space avialbe for storage
+ */
+const noStorageSpace = () => 0;
+const energyOnlyStorageSpace = () => this.energyCapacity - this.energy;
+const anyStorageSpace = () => this.storeCapacity - _.sum(this.store);
+
+RoomObject.prototype.storableSpace = noStorageSpace;
+StructureTower.prototype.isStorable = energyOnlyStorageSpace;
+StructureSpawn.prototype.isStorable = energyOnlyStorageSpace;
+Creep.prototype.storableSpace = () => this.carryCapacity - _.sum(this.carry);
+StructureContainer.prototype.isStorable = anyStorageSpace;
+StructureStorage.prototype.isStorable = anyStorageSpace;
+StructureTerminal.prototype.isStorable = anyStorageSpace;
+
 
 module.exports = JobStore;

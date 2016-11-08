@@ -12,7 +12,7 @@ const Job = class Job {
   /**
    * Constructs a new job to be worked.
    * @param {string} type the type of job
-   * @param {Object} site the site of the will take place at
+   * @param {Structure} site the site of the will take place at
    */
   constructor(type, site) {
     if (!site) {
@@ -32,18 +32,19 @@ const Job = class Job {
   }
 
   /**
-   * @return {number} priority of the job
-   */
-  priority() {
-    return Job.Priority.IDLE;
-  }
-
-  /**
    * Generate information about the job
    * @return {string} an info string representing the job
    */
   info() {
-    return `job-${this.type}[${this.priority}]@${u.name(this.site)}`;
+    return `job-${this.type}[${this.priority()}]@${u.name(this.site)}]`;
+  }
+
+  /**
+   * Priority of the job
+   * @return {Job.Priority} priority of the job
+   */
+  priority() {
+    return Job.Priority.IGNORE;
   }
 
   /**
@@ -127,10 +128,6 @@ Job.Priority = {
       return Job.Priority.CRITICAL;
     }
     return p - 1;
-  },
-
-  valid(p) {
-    return p >= Job.Priority.CRITICAL && p <= Job.Priority.IGNORE;
   }
 };
 
@@ -159,7 +156,7 @@ Creep.prototype.assignJob = function assignJob(job) {
   if (!this.memory.jobs) {
     this.memory.jobs = [];
   }
-  this.memory.jobs.push(job);
+  this.memory.jobs.push(job.id);
 };
 
 

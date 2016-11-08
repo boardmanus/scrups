@@ -31,13 +31,8 @@ function buildPriority(cs) {
 function repairPriority(s) {
   return Job.Priority.NORMAL;
 }
-
 function shouldRepair(s) {
-  return (s.hits < s.hitsMax) &&
-      (s.my ||
-        (s.structureType === STRUCTURE_ROAD) ||
-        (s.structureType === STRUCTURE_WALL) ||
-        (s.structureType === STRUCTURE_RAMPART));
+  return s.hits < s.hitsMax;
 }
 
 function sourcePriority(s) {
@@ -99,7 +94,7 @@ const Boss = class Boss {
   get repairJobs() {
     return this.cache.getValue('repairJobs', () => {
       const jobs = [];
-      const repairSites = this.room.find(FIND_STRUCTURES, shouldRepair);
+      const repairSites = this.room.find(FIND_MY_STRUCTURES, shouldRepair);
       _.each(repairSites, s => {
         jobs.push(new Job.Repair(s, repairPriority(s)));
       });
@@ -158,86 +153,65 @@ const Boss = class Boss {
     return this.cache.getValue('allJobs', () => {
       const jobs = this.upgradeJobs.concat(
           this.storeJobs,
-          this.upgradeJobs,
           this.harvestJobs,
-          this.pickupJobs,
-          this.repairJobs,
+          // this.repairJobs,
+          // this.buildJobs,
           this.constructionJobs);
+
+      // Find jobs that are already being worked...
+      const workers = this.workers;
+      _.each(workers, w => {
+        const jobId = w.memory.jobId;
+        if (!jobId) {
+          return;
+        }
+
+        let job = _.find(jobs, j => j.id() === jobId);
+        if (job) {
+          // Ok, this worker is is performing the job - update the reference
+          job.assign(w);
+        } else {
+          // No job exists that matches the workers... nuke the workers job
+          w.memory.jobId = null;
+        }
+      });
 
       prioritize(jobs);
     });
   }
 
-  /**
-   * The workers assigned to the city
-   * @return {creep[]} creeps assigned to the city, and boss
-   */
   get workers() {
     return this.cache.getValue('workers', () => {
-      return _.filter(Game.creeps, c => c.memory.cityName === this.room.name);
+      const workers = _.map(
+        _.filter(
+          Object.keys(Game.creeps),
+          k =>
+            (Game.creeps[k].memory.city === this.room.name &&
+              !Game.creeps[k].memory.transferCity) ||
+                (Game.creeps[k].memory.transferCity === this.room.name)),
+        k => {
+          const c = Game.creeps[k];
+          if (c.memory.transferCity) {
+            if (c.room.name === c.memory.transferCity) {
+              console.log(`${u.name(c)} is working in transfer location room=${c.room.name})`);
+            } else {
+              console.log(`${u.name(c)} is in the wrong room (city=${this.room.name}, room=${c.room.name}, transferRoom=${c.memory.transferCity})`);
+            }
+          }
+          return c;
+        });
+
+      return workers;
     });
   }
 
   /**
-   * Retrieves the workers not currently assigned a job
-   * @return {creep[]} workers not curently assigned jobs
-   */
-  get idleWorkers() {
-    return _.filter(this.workers, w => !w.memory.jobId);
-  }
-
-  /**
-   * Determine the jobs that are already being worked
-   */
-  determineExistingJobs() {
-
-    // Find jobs that are already being worked...
-    const workers = this.workers;
-    const jobs = this.allJobs;
-
-    _.each(workers, w => {
-      const jobId = w.memory.jobId;
-      if (!jobId) {
-        return;
-      }
-
-      let job = _.find(jobs, j => j.id() === jobId);
-      if (job) {
-        // Ok, this worker is is performing the job - update the reference
-        job.assign(w);
-      } else {
-        // No job exists that matches the workers... nuke the workers job
-        w.memory.jobId = null;
-      }
-    });
-  }
-
-  /**
-   * Prepare the boss for the days work
-   */
-  prepare() {
-    this.determineExistingJobs();
-  }
-
-
-  /**
-   * Delegate jobs to the workers without any
+   * Get the boss to deleage all the jobs to the workers.
    */
   delegate() {
     // Allocate jobs to workers
-    const idleWorkers = this.idleWorkers;
-    if (idleWorkers.length === 0) {
-      console.log('No idle workers...');
-      return;
-    }
-
-    const vacancies = _.filter(this.allJobs, j => j.workers.length === 0);
-    if (vacancies.length === 0) {
-      console.log('No job vacancies...');
-      return;
-    }
-
-    _.each(vacancies, job => {
+    const idleWorkers = _.filter(this.workers, w => !w.memory.jobId);
+    _.each(this.allJobs, job => {
       if (idleWorkers.length === 0) {
         return;
       }
@@ -249,7 +223,7 @@ const Boss = class Boss {
         if (peon.job) {
           return bestPeon;
         }
-        const efficiency2 = job.efficiency(peon);
+        const efficiency2 = peon.efficiency(job);
         if (efficiency2 > efficiency) {
           efficiency = efficiency2;
           bestIdx = idx;
@@ -259,15 +233,15 @@ const Boss = class Boss {
       }, null);
       if (worker) {
         job.assign(worker);
+        worker.assign(job);
         idleWorkers.splice(bestIdx, 1);
       } else {
-        console.log(`Weird - no creep can work ${job.info()}`);
+        // console.log(`Weird - no peon can work ${job.info()}`);
       }
     });
 
-    console.log(`${this.info()} has ${idleWorkers.length} idle peons after assigning jobs.`);
+    console.log(`${this.info()} has ${this.idlePeons.length} idle peons after assigning jobs.`);
   }
-
   /**
    * Report job information based on the options provided.
    * @param {object} options the options to modify the report
