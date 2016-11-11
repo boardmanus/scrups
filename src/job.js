@@ -128,6 +128,10 @@ Job.Priority = {
       return Job.Priority.CRITICAL;
     }
     return p - 1;
+  },
+
+  valid(p) {
+    return p >= Job.Priority.CRITICAL && p <= Job.Priority.IGNORE;
   }
 };
 

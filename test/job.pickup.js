@@ -11,17 +11,32 @@ describe('Screep Pickup Job', () => {
   const TEST_PRIORITY = Job.Priority.NORMAL;
   const TEST_SITE_ID = "abcde";
 
+  const createPickupSite = function(siteType) {
+    const site = new siteType();
+    if (site.hasOwnProperty('store')) {
+      site.store[RESOURCE_ENERGY] = 100;
+    }
+    else if (site.hasOwnProperty('carry')) {
+      site.carry[RESOURCE_ENERGY] = 100;
+      site.job = new JobHarvest(new Source());
+    }
+    else if (site.hasOwnProperty('energy')) {
+      site.energy = 100;
+    }
+    return site;
+  }
+
   describe('Construction', function() {
     it('can only pickup from expected sites', function() {
       assert.throws(() => new JobPickup(new ConstructionSite()), TypeError);
       assert.throws(() => new JobPickup(new Structure()), TypeError);
       assert.throws(() => new JobPickup(undefined), RangeError);
       assert.throws(() => new JobPickup(null), RangeError);
-      assert.doesNotThrow(() => new JobPickup(new StructureContainer()));
-      assert.doesNotThrow(() => new JobPickup(new StructureStorage()));
-      assert.doesNotThrow(() => new JobPickup(new StructureLink()));
-      assert.doesNotThrow(() => new JobPickup(new Creep()));
-      assert.doesNotThrow(() => new JobPickup(new Resource()));
+      assert.doesNotThrow(() => new JobPickup(createPickupSite(StructureContainer)));
+      assert.doesNotThrow(() => new JobPickup(createPickupSite(StructureStorage)));
+      assert.doesNotThrow(() => new JobPickup(createPickupSite(StructureLink)));
+      assert.doesNotThrow(() => new JobPickup(createPickupSite(Creep)));
+      assert.doesNotThrow(() => new JobPickup(createPickupSite(Resource)));
     });
 
 
@@ -37,16 +52,26 @@ describe('Screep Pickup Job', () => {
   });
 
   describe('After Construction', function() {
-    const site = new StructureContainer();
-    const job = new JobPickup(site);
+
+    const fixture = function(site = null) {
+      if (!site) {
+        site = new StructureContainer();
+      }
+      site.store[RESOURCE_ENERGY] = 100;
+      return new JobPickup(site);
+    }
 
     it('is of Pickup type', () => {
+      const job = fixture();
       assert(job.type === JobPickup.TYPE, "Unexpected Job type after construction");
     });
     it('has the expected structure', function() {
+      const site = new StructureContainer();
+      const job = fixture(site);
       assert(job.site === site, "Unexpected site after construction");
     });
     it('has the expected priority', function() {
+      const job = fixture();
       assert(job.priority() !== Job.Priority.IGNORE, "Unexpected priority after construction");
       assert(Job.Priority.valid(job.priority()), "Invalid priority");
     });
@@ -54,6 +79,7 @@ describe('Screep Pickup Job', () => {
     describe('General methods', function() {
       describe('energyRequired method', function() {
         it('should never require energy', function() {
+          const job = fixture();
           const energy = job.energyRequired();
           assert(energy === 0, "Should never require energy");
         });

@@ -141,9 +141,17 @@ Job.Factory[JobStore.TYPE] = function(components) {
  * @param {resource} resource the resource to check
  * @return {boolean} false
  */
-const noStorage = (resource = RESOURCE_ENERGY) => false;
-const energyOnlyStorage = (resource = RESOURCE_ENERGY) => resource === RESOURCE_ENERGY;
-const anyStorage = (resource = RESOURCE_ENERGY) => true;
+const noStorage = function(resource = RESOURCE_ENERGY) {
+  return false;
+};
+
+const energyOnlyStorage = function(resource = RESOURCE_ENERGY) {
+  return resource === RESOURCE_ENERGY;
+};
+
+const anyStorage = function(resource = RESOURCE_ENERGY) {
+  return true;
+};
 
 RoomObject.prototype.isStorable = noStorage;
 StructureTower.prototype.isStorable = energyOnlyStorage;
@@ -159,17 +167,28 @@ StructureTerminal.prototype.isStorable = anyStorage;
  * Retrieves the amount of space available to store stuff.
  * @return {integer} space avialbe for storage
  */
-const noStorageSpace = () => 0;
-const energyOnlyStorageSpace = () => this.energyCapacity - this.energy;
-const anyStorageSpace = () => this.storeCapacity - _.sum(this.store);
+const noStorageSpace = function() {
+  return 0;
+};
+
+const energyOnlyStorageSpace = function() {
+  return this.energyCapacity - this.energy;
+};
+
+const anyStorageSpace = function() {
+  return this.storeCapacity - _.sum(this.store);
+};
 
 RoomObject.prototype.storableSpace = noStorageSpace;
-StructureTower.prototype.isStorable = energyOnlyStorageSpace;
-StructureSpawn.prototype.isStorable = energyOnlyStorageSpace;
-Creep.prototype.storableSpace = () => this.carryCapacity - _.sum(this.carry);
-StructureContainer.prototype.isStorable = anyStorageSpace;
-StructureStorage.prototype.isStorable = anyStorageSpace;
-StructureTerminal.prototype.isStorable = anyStorageSpace;
+StructureTower.prototype.storableSpace = energyOnlyStorageSpace;
+StructureSpawn.prototype.storableSpace = energyOnlyStorageSpace;
+StructureExtension.prototype.storableSpace = energyOnlyStorageSpace;
+StructureContainer.prototype.storableSpace = anyStorageSpace;
+StructureStorage.prototype.storableSpace = anyStorageSpace;
+StructureTerminal.prototype.storableSpace = anyStorageSpace;
 
+Creep.prototype.storableSpace = function() {
+  return this.carryCapacity - _.sum(this.carry);
+};
 
 module.exports = JobStore;
