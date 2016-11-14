@@ -8,12 +8,16 @@ const JobHarvest = require('job.harvest');
 
 const JobPickup = class JobPickup extends Job {
 
-  constructor(site) {
+  constructor(site, resource = RESOURCE_ENERGY) {
     super(JobPickup.TYPE, site);
-    if (!site.hasPickup()) {
-      throw new TypeError(`Invalid pickup site`);
+    if (!site.hasPickup(resource)) {
+      throw new TypeError(`Invalid pickup site: doesn't have pickup ${site}-${resource}`);
     }
+
+    this.resource = resource;
+    this.key = `${this.key}-${resource}`;
   }
+
 
   /**
    * Determines the priority of a repair job
@@ -42,10 +46,10 @@ JobPickup.TYPE = 'pickup';
  * @return {JobRepair} repair job representing the components
  */
 Job.Factory[JobPickup.TYPE] = function(components) {
-  if (components.length !== 2) {
+  if (components.length !== 3) {
     throw new RangeError(`'${components}' had too many bits`);
   }
-  return new JobPickup(Game.getObjectById(components[1]));
+  return new JobPickup(Game.getObjectById(components[1]), components[2]);
 };
 
 
@@ -53,58 +57,64 @@ Job.Factory[JobPickup.TYPE] = function(components) {
  * By default, all room objects do *not* have a pickup.
  * @return {boolean} no pickups
  */
-RoomObject.prototype.hasPickup = function hasPickup() {
+const doesntHavePickup = function() {
   return false;
 };
+
+const hasStoredPickup = function(resource = RESOURCE_ENERGY) {
+  return this.store[resource] > 0;
+};
+
+const hasEnergyPickup = function(resource = RESOURCE_ENERGY) {
+  return (resource === RESOURCE_ENERGY) && (this.energy > 0);
+};
+
+
+
+RoomObject.prototype.hasPickup = doesntHavePickup;
+StructureContainer.prototype.hasPickup = hasStoredPickup;
+StructureStorage.prototype.hasPickup = hasStoredPickup;
+StructureTerminal.prototype.hasPickup = hasStoredPickup;
 
 
 /**
  * Creeps have a pickup if they are harvesting, and are carrying stuff.
+ * @param {string} resource the resource type to pickup
  * @return {boolean} can pickup
  */
-Creep.prototype.hasPickup = function hasPickup() {
-  return this.job && this.job.type === JobHarvest.TYPE && _.sum(this.carry) > 0;
+Creep.prototype.hasPickup = function hasPickup(resource = RESOURCE_ENERGY) {
+  return this.job && (this.job.type === JobHarvest.TYPE) && (this.carry[resource] > 0);
 };
 
 
 /**
  * Resources just lying around can be pickup
+ * @param {string} resource the resource type to pickup
  * @return {boolean} true always
  */
-Resource.prototype.hasPickup = function hasPickup() {
-  return true;
-};
-
-
-/**
- * Containers with stuff in them can be picked from
- * @return {boolean} can pickup
- */
-StructureContainer.prototype.hasPickup = function hasPickup() {
-  return _.sum(this.store) > 0;
-};
-
-
-/**
- * Storage boxes with stuff in them can be picked from
- * @return {boolean} can pickup
- */
-StructureStorage.prototype.hasPickup = function hasPickup() {
-  return _.sum(this.store) > 0;
+Resource.prototype.hasPickup = function hasPickup(resource = RESOURCE_ENERGY) {
+  console.log(`Resource.hasPickup(${resource}): ${this.resourceType}, ${this.amount}`);
+  return resource === this.resourceType && this.amount > 0;
 };
 
 
 /**
  * Links with stuff can be picked from
+ * @param {string} resource the resource type to pickup
  * @return {boolean} can pickup
  */
-StructureLink.prototype.hasPickup = function hasPickup() {
-  return this.energy > 0;
-  /*
-  return this.room.boss.find(FIND_MY_STRUCTURES, {
+StructureLink.prototype.hasPickup = function(resource = RESOURCE_ENERGY) {
+  if (this.energy > 0) {
+    return true;
+  }
+
+  // If any link has energy, it can be transferred to any other.  This means
+  // a link has pickup if any link has energy.
+  return this.room.find(FIND_MY_STRUCTURES, {
     filter: s => (s.structureType === STRUCTURE_LINK) && (s.energy > 0)
   }).length > 0;
-  */
 };
+
+
 
 module.exports = JobPickup;

@@ -13,6 +13,9 @@ describe('Screep Pickup Job', () => {
 
   const createPickupSite = function(siteType) {
     const site = new siteType();
+    const room = new Room();
+    site.room = room;
+
     if (site.hasOwnProperty('store')) {
       site.store[RESOURCE_ENERGY] = 100;
     }
@@ -23,6 +26,12 @@ describe('Screep Pickup Job', () => {
     else if (site.hasOwnProperty('energy')) {
       site.energy = 100;
     }
+
+    if (site instanceof Resource) {
+      site.resourceType = RESOURCE_ENERGY;
+      site.amount = 100;
+    }
+
     return site;
   }
 
@@ -41,9 +50,13 @@ describe('Screep Pickup Job', () => {
 
 
     it('can be constructed from the factory', function() {
-      Helpers.stubGetObjectById(TEST_SITE_ID, new Resource());
+      const res = new Resource();
+      res.amount = 100;
+      res.resourceType = RESOURCE_ENERGY;
+      Helpers.stubGetObjectById(TEST_SITE_ID, res);
 
-      const job = Job.create(`${JobPickup.TYPE}-${TEST_SITE_ID}`);
+
+      const job = Job.create(`${JobPickup.TYPE}-${TEST_SITE_ID}-${RESOURCE_ENERGY}`);
       assert(job.type === JobPickup.TYPE, "Unexptected type");
       assert(job.site.id === TEST_SITE_ID);
 
@@ -92,36 +105,46 @@ describe('Screep Pickup Job', () => {
     describe('hasPickup method', function () {
 
       it('should always allow pickup of resources', function() {
-        const resource = new Resource();
+        const resource = createPickupSite(Resource);
         assert(resource.hasPickup(), "Couldn't pick up resource!");
       });
 
       it('should only allow pickup from containers with resources', function() {
-        const container = new StructureContainer();
-        assert(!container.hasPickup(), "Container was empty, but had pickup");
-
-        container.store[RESOURCE_ENERGY] = 50;
+        const container = createPickupSite(StructureContainer);
         container.store[RESOURCE_OXYGEN] = 20;
+        container.store[RESOURCE_HYDROGEN] = 0;
         assert(container.hasPickup(), "Container wasn't empty, but didn't have pickup");
+        assert(container.hasPickup(RESOURCE_ENERGY), "Container wasn't empty, but didn't have pickup");
+        assert(container.hasPickup(RESOURCE_OXYGEN), "Container wasn't empty, but didn't have pickup");
+        assert(!container.hasPickup(RESOURCE_HYDROGEN), "Container was empty, but had pickup");
       });
 
       it('should only allow pickup from storage with resources', function() {
-        const storage = new StructureStorage();
-        assert(!storage.hasPickup(), "storage was empty, but had pickup");
+        const storage = createPickupSite(StructureStorage);
 
         storage.store[RESOURCE_OXYGEN] = 20;
-        assert(storage.hasPickup(), "storage wasn't empty, but didn't have pickup");
+        assert(storage.hasPickup(), "Container wasn't empty, but didn't have pickup");
+        assert(storage.hasPickup(RESOURCE_ENERGY), "Container wasn't empty, but didn't have pickup");
+        assert(storage.hasPickup(RESOURCE_OXYGEN), "Container wasn't empty, but didn't have pickup");
+        assert(!storage.hasPickup(RESOURCE_HYDROGEN), "Container was empty, but had pickup");
       });
 
       it('should only allow pickup from harvester creeps', function() {
-        const creep = new Creep();
-        const harvesterCreep = new Creep();
-        harvesterCreep.job = new JobHarvest(new Source(), 0);
-        harvesterCreep.carry = {};
-        harvesterCreep.carry[RESOURCE_ENERGY] = 50;
-
+        const creep = createPickupSite(Creep);
+        creep.job = null;
+        creep.carry[RESOURCE_OXYGEN] = 20;
         assert(!creep.hasPickup(), "shouldn't be able to pickup from a non-harvester creep");
+        assert(!creep.hasPickup(RESOURCE_ENERGY), "shouldn't be able to pickup from a non-harvester creep");
+        assert(!creep.hasPickup(RESOURCE_OXYGEN), "shouldn't be able to pickup from a non-harvester creep");
+
+
+        const harvesterCreep = createPickupSite(Creep);
+        harvesterCreep.carry[RESOURCE_OXYGEN] = 20;
+
         assert(harvesterCreep.hasPickup(), "should be able to pickup from a harvester creep with energy");
+        assert(harvesterCreep.hasPickup(RESOURCE_ENERGY), "should be able to pickup from a harvester creep with energy");
+        assert(harvesterCreep.hasPickup(RESOURCE_OXYGEN), "should be able to pickup from a harvester creep with energy");
+        assert(!harvesterCreep.hasPickup(RESOURCE_HYDROGEN), "shouldn't be able to pickup from a harvester creep without the resource");
       });
 
       it('should allow pickup if any links in room have resources', function() {
