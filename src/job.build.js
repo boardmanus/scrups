@@ -32,6 +32,12 @@ const JobBuild = class JobBuild extends Job {
   energyRequired() {
     return this.site.progressTotal / BUILD_POWER;
   }
+
+  /**
+   * Perform the job.
+   */
+  work() {
+  }
 };
 
 JobBuild.TYPE = 'build';

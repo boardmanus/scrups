@@ -11,16 +11,16 @@ describe('Screep Pickup Job', () => {
   const TEST_PRIORITY = Job.Priority.NORMAL;
   const TEST_SITE_ID = "abcde";
 
-  const createPickupSite = function(siteType) {
+  const createPickupSite = function(siteType, resource = RESOURCE_ENERGY) {
     const site = new siteType();
     const room = new Room();
     site.room = room;
 
     if (site.hasOwnProperty('store')) {
-      site.store[RESOURCE_ENERGY] = 100;
+      site.store[resource] = 100;
     }
     else if (site.hasOwnProperty('carry')) {
-      site.carry[RESOURCE_ENERGY] = 100;
+      site.carry[resource] = 100;
       site.job = new JobHarvest(new Source());
     }
     else if (site.hasOwnProperty('energy')) {
@@ -28,7 +28,7 @@ describe('Screep Pickup Job', () => {
     }
 
     if (site instanceof Resource) {
-      site.resourceType = RESOURCE_ENERGY;
+      site.resourceType = resource;
       site.amount = 100;
     }
 
@@ -50,15 +50,13 @@ describe('Screep Pickup Job', () => {
 
 
     it('can be constructed from the factory', function() {
-      const res = new Resource();
-      res.amount = 100;
-      res.resourceType = RESOURCE_ENERGY;
+      const res = createPickupSite(Resource, RESOURCE_HYDROGEN);
       Helpers.stubGetObjectById(TEST_SITE_ID, res);
 
-
-      const job = Job.create(`${JobPickup.TYPE}-${TEST_SITE_ID}-${RESOURCE_ENERGY}`);
+      const job = Job.create(`${JobPickup.TYPE}-${TEST_SITE_ID}-${RESOURCE_HYDROGEN}`);
       assert(job.type === JobPickup.TYPE, "Unexptected type");
       assert(job.site.id === TEST_SITE_ID);
+      assert(job.resource === RESOURCE_HYDROGEN);
 
       Helpers.unstubGetObjectById();
     });

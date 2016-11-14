@@ -68,6 +68,13 @@ const Job = class Job {
     }
     this.workers.push(worker);
   }
+
+  /**
+   * Perform the job.
+   */
+  work() {
+    throw new Error("Job not implemented!");
+  }
 };
 
 
@@ -105,7 +112,6 @@ Job.create = function(id) {
 
 /**
  * Possible job priorities.
- * @type {{CRITICAL: number, HIGH: number, NORMAL: number, LOW: number, IDLE: number, IGNORE: number, lower: ((p)), higher: ((p))}}
  */
 Job.Priority = {
 
@@ -160,7 +166,7 @@ Creep.prototype.assignJob = function assignJob(job) {
   if (!this.memory.jobs) {
     this.memory.jobs = [];
   }
-  this.memory.jobs.push(job.id);
+  this.memory.jobs.push(job.id());
 };
 
 

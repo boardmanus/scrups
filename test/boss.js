@@ -112,7 +112,7 @@ describe('A Boss', function() {
       const fixture = function() {
         const room = createRoom();
         Sinon.stub(room, "find", (type, opts) => {
-          if (type === FIND_STRUCTURES) {
+          if (type === FIND_MY_STRUCTURES) {
             return TEST_REPAIR_SITES;
           }
           return [];

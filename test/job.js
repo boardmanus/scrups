@@ -5,12 +5,17 @@ const u = require('utils');
 
 describe('Screep Job', function() {
   // Test parameters...
+  function createStructure(id) {
+    const s = new Structure();
+    s.id = id;
+    return s;
+  }
+
   const TEST_TYPE = 'my_job_type';
   const TEST_TYPE2 = 'my_job_type_2';
-  const TEST_SITE = new Structure();
-  const TEST_SITE2 = new Structure();
-  const TEST_PRIORITY = Job.Priority.NORMAL;
-  const TEST_PRIORITY2 = Job.Priority.HIGH;
+  const TEST_SITE = createStructure('12345');
+  const TEST_SITE2 = createStructure('abcde');
+  const TEST_SITE3 = createStructure('1s2d3f4g');
   TEST_SITE2.id = 'unique-id';
 
   describe('Creating a job using the factory', function() {
@@ -54,7 +59,7 @@ describe('Screep Job', function() {
 
     it('has the same key as a job with the same details', function() {
       const job = new Job(TEST_TYPE, TEST_SITE);
-      const otherJob = new Job(TEST_TYPE, TEST_SITE, TEST_PRIORITY);
+      const otherJob = new Job(TEST_TYPE, TEST_SITE);
       expect(otherJob.key).to.equal(job.key);
     });
 
@@ -109,6 +114,10 @@ describe('Screep Job', function() {
     it('energy required should always be 0.0', function() {
       const job = new Job(TEST_TYPE, TEST_SITE);
       assert(job.energyRequired() === 0.0, 'Unexpected energy');
+    });
+    it('working the job results in an exception', function() {
+      const job = new Job(TEST_TYPE, TEST_SITE);
+      assert.throws(() => job.work(), Error);
     });
   });
 
@@ -187,16 +196,16 @@ describe('Screep Job', function() {
       });
       it('should accumulate jobs as they are assigned', function() {
         const creep = new Creep();
-        const job1 = new Job(TEST_TYPE, TEST_SITE, TEST_PRIORITY);
-        const job2 = new Job(TEST_TYPE2, TEST_SITE2, TEST_PRIORITY2);
-        const job3 = new Job(TEST_TYPE, TEST_SITE2, TEST_PRIORITY2);
+        const job1 = new Job(TEST_TYPE, TEST_SITE);
+        const job2 = new Job(TEST_TYPE2, TEST_SITE2);
+        const job3 = new Job(TEST_TYPE, TEST_SITE3);
         creep.assignJob(job1);
         creep.assignJob(job2);
-        assert(creep.memory.jobs.length === 2,
-          'Had unexpected number of jobs assigned');
-        assert(_.indexOf(creep.memory.jobs, job1) >= 0, 'Couldnt find assigned job');
-        assert(_.indexOf(creep.memory.jobs, job2) >= 0, 'Couldnt find assigned job');
-        assert(_.indexOf(creep.memory.jobs, job3) === -1, 'Found an unexpected job');
+
+        assert(creep.memory.jobs.length === 2, 'Had unexpected number of jobs assigned');
+        assert(_.indexOf(creep.memory.jobs, job1.id()) >= 0, 'Couldnt find assigned job');
+        assert(_.indexOf(creep.memory.jobs, job2.id()) >= 0, 'Couldnt find assigned job');
+        assert(_.indexOf(creep.memory.jobs, job3.id()) === -1, 'Found an unexpected job');
       });
     });
   });

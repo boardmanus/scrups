@@ -55,23 +55,23 @@ Job.Factory[JobPickup.TYPE] = function(components) {
 
 /**
  * By default, all room objects do *not* have a pickup.
+ * @param {string} resource the resource type to pickup
  * @return {boolean} no pickups
  */
-const doesntHavePickup = function() {
+RoomObject.prototype.hasPickup = function() {
   return false;
 };
 
+
+/**
+ * Stuff that can store all resources has pickup if the resource is present.
+ * @param {string} resource the resource type to pickup
+ * @return {boolean} whether the resource is present
+ */
 const hasStoredPickup = function(resource = RESOURCE_ENERGY) {
   return this.store[resource] > 0;
 };
 
-const hasEnergyPickup = function(resource = RESOURCE_ENERGY) {
-  return (resource === RESOURCE_ENERGY) && (this.energy > 0);
-};
-
-
-
-RoomObject.prototype.hasPickup = doesntHavePickup;
 StructureContainer.prototype.hasPickup = hasStoredPickup;
 StructureStorage.prototype.hasPickup = hasStoredPickup;
 StructureTerminal.prototype.hasPickup = hasStoredPickup;
@@ -93,7 +93,6 @@ Creep.prototype.hasPickup = function hasPickup(resource = RESOURCE_ENERGY) {
  * @return {boolean} true always
  */
 Resource.prototype.hasPickup = function hasPickup(resource = RESOURCE_ENERGY) {
-  console.log(`Resource.hasPickup(${resource}): ${this.resourceType}, ${this.amount}`);
   return resource === this.resourceType && this.amount > 0;
 };
 
