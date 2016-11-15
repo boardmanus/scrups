@@ -8,7 +8,7 @@ const JobHarvest = require('job.harvest');
 
 const JobPickup = class JobPickup extends Job {
 
-  constructor(site, resource = RESOURCE_ENERGY) {
+  constructor(site, resource = JobPickup.RESOURCE_ANY) {
     super(JobPickup.TYPE, site);
     if (!site.hasPickup(resource)) {
       throw new TypeError(`Invalid pickup site: doesn't have pickup ${site}-${resource}`);
@@ -38,7 +38,7 @@ const JobPickup = class JobPickup extends Job {
 
 
 JobPickup.TYPE = 'pickup';
-
+JobPickup.RESOURCE_ANY = 'any';
 
 /**
  * Factory function to construct repair jobs
@@ -68,7 +68,10 @@ RoomObject.prototype.hasPickup = function() {
  * @param {string} resource the resource type to pickup
  * @return {boolean} whether the resource is present
  */
-const hasStoredPickup = function(resource = RESOURCE_ENERGY) {
+const hasStoredPickup = function(resource = JobPickup.RESOURCE_ANY) {
+  if (resource === JobPickup.RESOURCE_ANY) {
+    return _.sum(this.store) > 0;
+  }
   return this.store[resource] > 0;
 };
 
@@ -82,8 +85,17 @@ StructureTerminal.prototype.hasPickup = hasStoredPickup;
  * @param {string} resource the resource type to pickup
  * @return {boolean} can pickup
  */
-Creep.prototype.hasPickup = function hasPickup(resource = RESOURCE_ENERGY) {
-  return this.job && (this.job.type === JobHarvest.TYPE) && (this.carry[resource] > 0);
+Creep.prototype.hasPickup = function hasPickup(resource = JobPickup.RESOURCE_ANY) {
+  // The creep must be performing a harvest job to have a pickup
+  if (!this.job || (this.job.type !== JobHarvest.TYPE)) {
+    return false;
+  }
+
+  if (resource === JobPickup.RESOURCE_ANY) {
+    return _.sum(this.carry) > 0;
+  }
+
+  return this.carry[resource] > 0;
 };
 
 
@@ -92,8 +104,11 @@ Creep.prototype.hasPickup = function hasPickup(resource = RESOURCE_ENERGY) {
  * @param {string} resource the resource type to pickup
  * @return {boolean} true always
  */
-Resource.prototype.hasPickup = function hasPickup(resource = RESOURCE_ENERGY) {
-  return resource === this.resourceType && this.amount > 0;
+Resource.prototype.hasPickup = function hasPickup(resource = JobPickup.RESOURCE_ANY) {
+  if (resource === JobPickup.RESOURCE_ANY) {
+    return this.amount > 0;
+  }
+  return (resource === this.resourceType) && (this.amount > 0);
 };
 
 
@@ -102,7 +117,11 @@ Resource.prototype.hasPickup = function hasPickup(resource = RESOURCE_ENERGY) {
  * @param {string} resource the resource type to pickup
  * @return {boolean} can pickup
  */
-StructureLink.prototype.hasPickup = function(resource = RESOURCE_ENERGY) {
+StructureLink.prototype.hasPickup = function(resource = JobPickup.RESOURCE_ANY) {
+  if (resource !== JobPickup.RESOURCE_ANY && resource !== RESOURCE_ENERGY) {
+    return false;
+  }
+
   if (this.energy > 0) {
     return true;
   }

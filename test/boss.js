@@ -4,6 +4,7 @@ const assert = require('chai').assert;
 const Sinon = require('sinon');
 const Boss = require('boss');
 const Job = require('job.all');
+const Helper = require('./helpers');
 
 const TEST_ROOM_NAME = 'E34S32';
 
@@ -214,17 +215,17 @@ describe('A Boss', function() {
 
     describe('retrieving pickup jobs', function() {
       const TEST_PICKUP_SITES = [
-        new StructureStorage(),
-        new StructureContainer(),
-        new StructureLink()
+        Helper.createPickupSite(StructureStorage, RESOURCE_ENERGY),
+        Helper.createPickupSite(StructureContainer, RESOURCE_OXYGEN),
+        Helper.createPickupSite(StructureLink, RESOURCE_HYDROGEN)
       ];
       const TEST_RESOURCE_SITES = [
-        new Resource(),
-        new Resource()
+        Helper.createPickupSite(Resource, RESOURCE_ENERGY),
+        Helper.createPickupSite(Resource, RESOURCE_OXYGEN)
       ];
       const TEST_HARVESTER_WORKERS = [
-        new Creep(),
-        new Creep()
+        Helper.createPickupSite(Creep, RESOURCE_ENERGY),
+        Helper.createPickupSite(Creep, RESOURCE_HYDROGEN)
       ];
       const TEST_ALL_SITES = TEST_PICKUP_SITES
         .concat(TEST_RESOURCE_SITES)
@@ -232,7 +233,7 @@ describe('A Boss', function() {
 
       const fixture = function() {
         const room = createRoom();
-
+        _.each(TEST_ALL_SITES, s => s.room = room);
         Sinon.stub(room, "find", (type, filter) => {
           switch (type) {
             case FIND_DROPPED_RESOURCES:
