@@ -96,7 +96,7 @@ const Boss = class Boss {
     return this.cache.getValue('pickupJobs', () => {
       const jobs = [];
       const resources = this.room.find(FIND_DROPPED_RESOURCES);
-      _.each(resources, r => jobs.push(new Job.Pickup(r)));
+      _.each(resources, r => jobs.push(new Job.Pickup(r, r.resourceType)));
       const sites = this.room.find(FIND_STRUCTURES, {filter: s => s.hasPickup()});
       _.each(sites, s => jobs.push(new Job.Pickup(s)));
       const creeps = this.room.find(FIND_MY_CREEPS, {filter: c => c.hasPickup()});
@@ -157,24 +157,10 @@ const Boss = class Boss {
 
   get workers() {
     return this.cache.getValue('workers', () => {
-      const workers = _.map(
-        _.filter(
-          Object.keys(Game.creeps),
-          k =>
-            (Game.creeps[k].memory.city === this.room.name &&
-              !Game.creeps[k].memory.transferCity) ||
-                (Game.creeps[k].memory.transferCity === this.room.name)),
-        k => {
-          const c = Game.creeps[k];
-          if (c.memory.transferCity) {
-            if (c.room.name === c.memory.transferCity) {
-              console.log(`${u.name(c)} is working in transfer location room=${c.room.name})`);
-            } else {
-              console.log(`${u.name(c)} is in the wrong room (city=${this.room.name}, room=${c.room.name}, transferRoom=${c.memory.transferCity})`);
-            }
-          }
-          return c;
-        });
+      const workers = _.filter(Game.creeps, c => {
+        const city = c.memory.cityName;
+        return (!city && c.room.name === this.room.name) || (city === this.room.name);
+      });
 
       return workers;
     });

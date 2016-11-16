@@ -14,8 +14,9 @@ const createRoom = function(name = TEST_ROOM_NAME) {
   return room;
 }
 
-const createCreep = function(cityName, jobId = null) {
+const createCreep = function(room, cityName, jobId = null) {
   const creep = new Creep();
+  creep.room = room;
   creep.memory.cityName = cityName;
   creep.memory.jobId = jobId;
   return creep;
@@ -400,16 +401,15 @@ describe('A Boss', function() {
 
     describe('retrieving workers', function() {
 
-      const TEST_CREEPS = [
-          createCreep(TEST_ROOM_NAME),
-          createCreep('xxxx'),
-          createCreep(TEST_ROOM_NAME),
-          createCreep('W1N1'),
-          createCreep('E1S1'),
-        ];
-
       const fixture = function() {
         const room = createRoom(TEST_ROOM_NAME);
+        const TEST_CREEPS = [
+            createCreep(room, TEST_ROOM_NAME),
+            createCreep(room, 'xxxx'),
+            createCreep(room, TEST_ROOM_NAME),
+            createCreep(room, 'W1N1'),
+            createCreep(room, 'E1S1'),
+          ];
         Game.creeps = TEST_CREEPS;
         return new Boss(room);
       }
@@ -426,39 +426,6 @@ describe('A Boss', function() {
         const workers = boss.workers;
         const workers2 = boss.workers;
         assert(workers === workers2, "Workers are different on different calls");
-      });
-
-      after(function() {
-        Game.creeps = null;
-      });
-    });
-
-    describe('retrieving idle workers', function() {
-
-      const TEST_CREEPS = [
-        createCreep(TEST_ROOM_NAME, 'store-xxxx'),
-        createCreep(TEST_ROOM_NAME, null),
-        createCreep(TEST_ROOM_NAME, 'harvest-xxxx'),
-      ];
-
-      const fixture = function() {
-        const room = createRoom(TEST_ROOM_NAME);
-        Game.creeps = TEST_CREEPS;
-        return new Boss(room);
-      }
-
-      it('must only provide workers without a job', function() {
-        const boss = fixture();
-        const idleWorkers = boss.idleWorkers;
-        _.each(boss.workers, w => console.log(`worker: ${w.memory.cityName}-${w.memory.jobId}`));
-        _.each(idleWorkers, w => console.log(`idleworker: ${w.memory.cityName}-${w.memory.jobId}`));
-        assert(idleWorkers.length === 1, `Unexpected number of idle workers (${idleWorkers.length} !== 1})`);
-      });
-
-      it ('must produce workers with no job', function() {
-        const boss = fixture();
-        const idleWorkers = boss.idleWorkers;
-        _.each(idleWorkers, (w) => assert(!w.memory.jobId));
       });
 
       after(function() {
