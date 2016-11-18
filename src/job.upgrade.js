@@ -47,7 +47,7 @@ JobUpgrade.TYPE = 'upgrade';
  */
 Job.Factory[JobUpgrade.TYPE] = function(components) {
   if (components.length !== 2) {
-    throw new JobUpgrade(`'${components}' had too many bits`);
+    throw new RangeError(`JobUpgrade('${components}' had too many bits`);
   }
   return new JobUpgrade(Game.getObjectById(components[1]));
 };

@@ -31,6 +31,10 @@ describe('Screep Store Job', () => {
 
       Helpers.unstubGetObjectById();
     });
+
+    it('cannot be constructed from the factory with bad id', function() {
+      assert.throws(() => Job.create(`${JobStore.TYPE}-${TEST_SITE_ID}-extra`), RangeError);
+    });
   });
 
   describe('After Construction', function() {
@@ -67,11 +71,24 @@ describe('Screep Store Job', () => {
     });
   });
 
-  describe('Random', function() {
-    it('works', function() {
-      const structure = new StructureContainer();
-      const res = structure.isStorable();
-      assert(res);
+  describe('Monky-patching', function() {
+    it('isStorable method succeeds where expected', function() {
+      assert(!(new Structure()).isStorable());
+      assert(!(new StructureWall()).isStorable());
+      assert((new StructureContainer()).isStorable());
+      assert((new StructureContainer()).isStorable(RESOURCE_HYDROGEN));
+      assert((new Creep()).isStorable());
+      assert((new Creep()).isStorable(RESOURCE_OXYGEN));
+      assert((new StructureTower()).isStorable(RESOURCE_ENERGY));
+      assert(!(new StructureTower()).isStorable(RESOURCE_HYDROGEN));
+    });
+
+    it('has storableSpace where expected', function() {
+      assert((new Structure()).storableSpace() === 0);
+      assert(Helpers.createTower(100).storableSpace() === 100);
+      assert(Helpers.createTower(100, 50).storableSpace() === 100 - 50);
+      assert(Helpers.createCreep(100).storableSpace() === 100);
+      assert(Helpers.createCreep(100, 50).storableSpace() === 100 - 50);
     });
   });
 });

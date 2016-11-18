@@ -28,6 +28,10 @@ describe('Screep Repair Job', () => {
 
       Helpers.unstubGetObjectById();
     });
+
+    it('cannot be constructed from the factory with bad id', function() {
+      assert.throws(() => Job.create(`${JobRepair.TYPE}-${TEST_SITE_ID}-extra`), RangeError);
+    });
   });
 
   describe('After Construction', function() {

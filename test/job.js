@@ -3,6 +3,7 @@ const assert = require('chai').assert;
 const Job = require('job');
 const u = require('utils');
 
+
 describe('Screep Job', function() {
   // Test parameters...
   function createStructure(id) {
@@ -43,6 +44,7 @@ describe('Screep Job', function() {
   });
 
   describe('After Construction', function() {
+
     it('has the expected properties', () => {
       const job = new Job(TEST_TYPE, TEST_SITE);
       expect(job.type).to.equal(TEST_TYPE);

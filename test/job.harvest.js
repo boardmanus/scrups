@@ -37,6 +37,11 @@ describe('Screep Harvest Job', () => {
 
       Helpers.unstubGetObjectById();
     });
+
+    it('cannot be constructed from the factory with bad id', function() {
+      assert.throws(() => Job.create(`${JobHarvest.TYPE}`), RangeError);
+      assert.throws(() => Job.create(`${JobHarvest.TYPE}-${TEST_SITE_ID}-extra`), RangeError);
+    });
   });
 
   describe('After Construction', function() {

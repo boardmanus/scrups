@@ -257,17 +257,16 @@ Boss.monkeyPatch = function monkeyPatch() {
     city.boss.jobReport(options);
   };
 
-  Game.cmd.transferWorker = function transferWorker(fromRoomName, toRoomName) {
-    const fromRoom = Game.rooms[fromRoomName];
-    const toRoom = Game.rooms[toRoomName];
+  Game.cmd.transferWorker = function transferWorker(creep, newRoomName) {
+    const fromRoom = creep.room;
+    const toRoom = Game.rooms[newRoomName];
     if (!fromRoom || !toRoom) {
       console.log('Invalid rooms specified for transfer');
       return;
     }
 
-    const peon = fromRoom.city.boss.peons[0];
-    peon.creep.memory.transferCity = toRoom.name;
-    console.log(`Transfering ${peon.info()} to ${toRoom.name} (city=${peon.creep.memory.city}, transferCity=${peon.creep.memory.transferCity})`);
+    creep.memory.cityName = newRoom.name;
+    console.log(`Transfering ${creep.name} to ${toRoom.name}`);
   };
 };
 
