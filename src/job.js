@@ -97,12 +97,8 @@ Job.create = function(id) {
   }
 
   const components = id.split('-');
-  if (!components instanceof Array) {
-    throw new RangeError("Couldn't split id into components");
-  }
-
   const creator = Job.Factory[components[0]];
-  if (creator === null) {
+  if (!creator) {
     throw new RangeError(`'${id}' doesn't have a valid creation function`);
   }
 
