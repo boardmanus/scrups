@@ -63,6 +63,7 @@ describe('A Boss', function() {
 
       const fixture = function() {
         const room = createRoom();
+        _.each(TEST_CONSTRUCTION_SITES, cs => cs.room = room);
         Sinon.stub(room, "find", (type, opts) => {
           if (type === FIND_CONSTRUCTION_SITES) {
             return TEST_CONSTRUCTION_SITES;
@@ -110,9 +111,9 @@ describe('A Boss', function() {
         new Structure(),
         new Structure()
       ];
-
       const fixture = function() {
         const room = createRoom();
+        _.each(TEST_REPAIR_SITES, s => s.room = room);
         Sinon.stub(room, "find", (type, opts) => {
           if (type === FIND_MY_STRUCTURES) {
             return TEST_REPAIR_SITES;
@@ -166,7 +167,7 @@ describe('A Boss', function() {
 
       const fixture = function() {
         const room = createRoom();
-
+        _.each(TEST_SITES, s => s.room = room);
         Sinon.stub(room, "find", (type, opts) => {
           let filter = (opts && opts.filter) ? opts.filter : _.identity;
           if (type === FIND_SOURCES) {
@@ -304,7 +305,7 @@ describe('A Boss', function() {
 
       const fixture = function() {
         const room = createRoom();
-
+        _.each(TEST_ALL_SITES, s => s.room = room);
         Sinon.stub(room, "find", (type, opts) => {
           let filter = (opts && opts.filter) ? opts.filter : _.identity;
           if (type === FIND_MY_STRUCTURES) {
@@ -354,6 +355,7 @@ describe('A Boss', function() {
       const fixture = function() {
         const room = createRoom();
         room.controller = new StructureController();
+        room.controller.room = room;
 
         Sinon.stub(room, "find", (type, opts) => {
           let filter = (opts && opts.filter) ? opts.filter : _.identity;

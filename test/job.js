@@ -2,21 +2,17 @@ const expect = require('chai').expect;
 const assert = require('chai').assert;
 const Job = require('job');
 const u = require('utils');
+const Helpers = require('./helpers');
 
 
 describe('Screep Job', function() {
   // Test parameters...
-  function createStructure(id) {
-    const s = new Structure();
-    s.id = id;
-    return s;
-  }
-
   const TEST_TYPE = 'my_job_type';
   const TEST_TYPE2 = 'my_job_type_2';
-  const TEST_SITE = createStructure('12345');
-  const TEST_SITE2 = createStructure('abcde');
-  const TEST_SITE3 = createStructure('1s2d3f4g');
+  const TEST_ROOM = Helpers.createRoom();
+  const TEST_SITE = Helpers.createSite(StructureStorage, [], TEST_ROOM);
+  const TEST_SITE2 = Helpers.createSite(Source, [], TEST_ROOM);
+  const TEST_SITE3 = Helpers.createSite(Resource, [], TEST_ROOM);
   TEST_SITE2.id = 'unique-id';
 
   describe('Creating a job using the factory', function() {
@@ -56,7 +52,7 @@ describe('Screep Job', function() {
       const job = new Job(TEST_TYPE, TEST_SITE);
       const info = job.info();
       expect(info).to.contain(TEST_TYPE);
-      expect(info).to.contain(u.name(TEST_SITE));
+      expect(info).to.contain(TEST_SITE.info());
     });
 
     it('has the same key as a job with the same details', function() {

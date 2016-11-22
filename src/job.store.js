@@ -74,21 +74,6 @@ function storagePriority(job) {
   return job.isComplete() ? Job.Priority.IGNORE : Job.Priority.IDLE;
 }
 
-
-function energyRequiredForSite(site) {
-  switch (site.structureType) {
-    case STRUCTURE_TOWER:
-    case STRUCTURE_LINK:
-    case STRUCTURE_SPAWN:
-    case STRUCTURE_EXTENSION:
-      return site.energyCapacity - site.energyAvailable;
-    case STRUCTURE_CONTAINER:
-    case STRUCTURE_STORAGE:
-      return site.storeCapacity - _.sum(site.store);
-    default: break;
-  }
-  return 0;
-}
 */
 
 const JobStore = class JobStore extends Job {
@@ -118,6 +103,55 @@ const JobStore = class JobStore extends Job {
    */
   energyRequired() {
     return this.site.storableSpace();
+  }
+
+  transferToSite(worker, resource) {
+    let res = worker.transfer(this.site, resource);
+    switch (res) {
+      case ERR_NOT_OWNER:
+      case ERR_INVALID_ARGS:
+      case ERR_NOT_ENOUGH_RESOURCES:
+      case ERR_INVALID_TARGET:
+      default:
+        throw new Error(`${this.info()}: unexpected error while storing ${w.carry[resource]} ${resource} (${res})`);
+      case ERR_FULL:
+        // The site is full - this job is complete
+        console.log(`${this.info()}: site is full, bug in store work function.`);
+        return false;
+      case ERR_BUSY:
+        // The worker is busy, it's not going to do anything
+        console.log(`${this.info}: worker ${w.info()} is busy - can't store.`);
+        return false;
+        break;
+      case ERR_NOT_IN_RANGE:
+        // Not close enough - move towards the site
+        this.moveToSite(w);
+        return false;
+      case OK:
+        break;
+    }
+    return true;
+  }
+  work() {
+    const allowableResources = this.site.storableResource();
+    _.each(this.workers, w => {
+      if (allowableResources === RESOURCE_ENERGY) {
+        if (w.carry[RESOURCE_ENERGY] > 0) {
+          this.transferToSite(w, RESOURCE_ENERGY);
+        }
+        else {
+          // The worker has no energy to transfer
+          console.log(`${this.info()}: ${w.info()} has no energy to transfer to ${this.site.info()}`);
+        }
+      } else if (allowableResources === RESOURCE_ANY) {
+        for (const resource in w.carry) {
+          this.transferToSite(w, resource);
+          break;
+        }
+      } else {
+        throw new Error(`${this.info}: ${this.site.info()} is not storable!`);
+      }
+    });
   }
 };
 
@@ -190,5 +224,32 @@ StructureTerminal.prototype.storableSpace = anyStorageSpace;
 Creep.prototype.storableSpace = function() {
   return this.carryCapacity - _.sum(this.carry);
 };
+
+
+/**
+ * Retrieves the desired resource type of an object.
+ * @return {string} the storable resource
+ */
+const energyOnlyStorableResource = function() {
+  return RESOURCE_ENERGY;
+};
+
+const anyStorableResource = function() {
+  return RESOURCE_ANY;
+};
+
+const noStorableResource = function() {
+  return RESOURCE_NONE;
+};
+
+RoomObject.prototype.storableResource = noStorableResource;
+StructureTower.prototype.storableResource = energyOnlyStorableResource;
+StructureSpawn.prototype.storableResource = energyOnlyStorableResource;
+StructureExtension.prototype.storableResource = energyOnlyStorableResource;
+StructureContainer.prototype.storableResource = anyStorableResource;
+StructureStorage.prototype.storableResource = anyStorableResource;
+StructureTerminal.prototype.storableResource = anyStorableResource;
+Creep.prototype.storableResource = anyStorableResource;
+
 
 module.exports = JobStore;

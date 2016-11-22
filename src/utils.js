@@ -1,32 +1,40 @@
 /**
  * Provides some basic utilities for logging and such
  */
+global.RESOURCE_ANY = 'any';
+global.RESOURCE_NONE = 'none';
+
+RoomObject.prototype.info = function() {
+  return `unknown-${this.constructor.name}-${this.room.name}`;
+};
+
+Creep.prototype.info = function() {
+  return this.my ?
+    `creep-${this.name}-${this.room.name}` :
+    `enemy-${this.name}-${this.owner}`;
+};
+
+Structure.prototype.info = function() {
+  return `${this.structureType}-${this.room.name}-${this.id}`;
+};
+
+Room.prototype.info = function() {
+  return `room-${this.name}`;
+};
+
+Source.prototype.info = function() {
+  return `source-${this.room.name}-${this.id}`;
+};
+
+Flag.prototype.info = function() {
+  return `flag-${this.name}-${this.room.name}`;
+};
+
+Resource.prototype.info = function() {
+  return `resource-${this.resourceType}-${this.amount}-${this.id}`;
+};
 
 module.exports = {
-  /**
-   * Creates a good name for a screeps objects
-   * @param {RoomObj} obj the screep object to generate a name for
-   * @return {string} name for the object
-   */
-  name(obj) {
-    if (obj instanceof Structure) {
-      return `${obj.structureType}-${obj.id}`;
-    } else if (obj instanceof Creep) {
-      return ((obj.my) ?
-        `${obj.memory.role}-${obj.name}` :
-        `enemy-${obj.owner}-${obj.name}`);
-    } else if (obj instanceof Room) {
-      return `room-${obj.name}`;
-    } else if (obj instanceof Source) {
-      return `source-${obj.id}`;
-    } else if (obj instanceof Flag) {
-      return `flag-${obj.name}`;
-    } else if (obj instanceof Resource) {
-      return `resource-${obj.resourceType}-${obj.id}`;
-    }
-
-    return `unknown-${obj}`;
-  },
 
   Cache: class {
     /**
