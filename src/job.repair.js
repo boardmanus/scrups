@@ -54,6 +54,27 @@ const JobRepair = class JobRepair extends Job {
 
     this.workers.push(worker);
   }
+
+  work() {
+    _.each(this.workers, w => {
+      let res = w.repair(this.site);
+      switch (res) {
+        case ERR_NOT_OWNER:
+        case ERR_INVALID_TARGET:
+        case ERR_NO_BODY_PART:
+        case ERR_BUSY:
+        default:
+          throw new Error(`${this.info()}: unexpected failure when repairing (${res})`);
+        case ERR_NOT_ENOUGH_RESOURCES:
+          break;
+        case ERR_NOT_IN_RANGE:
+          this.moveToSite(w);
+          break;
+        case OK:
+          break;
+      }
+    });
+  }
 };
 
 

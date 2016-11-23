@@ -40,7 +40,12 @@ const Helpers = {
    * @param {array} resources array of resources to populate the site with
    * @return {RoomObject} a new room object with the site details
    */
-  createSite(siteType, resources = [], room = new Room()) {
+   createRoom(name = 'W10S1') {
+     const room = new Room();
+     room.name = name;
+     return room;
+   },
+   createSite(siteType, resources = [], room = Helpers.createRoom()) {
     const site = new siteType();
     site.room = room;
     site.id = _.uniqueId();
@@ -96,17 +101,13 @@ const Helpers = {
   createCreep(carryCapacity = 0, resources = []) {
     const creep = Helpers.createSite(Creep, resources);
     creep.carryCapacity = carryCapacity;
+    creep.name = 'Bob';
     return creep;
   },
   createTower(energyCapacity = 0, resources = []) {
     const tower = Helpers.createSite(StructureTower, resources);
     tower.energyCapacity = energyCapacity;
     return tower;
-  },
-  createRoom(name = 'W10S1') {
-    const room = new Room();
-    room.name = name;
-    return room;
   }
 };
 

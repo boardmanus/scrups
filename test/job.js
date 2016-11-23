@@ -2,6 +2,7 @@ const expect = require('chai').expect;
 const assert = require('chai').assert;
 const Job = require('job');
 const u = require('utils');
+const Sinon = require('sinon');
 const Helpers = require('./helpers');
 
 
@@ -141,6 +142,27 @@ describe('Screep Job', function() {
       assert(
         Job.Priority.lower(Job.Priority.IGNORE) === Job.Priority.IGNORE,
         'Allowed a lower priority than Idle!');
+    });
+  });
+
+  describe('Moving to work site', function() {
+
+    function createStubbedCreep(moveToResult) {
+      const creep = Helpers.createCreep();
+      Sinon.stub(creep, "moveTo", (site, opts = {}) => {
+        return moveToResult;
+      });
+      return creep;
+    }
+    it('Reports success if creep moves to site', function() {
+      const job = new Job(TEST_TYPE, TEST_SITE);
+      const creep = createStubbedCreep(OK);
+      assert(job.moveToSite(creep), "Unsuccessful return when creep moved");
+    });
+    it('Reports failure if creep is tired', function() {
+      const job = new Job(TEST_TYPE, TEST_SITE);
+      const creep = createStubbedCreep(ERR_TIRED);
+      assert(!job.moveToSite(creep), "Unsuccessful return when creep moved");
     });
   });
 

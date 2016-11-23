@@ -105,6 +105,12 @@ const JobStore = class JobStore extends Job {
     return this.site.storableSpace();
   }
 
+  /**
+   * Transfer the resource to the job site
+   * @param {Creep} worker the worker to do the transferring
+   * @param {RoomObject} resource the resource to transfer from the worker
+   * @return {boolean} whether the transfer was successful
+   */
   transferToSite(worker, resource) {
     let res = worker.transfer(this.site, resource);
     switch (res) {
@@ -122,7 +128,6 @@ const JobStore = class JobStore extends Job {
         // The worker is busy, it's not going to do anything
         console.log(`${this.info}: worker ${w.info()} is busy - can't store.`);
         return false;
-        break;
       case ERR_NOT_IN_RANGE:
         // Not close enough - move towards the site
         this.moveToSite(w);
@@ -132,6 +137,7 @@ const JobStore = class JobStore extends Job {
     }
     return true;
   }
+
   work() {
     const allowableResources = this.site.storableResource();
     _.each(this.workers, w => {

@@ -75,6 +75,30 @@ const Job = class Job {
   work() {
     throw new Error("Job not implemented!");
   }
+
+  /*
+   * Move a worker towards the job site
+   * @param {Creep} worker the worker to move
+   * @return {boolean} whether the operation was successful
+   */
+  moveToSite(worker) {
+    let res = worker.moveTo(this.site);
+    switch (res) {
+      case ERR_NOT_OWNER:
+      case ERR_BUSY:
+      case ERR_NO_BODYPART:
+      case ERR_INVALID_TARGET:
+      default:
+        throw new Error(`${this.info()}: ${worker.info()} failed to move to ${this.site.info()} (${res})`);
+      case ERR_TIRED:
+        console.log(`${this.info()}: ${worker.info()} was to tired to move to ${this.site.info()}`);
+        return false;
+      case OK:
+        break;
+    }
+
+    return true;
+  }
 };
 
 
