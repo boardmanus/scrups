@@ -68,6 +68,72 @@ describe('Screep Store Job', () => {
           assert(energy === job.site.storableSpace(), "Required energy should match the storage space");
         });
       });
+
+      describe('transferToSite method', function() {
+        function createStubbedCreep(res) {
+          const creep = Helpers.createCreep(200, RESOURCE_ENERGY);
+          Sinon.stub(creep, "transfer", (site, opts = {}) => res);
+          return creep;
+        }
+        it('should succeed when the worker can transfer', function() {
+          const job = new JobStore(Helpers.createSite(StructureStorage));
+          const worker = createStubbedCreep(OK);
+          assert(job.transferToSite(worker) === true, "Failed to transfer when things were looking good");
+        });
+        it('should fail when the site is full', function() {
+          const job = new JobStore(Helpers.createSite(StructureStorage));
+          const worker = createStubbedCreep(ERR_FULL);
+          assert(job.transferToSite(worker, RESOURCE_ENERGY) === false, "Succeeded transferring when site was full");
+        });
+        it('should move towards site if not in range', function() {
+          const job = new JobStore(Helpers.createSite(StructureStorage));
+          const worker = createStubbedCreep(ERR_NOT_IN_RANGE);
+          const moveTo = Sinon.stub(worker, "moveTo", (site, opts = {}) => OK);
+          assert(job.transferToSite(worker, RESOURCE_ENERGY) === false, "Succeeded when not in range");
+          assert(moveTo.calledOnce, "moveTo not invoked");
+        });
+        it('should throw exceptions on unexpected results', function() {
+          const job = new JobStore(Helpers.createSite(StructureStorage));
+          assert.throws(() => job.transferToSite(createStubbedCreep(ERR_INVALID_TARGET), RESOURCE_ENERGY), Error);
+          assert.throws(() => job.transferToSite(createStubbedCreep(ERR_NOT_OWNER), RESOURCE_ENERGY), Error);
+          assert.throws(() => job.transferToSite(createStubbedCreep(ERR_INVALID_ARGS), RESOURCE_ENERGY), Error);
+          assert.throws(() => job.transferToSite(createStubbedCreep(ERR_INVALID_TARGET), RESOURCE_ENERGY), Error);
+          assert.throws(() => job.transferToSite(createStubbedCreep(ERR_NOT_ENOUGH_RESOURCES), RESOURCE_ENERGY), Error);
+        });
+      });
+
+      describe('working the job', function() {
+        function createStubbedJob(siteType) {
+          const job = new JobStore(Helpers.createSite(siteType));
+          Sinon.stub(job, "transferToSite", (worker, resource) => true);
+          return job;
+        }
+        it ('should store all worker resources in good conditions', function() {
+          const job = createStubbedJob(StructureStorage);
+          job.assignWorker(Helpers.createCreep(200, RESOURCE_ENERGY));
+          job.assignWorker(Helpers.createCreep(100, RESOURCE_OXYGEN));
+          job.work();
+          assert(job.transferToSite.calledTwice, "Resources not stored");
+        });
+        it ('should store energy in energy only site', function() {
+          const job = createStubbedJob(StructureExtension);
+          job.assignWorker(Helpers.createCreep(200, RESOURCE_ENERGY));
+          job.work();
+          assert(job.transferToSite.calledOnce, "Resources not stored");
+        });
+        it ('should not store resources in energy only site', function() {
+          const job = createStubbedJob(StructureExtension);
+          job.assignWorker(Helpers.createCreep(200, RESOURCE_OXYGEN));
+          job.work();
+          assert(job.transferToSite.callCount === 0, "Resources not stored");
+        });
+        it ('should only store energy in energy only site', function() {
+          const job = createStubbedJob(StructureExtension);
+          job.assignWorker(Helpers.createCreep(200, [RESOURCE_OXYGEN, RESOURCE_ENERGY]));
+          job.work();
+          assert(job.transferToSite.calledOnce, "Resources not stored");
+        });
+      });
     });
   });
 

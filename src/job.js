@@ -36,7 +36,7 @@ const Job = class Job {
    * @return {string} an info string representing the job
    */
   info() {
-    return `job-${this.type}[${this.priority()}]@${this.site.info()}]`;
+    return `job-${this.type}[${this.priority()}]@${this.site.info()}`;
   }
 
   /**

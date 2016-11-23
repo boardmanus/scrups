@@ -118,19 +118,16 @@ const JobStore = class JobStore extends Job {
       case ERR_INVALID_ARGS:
       case ERR_NOT_ENOUGH_RESOURCES:
       case ERR_INVALID_TARGET:
+      case ERR_BUSY:
       default:
-        throw new Error(`${this.info()}: unexpected error while storing ${w.carry[resource]} ${resource} (${res})`);
+        throw new Error(`${this.info()}: unexpected error while storing ${worker.carry[resource]} ${resource} (${res})`);
       case ERR_FULL:
         // The site is full - this job is complete
         console.log(`${this.info()}: site is full, bug in store work function.`);
         return false;
-      case ERR_BUSY:
-        // The worker is busy, it's not going to do anything
-        console.log(`${this.info}: worker ${w.info()} is busy - can't store.`);
-        return false;
       case ERR_NOT_IN_RANGE:
         // Not close enough - move towards the site
-        this.moveToSite(w);
+        this.moveToSite(worker);
         return false;
       case OK:
         break;
@@ -144,8 +141,7 @@ const JobStore = class JobStore extends Job {
       if (allowableResources === RESOURCE_ENERGY) {
         if (w.carry[RESOURCE_ENERGY] > 0) {
           this.transferToSite(w, RESOURCE_ENERGY);
-        }
-        else {
+        } else {
           // The worker has no energy to transfer
           console.log(`${this.info()}: ${w.info()} has no energy to transfer to ${this.site.info()}`);
         }
