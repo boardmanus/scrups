@@ -55,23 +55,36 @@ const JobRepair = class JobRepair extends Job {
     this.workers.push(worker);
   }
 
+  /**
+   * Gets the worker to repair the job site.
+   * @param {Creep} worker to perform the repairSite
+   * @param {boolean} whether the worker did something useful
+   */
+  repairSite(worker) {
+    let res = worker.repair(this.site);
+    switch (res) {
+      case ERR_NOT_OWNER:
+      case ERR_INVALID_TARGET:
+      case ERR_NO_BODYPART:
+      case ERR_BUSY:
+      default:
+        throw new Error(`${this.info()}: unexpected failure when repairing (${res})`);
+      case ERR_NOT_ENOUGH_RESOURCES:
+        throw new Error(`${this.info()}: ${worker.info()} doesn't have enough energy to repair ${this.site.info()}`);
+      case ERR_NOT_IN_RANGE:
+        this.moveToSite(worker);
+        return false;
+      case OK:
+        return true;
+    }
+  }
+
   work() {
     _.each(this.workers, w => {
-      let res = w.repair(this.site);
-      switch (res) {
-        case ERR_NOT_OWNER:
-        case ERR_INVALID_TARGET:
-        case ERR_NO_BODY_PART:
-        case ERR_BUSY:
-        default:
-          throw new Error(`${this.info()}: unexpected failure when repairing (${res})`);
-        case ERR_NOT_ENOUGH_RESOURCES:
-          break;
-        case ERR_NOT_IN_RANGE:
-          this.moveToSite(w);
-          break;
-        case OK:
-          break;
+      try {
+        this.repairSite(w);
+      } catch (e) {
+        console.log(`ERROR: ${e.message}`);
       }
     });
   }

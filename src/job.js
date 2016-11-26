@@ -94,10 +94,8 @@ const Job = class Job {
         console.log(`${this.info()}: ${worker.info()} was to tired to move to ${this.site.info()}`);
         return false;
       case OK:
-        break;
+        return true;
     }
-
-    return true;
   }
 };
 

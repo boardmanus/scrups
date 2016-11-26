@@ -42,6 +42,35 @@ const JobHarvest = class JobHarvest extends Job {
   energyRequired() {
     return 0.0;
   }
+
+  harvestFromSite(worker) {
+    let res = worker.harvest(this.site);
+    switch (res) {
+      case ERR_NOT_OWNER:
+      case ERR_INVALID_TARGET:
+      case ERR_NO_BODYPART:
+      case ERR_BUSY:
+      default:
+        throw new Error(`${this.info()}: unexpected failure when repairing (${res})`);
+      case ERR_NOT_ENOUGH_RESOURCES:
+        throw new Error(`${this.info()}: ${this.site.info()} doesn't have enough energy for ${worker.info()} to harvest`);
+      case ERR_NOT_IN_RANGE:
+        this.moveToSite(worker);
+        return false;
+      case OK:
+        return true;
+    }
+  }
+
+  work() {
+    _.each(this.workers, w => {
+      try {
+        return this.harvestFromSite(w);
+      } catch (e) {
+        console.log(`${this.info()}: failed to harvest from ${w.info()}`);
+      }
+    });
+  }
 };
 
 

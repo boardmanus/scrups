@@ -85,8 +85,17 @@ const Helpers = {
         site.amount = r.amount;
       }
     }
-    else {
-      throw new ArgumentError(`Bad arguments: ${siteType}, ${resources}`);
+    else if (site instanceof Mineral) {
+      if (resources.length === 0) {
+        site.mineralType = RESOURCE_OXYGEN;
+        site.mineralAmount = 100;
+      }
+      else {
+        const r = Helpers.asResourceObj(resources[0]);
+        site.mineralType = r.type;
+        site.mineralAmount = r.amount;
+      }
+      Sinon.stub(site, "isHarvestable", () => true);
     }
 
     return site;

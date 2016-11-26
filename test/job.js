@@ -164,6 +164,12 @@ describe('Screep Job', function() {
       const creep = createStubbedCreep(ERR_TIRED);
       assert(!job.moveToSite(creep), "Unsuccessful return when creep moved");
     });
+    it('Throw exception if an unexpected error occurred', function() {
+      const job = new Job(TEST_TYPE, TEST_SITE);
+      assert.throws(() => job.moveToSite(createStubbedCreep(ERR_NOT_OWNER)), Error);
+      assert.throws(() => job.moveToSite(createStubbedCreep(ERR_NO_PATH)), Error);
+      assert.throws(() => job.moveToSite(createStubbedCreep(ERR_NO_PATH)), Error);
+    });
   });
 
   describe('Creep patching', function() {

@@ -60,6 +60,59 @@ describe('Screep Harvest Job', () => {
     });
   });
 
+  describe('harvesFromSite function', function() {
+    function createHarvester(res) {
+      const creep = Helpers.createCreep(100);
+      Sinon.stub(creep, "harvest", site => res);
+      return creep;
+    }
+
+    it('Successfully harvests under good conditions', function() {
+      const job = new JobHarvest(Helpers.createSite(Source, RESOURCE_ENERGY));
+      const worker = createHarvester(OK);
+      const res = job.harvestFromSite(worker);
+      assert(res, `worker succeessfully harvested despite being far from site`);
+    });
+    it('Fails to harvests under bad conditions', function() {
+      const job = new JobHarvest(Helpers.createSite(Source, RESOURCE_ENERGY));
+      assert.throws(() => job.harvestFromSite(createHarvester(ERR_BUSY)));
+      assert.throws(() => job.harvestFromSite(createHarvester(ERR_NO_BODYPART)));
+      assert.throws(() => job.harvestFromSite(createHarvester(ERR_NOT_OWNER)));
+      assert.throws(() => job.harvestFromSite(createHarvester(ERR_TIRED)));
+      assert.throws(() => job.harvestFromSite(createHarvester(ERR_FULL)));
+      assert.throws(() => job.harvestFromSite(createHarvester(ERR_NO_BODYPART)));
+    });
+    it('Moves to site if not close', function() {
+      const job = new JobHarvest(Helpers.createSite(Source, RESOURCE_ENERGY));
+      Sinon.stub(job, "moveToSite", w => true);
+      const worker = createHarvester(ERR_NOT_IN_RANGE);
+      const res = job.harvestFromSite(worker);
+      assert(!res, `${worker.info()} failed to harvest from ${job.site.info()}`);
+      assert(job.moveToSite.calledOnce, `moveToSite not invoked when far from site`);
+    });
+  });
+
+  describe("Work method", function() {
+    function createHarvester(name, res = OK) {
+      const creep = Helpers.createCreep();
+      creep.name = name;
+      Sinon.stub(creep, "harvest", (site, opts = {}) => res);
+      return creep;
+    }
+    it("All workers work", function() {
+      const job = new JobHarvest(Helpers.createSite(Mineral));
+      const workers = [
+        createHarvester('one'),
+        createHarvester('two', ERR_NOT_ENOUGH_RESOURCES),
+        createHarvester('three')
+      ];
+      _.each(workers, w => job.assignWorker(w));
+
+      job.work();
+      _.each(workers, w => assert(w.harvest.calledOnce, `${w.info()} didn't harvest!`));
+    });
+  });
+
   describe('Mineral patches work correctly', function() {
     it('has the correct number of minerals available', function() {
       const TEST_MINERALS_AVAILABLE = 127;

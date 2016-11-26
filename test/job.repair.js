@@ -1,4 +1,5 @@
 const assert = require('chai').assert;
+const Sinon = require('sinon');
 const Job = require('job');
 const JobRepair = require('job.repair');
 const Helpers = require('./helpers');
@@ -73,6 +74,57 @@ describe('Screep Repair Job', () => {
           assert.throws(() => job.assignWorker(null), RangeError);
           assert.throws(() => job.assignWorker(undefined), RangeError);
           assert.throws(() => job.assignWorker(new Structure), TypeError);
+        });
+      });
+      describe('repairSite method', function() {
+        function createStubbedRepairer(res) {
+          const creep = Helpers.createCreep();
+          Sinon.stub(creep, "repair", (site, opts = {}) => res);
+          return creep;
+        }
+
+        it ('Successfully repairs the site', function() {
+          const job = new JobRepair(Helpers.createSite(StructureWall));
+          const worker = createStubbedRepairer(OK);
+          const res = job.repairSite(worker);
+          assert(res, "Failed to repair the site!");
+        });
+        it ('Moves to site if not close enough', function() {
+          const job = new JobRepair(Helpers.createSite(StructureWall));
+          Sinon.stub(job, 'moveToSite', () => true);
+          const worker = createStubbedRepairer(ERR_NOT_IN_RANGE);
+          const res = job.repairSite(worker);
+          assert(!res, "Indicated successful repair when it shouldn't have!");
+          assert(job.moveToSite.calledOnce, "Worker didn't move to site");
+        });
+        it ('Throws exception on unexpcted errors', function() {
+          const job = new JobRepair(Helpers.createSite(StructureWall));
+          assert.throws(() => job.repairSite(createStubbedRepairer(ERR_TIRED)));
+          assert.throws(() => job.repairSite(createStubbedRepairer(ERR_NOT_OWNER)));
+          assert.throws(() => job.repairSite(createStubbedRepairer(ERR_INVALID_TARGET)));
+          assert.throws(() => job.repairSite(createStubbedRepairer(ERR_NOT_ENOUGH_RESOURCES)));
+          assert.throws(() => job.repairSite(createStubbedRepairer(ERR_NO_BODYPART)));
+          assert.throws(() => job.repairSite(createStubbedRepairer(ERR_BUSY)));
+        });
+      });
+      describe("Work method", function() {
+        function createRepairer(name, res = OK) {
+          const creep = Helpers.createCreep();
+          creep.name = name;
+          Sinon.stub(creep, "repair", (site, opts = {}) => res);
+          return creep;
+        }
+        it("All workers work", function() {
+          const job = new JobRepair(Helpers.createSite(StructureRampart));
+          const workers = [
+            createRepairer('one'),
+            createRepairer('two', ERR_NOT_ENOUGH_RESOURCES),
+            createRepairer('three')
+          ];
+          _.each(workers, w => job.assignWorker(w));
+
+          job.work();
+          _.each(workers, w => assert(w.repair.calledOnce, `${w.info()} didn't repair!`));
         });
       });
     });
