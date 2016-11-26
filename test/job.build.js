@@ -58,4 +58,55 @@ describe('Screep Build Job', () => {
       });
     });
   });
+  describe('buildAtSite method', function() {
+    function createBuilder(res) {
+      const creep = Helpers.createCreep();
+      Sinon.stub(creep, "build", (site, opts = {}) => res);
+      return creep;
+    }
+
+    it ('Successfully builds the site', function() {
+      const job = new JobBuild(Helpers.createSite(ConstructionSite));
+      const worker = createBuilder(OK);
+      const res = job.buildAtSite(worker);
+      assert(res, "Failed to build at the site!");
+    });
+    it ('Moves to site if not close enough', function() {
+      const job = new JobBuild(Helpers.createSite(ConstructionSite));
+      Sinon.stub(job, 'moveToSite', () => true);
+      const worker = createBuilder(ERR_NOT_IN_RANGE);
+      const res = job.buildAtSite(worker);
+      assert(!res, "Indicated successful repair when it shouldn't have!");
+      assert(job.moveToSite.calledOnce, "Worker didn't move to site");
+    });
+    it ('Throws exception on unexpcted errors', function() {
+      const job = new JobBuild(Helpers.createSite(ConstructionSite));
+      assert.throws(() => job.buildAtSite(createBuilder(ERR_TIRED)));
+      assert.throws(() => job.buildAtSite(createBuilder(ERR_NOT_OWNER)));
+      assert.throws(() => job.buildAtSite(createBuilder(ERR_INVALID_TARGET)));
+      assert.throws(() => job.buildAtSite(createBuilder(ERR_NOT_ENOUGH_RESOURCES)));
+      assert.throws(() => job.buildAtSite(createBuilder(ERR_NO_BODYPART)));
+      assert.throws(() => job.buildAtSite(createBuilder(ERR_BUSY)));
+    });
+  });
+  describe("Work method", function() {
+    function createBuilder(name, res = OK) {
+      const creep = Helpers.createCreep();
+      creep.name = name;
+      Sinon.stub(creep, "build", (site, opts = {}) => res);
+      return creep;
+    }
+    it("All workers work", function() {
+      const job = new JobBuild(Helpers.createSite(ConstructionSite));
+      const workers = [
+        createBuilder('one'),
+        createBuilder('two', ERR_NOT_ENOUGH_RESOURCES),
+        createBuilder('three')
+      ];
+      _.each(workers, w => job.assignWorker(w));
+
+      job.work();
+      _.each(workers, w => assert(w.build.calledOnce, `${w.info()} didn't build!`));
+    });
+  });
 });

@@ -33,10 +33,33 @@ const JobBuild = class JobBuild extends Job {
     return this.site.progressTotal / BUILD_POWER;
   }
 
-  /**
-   * Perform the job.
-   */
+  buildAtSite(worker) {
+    let res = worker.build(this.site);
+    switch (res) {
+      case ERR_NOT_OWNER:
+      case ERR_INVALID_TARGET:
+      case ERR_NO_BODYPART:
+      case ERR_BUSY:
+      default:
+        throw new Error(`${this.info()}: unexpected failure when building (${res})`);
+      case ERR_NOT_ENOUGH_RESOURCES:
+        throw new Error(`${this.info()}: ${this.site.info()} doesn't have enough energy for ${worker.info()} to build`);
+      case ERR_NOT_IN_RANGE:
+        this.moveToSite(worker);
+        return false;
+      case OK:
+        return true;
+    }
+  }
+
   work() {
+    _.each(this.workers, w => {
+      try {
+        return this.buildAtSite(w);
+      } catch (e) {
+        console.log(`${this.info()}: ${w.info()} failed to build at ${this.site.info()}`);
+      }
+    });
   }
 };
 
