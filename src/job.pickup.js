@@ -11,7 +11,7 @@ const JobPickup = class JobPickup extends Job {
   constructor(site, resource = RESOURCE_ANY) {
     super(JobPickup.TYPE, site);
     if (!site.hasPickup(resource)) {
-      throw new TypeError(`Invalid pickup site: doesn't have pickup ${site}-${resource}`);
+      throw new TypeError(`Invalid pickup site: doesn't have pickup ${site.info()}-${resource}`);
     }
 
     this.resource = resource;
@@ -33,6 +33,43 @@ const JobPickup = class JobPickup extends Job {
    */
   energyRequired() {
     return 0;
+  }
+
+  /**
+   * Gets the worker to pickup resources from the job site.
+   * @param {Creep} worker to perform the repairSite
+   * @return {boolean} whether the worker did something useful
+   */
+  pickupFromSite(worker) {
+    let res = this.site.pickup(worker, this.resource);
+    switch (res) {
+      case ERR_NOT_OWNER:
+      case ERR_INVALID_TARGET:
+      case ERR_NO_BODYPART:
+      case ERR_FULL:
+      case ERR_BUSY:
+      default:
+        throw new Error(`${this.info()}: unexpected failure when ${worker.info()} tried picking up from ${this.site.info()} (${res})`);
+      case ERR_NOT_ENOUGH_RESOURCES:
+          // The site is empty - this job is complete
+        console.log(`${this.info()}: ${this.site.info()} doesn't have any ${this.resource} to pickup. (${res})`);
+        return false;
+      case ERR_NOT_IN_RANGE:
+        this.moveToSite(worker);
+        return false;
+      case OK:
+        return true;
+    }
+  }
+
+  work() {
+    _.each(this.workers, w => {
+      try {
+        this.pickupFromSite(w);
+      } catch (e) {
+        console.log(`ERROR: ${e.message}`);
+      }
+    });
   }
 };
 
@@ -62,6 +99,10 @@ RoomObject.prototype.hasPickup = function() {
   return false;
 };
 
+RoomObject.prototype.pickup = function(worker) {
+  throw new Error(`Invalid operation: ${worker.info()} tried to pickup from ${this.info()}`);
+};
+
 
 /**
  * Stuff that can store all resources has pickup if the resource is present.
@@ -75,9 +116,25 @@ const hasStoredPickup = function(resource = RESOURCE_ANY) {
   return this.store[resource] > 0;
 };
 
+const withdrawToPickup = function(worker, desiredResource) {
+  let resource = desiredResource;
+  if (resource === RESOURCE_ANY) {
+    for (const r in this.store) {
+      resource = r;
+      break;
+    }
+  }
+  return worker.withdraw(this, resource);
+};
+
 StructureContainer.prototype.hasPickup = hasStoredPickup;
+StructureContainer.prototype.pickup = withdrawToPickup;
+
 StructureStorage.prototype.hasPickup = hasStoredPickup;
+StructureStorage.prototype.pickup = withdrawToPickup;
+
 StructureTerminal.prototype.hasPickup = hasStoredPickup;
+StructureTerminal.prototype.pickup = withdrawToPickup;
 
 
 /**
@@ -98,6 +155,17 @@ Creep.prototype.hasPickup = function hasPickup(resource = RESOURCE_ANY) {
   return this.carry[resource] > 0;
 };
 
+Creep.prototype.pickup = function(worker, desiredResource) {
+  let resource = desiredResource;
+  if (resource === RESOURCE_ANY) {
+    for (const r in this.carry) {
+      resource = r;
+      break;
+    }
+  }
+  return worker.withdraw(this.site, resource);
+};
+
 
 /**
  * Resources just lying around can be pickup
@@ -109,6 +177,10 @@ Resource.prototype.hasPickup = function hasPickup(resource = RESOURCE_ANY) {
     return this.amount > 0;
   }
   return (resource === this.resourceType) && (this.amount > 0);
+};
+
+Resource.prototype.pickup = function(worker, desiredResource) {
+  return worker.pickup(this);
 };
 
 
@@ -133,6 +205,9 @@ StructureLink.prototype.hasPickup = function(resource = RESOURCE_ANY) {
   }).length > 0;
 };
 
+Resource.prototype.pickup = function(worker, desiredResource) {
+  return worker.withdraw(this, RESOURCE_ENERGY);
+};
 
 
 module.exports = JobPickup;

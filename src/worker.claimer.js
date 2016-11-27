@@ -14,7 +14,7 @@
      IS_SPAWNING: -1,
      NO_CONTROLLERS_TO_CLAIM: -2,
      NOT_CONTROLLER: -3,
-     CLAIM_FAILED: -4,
+     CLAIM_FAILED: -4
    },
 
    /**
@@ -119,7 +119,7 @@
 
      worker.memory.operation = Claimer.OPERATION;
      return Claimer.ERROR.NONE;
-   },
+   }
  };
 
  module.exports = Claimer;

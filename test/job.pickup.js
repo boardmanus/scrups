@@ -77,6 +77,61 @@ describe('Screep Pickup Job', () => {
         });
       });
     });
+
+    describe('pickupFromSite method', function() {
+      function createPickerupper(res) {
+        const creep = Helpers.createCreep(200);
+        Sinon.stub(creep, "pickup", (site, opts = {}) => res);
+        Sinon.stub(creep, "withdraw", (site, opts = {}) => res);
+        return creep;
+      }
+      it('should succeed when the worker can transfer', function() {
+        const job = new JobPickup(Helpers.createSite(StructureStorage, RESOURCE_ENERGY));
+        const worker = createPickerupper(OK);
+        assert(job.pickupFromSite(worker) === true, "Failed to pickup when things were looking good");
+      });
+      it('should fail when the site has none of the required resources', function() {
+        const job = new JobPickup(Helpers.createSite(StructureStorage, RESOURCE_ENERGY));
+        const worker = createPickerupper(ERR_NOT_ENOUGH_RESOURCES);
+        assert(job.pickupFromSite(worker, RESOURCE_ENERGY) === false, "Succeeded transferring when site was full");
+      });
+      it('should move towards site if not in range', function() {
+        const job = new JobPickup(Helpers.createSite(StructureStorage, RESOURCE_ENERGY));
+        const worker = createPickerupper(ERR_NOT_IN_RANGE);
+        const moveTo = Sinon.stub(worker, "moveTo", (site, opts = {}) => OK);
+        assert(job.pickupFromSite(worker, RESOURCE_ENERGY) === false, "Succeeded when not in range");
+        assert(moveTo.calledOnce, "moveTo not invoked");
+      });
+      it('should throw exceptions on unexpected results', function() {
+        const job = new JobPickup(Helpers.createSite(StructureStorage, RESOURCE_ENERGY));
+        assert.throws(() => job.pickupFromSite(createPickerupper(ERR_INVALID_TARGET), RESOURCE_ENERGY), Error);
+        assert.throws(() => job.pickupFromSite(createPickerupper(ERR_NOT_OWNER), RESOURCE_ENERGY), Error);
+        assert.throws(() => job.pickupFromSite(createPickerupper(ERR_INVALID_ARGS), RESOURCE_ENERGY), Error);
+        assert.throws(() => job.pickupFromSite(createPickerupper(ERR_INVALID_TARGET), RESOURCE_ENERGY), Error);
+        assert.throws(() => job.pickupFromSite(createPickerupper(ERR_FULL), RESOURCE_ENERGY), Error);
+      });
+    });
+
+    describe('working the job', function() {
+      function createStubbedJob(siteType) {
+        const job = new JobPickup(Helpers.createSite(siteType, RESOURCE_OXYGEN));
+        Sinon.stub(job, "pickupFromSite", (worker) => true);
+        return job;
+      }
+      it ('should store all worker resources in good conditions', function() {
+        const job = createStubbedJob(StructureStorage);
+        job.assignWorker(Helpers.createCreep(200, RESOURCE_ENERGY));
+        job.assignWorker(Helpers.createCreep(100, RESOURCE_OXYGEN));
+        job.work();
+        assert(job.pickupFromSite.calledTwice, "Resources not stored");
+      });
+      it ('should store energy in energy only site', function() {
+        const job = createStubbedJob(StructureContainer);
+        job.assignWorker(Helpers.createCreep(200, RESOURCE_ENERGY));
+        job.work();
+        assert(job.pickupFromSite.calledOnce, "Resources not stored");
+      });
+    });
   });
 
   describe('Monkey patching', function() {
