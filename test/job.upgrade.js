@@ -2,7 +2,7 @@ const assert = require('chai').assert;
 const Job = require('job');
 const JobUpgrade = require('job.upgrade');
 const Helpers = require('./helpers');
-
+const Sinon = require('sinon');
 
 describe('Screep Upgrade Job', () => {
     // Test parameters...
@@ -63,5 +63,57 @@ describe('Screep Upgrade Job', () => {
                 });
             });
         });
+    });
+
+    describe('upgradeSite method', function() {
+      function createUpgrader(res) {
+        const creep = Helpers.createCreep(100, RESOURCE_ENERGY);
+        Sinon.stub(creep, "upgradeController", (controller) => res);
+        return creep;
+      }
+
+      it ('Successfully upgrades the controller', function() {
+        const job = new JobUpgrade(Helpers.createSite(StructureController));
+        const worker = createUpgrader(OK);
+        const res = job.upgradeSite(worker);
+        assert(res, "Failed to repair the site!");
+      });
+      it ('Moves to site if not close enough', function() {
+        const job = new JobUpgrade(Helpers.createSite(StructureController));
+        Sinon.stub(job, 'moveToSite', () => true);
+        const worker = createUpgrader(ERR_NOT_IN_RANGE);
+        const res = job.upgradeSite(worker);
+        assert(!res, "Indicated successful upgrade when it shouldn't have!");
+        assert(job.moveToSite.calledOnce, "Worker didn't move to site");
+      });
+      it ('Throws exception on unexpcted errors', function() {
+        const job = new JobUpgrade(Helpers.createSite(StructureController));
+        assert.throws(() => job.upgradeSite(createUpgrader(ERR_TIRED)));
+        assert.throws(() => job.upgradeSite(createUpgrader(ERR_NOT_OWNER)));
+        assert.throws(() => job.upgradeSite(createUpgrader(ERR_INVALID_TARGET)));
+        assert.throws(() => job.upgradeSite(createUpgrader(ERR_NOT_ENOUGH_RESOURCES)));
+        assert.throws(() => job.upgradeSite(createUpgrader(ERR_NO_BODYPART)));
+        assert.throws(() => job.upgradeSite(createUpgrader(ERR_BUSY)));
+      });
+    });
+    describe("Work method", function() {
+      function createUpgrader(name, res = OK) {
+        const creep = Helpers.createCreep();
+        creep.name = name;
+        Sinon.stub(creep, "upgradeController", (site, opts = {}) => res);
+        return creep;
+      }
+      it("All workers work", function() {
+        const job = new JobUpgrade(Helpers.createSite(StructureController));
+        const workers = [
+          createUpgrader('one'),
+          createUpgrader('two', ERR_NOT_ENOUGH_RESOURCES),
+          createUpgrader('three')
+        ];
+        _.each(workers, w => job.assignWorker(w));
+
+        job.work();
+        _.each(workers, w => assert(w.upgradeController.calledOnce, `${w.info()} didn't try to upgrade!`));
+      });
     });
 });

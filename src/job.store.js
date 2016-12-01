@@ -108,10 +108,26 @@ const JobStore = class JobStore extends Job {
   /**
    * Transfer the resource to the job site
    * @param {Creep} worker the worker to do the transferring
-   * @param {RoomObject} resource the resource to transfer from the worker
    * @return {boolean} whether the transfer was successful
    */
-  transferToSite(worker, resource) {
+  transferToSite(worker) {
+    let resource = this.site.storableResource();
+    if (resource === RESOURCE_ENERGY) {
+      if (worker.carry[RESOURCE_ENERGY] > 0) {
+        resource = RESOURCE_ENERGY;
+      } else {
+        // The worker has no energy to transfer
+        throw new Error(`${this.info()}: ${worker.info()} has no energy to transfer to ${this.site.info()}`);
+      }
+    } else if (resource === RESOURCE_ANY) {
+      for (const carriedResource in worker.carry) {
+        resource = carriedResource;
+        break;
+      }
+    } else {
+      throw new Error(`${this.info}: ${this.site.info()} is not storable!`);
+    }
+
     let res = worker.transfer(this.site, resource);
     switch (res) {
       case ERR_NOT_OWNER:
@@ -136,22 +152,11 @@ const JobStore = class JobStore extends Job {
   }
 
   work() {
-    const allowableResources = this.site.storableResource();
     _.each(this.workers, w => {
-      if (allowableResources === RESOURCE_ENERGY) {
-        if (w.carry[RESOURCE_ENERGY] > 0) {
-          this.transferToSite(w, RESOURCE_ENERGY);
-        } else {
-          // The worker has no energy to transfer
-          console.log(`${this.info()}: ${w.info()} has no energy to transfer to ${this.site.info()}`);
-        }
-      } else if (allowableResources === RESOURCE_ANY) {
-        for (const resource in w.carry) {
-          this.transferToSite(w, resource);
-          break;
-        }
-      } else {
-        throw new Error(`${this.info}: ${this.site.info()} is not storable!`);
+      try {
+        this.transferToSite(w);
+      } catch (e) {
+        console.log(`ERROR: ${e.message}`);
       }
     });
   }

@@ -70,8 +70,8 @@ describe('Screep Store Job', () => {
       });
 
       describe('transferToSite method', function() {
-        function createStubbedCreep(res) {
-          const creep = Helpers.createCreep(200, RESOURCE_ENERGY);
+        function createStubbedCreep(res, resource = RESOURCE_ENERGY) {
+          const creep = Helpers.createCreep(200, resource);
           Sinon.stub(creep, "transfer", (site, opts = {}) => res);
           return creep;
         }
@@ -83,29 +83,35 @@ describe('Screep Store Job', () => {
         it('should fail when the site is full', function() {
           const job = new JobStore(Helpers.createSite(StructureStorage));
           const worker = createStubbedCreep(ERR_FULL);
-          assert(job.transferToSite(worker, RESOURCE_ENERGY) === false, "Succeeded transferring when site was full");
+          assert(job.transferToSite(worker) === false, "Succeeded transferring when site was full");
+        });
+        it ('should not store resources in energy only site', function() {
+          const job = new JobStore(Helpers.createSite(StructureExtension));
+          const worker = createStubbedCreep(OK, RESOURCE_OXYGEN);
+          assert(worker.transfer.callCount === 0, "The transfer method was called, when it shouldn't be");
+          assert.throws(() => job.transferToSite(worker), Error);
         });
         it('should move towards site if not in range', function() {
           const job = new JobStore(Helpers.createSite(StructureStorage));
           const worker = createStubbedCreep(ERR_NOT_IN_RANGE);
           const moveTo = Sinon.stub(worker, "moveTo", (site, opts = {}) => OK);
-          assert(job.transferToSite(worker, RESOURCE_ENERGY) === false, "Succeeded when not in range");
+          assert(job.transferToSite(worker) === false, "Succeeded when not in range");
           assert(moveTo.calledOnce, "moveTo not invoked");
         });
         it('should throw exceptions on unexpected results', function() {
           const job = new JobStore(Helpers.createSite(StructureStorage));
-          assert.throws(() => job.transferToSite(createStubbedCreep(ERR_INVALID_TARGET), RESOURCE_ENERGY), Error);
-          assert.throws(() => job.transferToSite(createStubbedCreep(ERR_NOT_OWNER), RESOURCE_ENERGY), Error);
-          assert.throws(() => job.transferToSite(createStubbedCreep(ERR_INVALID_ARGS), RESOURCE_ENERGY), Error);
-          assert.throws(() => job.transferToSite(createStubbedCreep(ERR_INVALID_TARGET), RESOURCE_ENERGY), Error);
-          assert.throws(() => job.transferToSite(createStubbedCreep(ERR_NOT_ENOUGH_RESOURCES), RESOURCE_ENERGY), Error);
+          assert.throws(() => job.transferToSite(createStubbedCreep(ERR_INVALID_TARGET)), Error);
+          assert.throws(() => job.transferToSite(createStubbedCreep(ERR_NOT_OWNER)), Error);
+          assert.throws(() => job.transferToSite(createStubbedCreep(ERR_INVALID_ARGS)), Error);
+          assert.throws(() => job.transferToSite(createStubbedCreep(ERR_INVALID_TARGET)), Error);
+          assert.throws(() => job.transferToSite(createStubbedCreep(ERR_NOT_ENOUGH_RESOURCES)), Error);
         });
       });
 
       describe('working the job', function() {
         function createStubbedJob(siteType) {
           const job = new JobStore(Helpers.createSite(siteType));
-          Sinon.stub(job, "transferToSite", (worker, resource) => true);
+          Sinon.stub(job, "transferToSite", (worker) => true);
           return job;
         }
         it ('should store all worker resources in good conditions', function() {
@@ -120,12 +126,6 @@ describe('Screep Store Job', () => {
           job.assignWorker(Helpers.createCreep(200, RESOURCE_ENERGY));
           job.work();
           assert(job.transferToSite.calledOnce, "Resources not stored");
-        });
-        it ('should not store resources in energy only site', function() {
-          const job = createStubbedJob(StructureExtension);
-          job.assignWorker(Helpers.createCreep(200, RESOURCE_OXYGEN));
-          job.work();
-          assert(job.transferToSite.callCount === 0, "Resources not stored");
         });
         it ('should only store energy in energy only site', function() {
           const job = createStubbedJob(StructureExtension);
