@@ -3,22 +3,12 @@
  */
 
 const Job = require('job');
+const JobUpgrade = require('job.upgrade');
+const JobRepair = require('job.repair');
+const JobBuild = require('job.build');
 
 /*
-function towerPriority(job) {
-  const energyRatio = job.completionRatio();
-  const enemiesPresent = (job.site.room.city.enemies.length > 0);
-  if (energyRatio < 0.1) {
-    return Job.Priority.CRITICAL;
-  } else if (energyRatio < 0.3) {
-    return enemiesPresent ? Job.Priority.CRITICAL : Job.Priority.HIGH;
-  } else if (energyRatio < 0.5) {
-    return enemiesPresent ? Job.Priority.HIGH : Job.Priority.NORMAL;
-  } else if (energyRatio < 0.7) {
-    return enemiesPresent ? Job.Priority.NORMAL : Job.Priority.LOW;
-  }
-  return Job.Priority.IDLE;
-}
+
 
 function linkPriority(job) {
   const energyRatio = job.completionRatio();
@@ -57,23 +47,6 @@ function spawnerPriority(job) {
 
   return storePriority;
 }
-
-function containerPriority(job) {
-  const energyRatio = job.completionRatio();
-  if (energyRatio < 0.3) {
-    return Job.Priority.LOW;
-  }
-  return job.isComplete() ? Job.Priority.IGNORE : Job.Priority.IDLE;
-}
-
-function storagePriority(job) {
-  const energyRatio = job.completionRatio();
-  if (energyRatio < 0.3) {
-    return Job.Priority.LOW;
-  }
-  return job.isComplete() ? Job.Priority.IGNORE : Job.Priority.IDLE;
-}
-
 */
 
 const JobStore = class JobStore extends Job {
@@ -85,7 +58,7 @@ const JobStore = class JobStore extends Job {
   constructor(site) {
     super(JobStore.TYPE, site);
     if (!site.isStorable()) {
-      throw new TypeError(`Site not storable - ${site.id}`);
+      throw new TypeError(`Site not storable - ${site.info()}`);
     }
   }
 
@@ -198,10 +171,18 @@ RoomObject.prototype.isStorable = noStorage;
 StructureTower.prototype.isStorable = energyOnlyStorage;
 StructureSpawn.prototype.isStorable = energyOnlyStorage;
 StructureExtension.prototype.isStorable = energyOnlyStorage;
-Creep.prototype.isStorable = anyStorage;
 StructureContainer.prototype.isStorable = anyStorage;
 StructureStorage.prototype.isStorable = anyStorage;
 StructureTerminal.prototype.isStorable = anyStorage;
+
+Creep.prototype.isStorable = function(resource = RESOURCE_ENERGY) {
+  return (
+    (resource === RESOURCE_ENERGY) &&
+    this.jobs && this.jobs.length &&
+    ((this.jobs[0].type === JobUpgrade.TYPE) ||
+     (this.jobs[0].type === JobRepair.TYPE) ||
+     (this.jobs[0].type === JobBuild.TYPE)));
+};
 
 
 /**
@@ -258,5 +239,66 @@ StructureStorage.prototype.storableResource = anyStorableResource;
 StructureTerminal.prototype.storableResource = anyStorableResource;
 Creep.prototype.storableResource = anyStorableResource;
 
+
+/**
+ * Retrieves the desired resource type of an object.
+ * @return {string} the storable resource
+ */
+RoomObject.prototype.storagePriority = function() {
+  throw new Error(`Can't store energy in ${this.info()}`);
+};
+
+StructureTower.prototype.storagePriority = function() {
+  const energyRatio = this.completionRatio();
+  const enemiesPresent = (this.room.city.enemies.length > 0);
+  if (energyRatio < 0.1) {
+    return Job.Priority.CRITICAL;
+  } else if (energyRatio < 0.3) {
+    return enemiesPresent ? Job.Priority.CRITICAL : Job.Priority.HIGH;
+  } else if (energyRatio < 0.5) {
+    return enemiesPresent ? Job.Priority.HIGH : Job.Priority.NORMAL;
+  } else if (energyRatio < 0.7) {
+    return enemiesPresent ? Job.Priority.NORMAL : Job.Priority.LOW;
+  }
+  return Job.Priority.IDLE;
+};
+
+StructureSpawn.prototype.storagePriority = function(job) {
+  return Job.Priority.NORMAL;
+};
+
+StructureExtension.prototype.storagePriority = function(job) {
+  return Job.Priority.NORMAL;
+};
+
+StructureContainer.prototype.storagePriority = function(job) {
+  return Job.Priority.LOW;
+};
+
+StructureStorage.prototype.storagePriority = function(job) {
+  return Job.Priority.LOW;
+};
+
+StructureTerminal.prototype.storagePriority = function(job) {
+  return Job.Priority.LOW;
+};
+
+Creep.prototype.storagePriority = function(job) {
+  const space = this.carryCapacity - _.sum(this.carry);
+  if (space < 50) {
+    return Job.Priority.IDLE;
+  }
+
+  const energy = this.carry(RESOURCE_ENERGY);
+  if (energy < 20) {
+    return Job.Priority.HIGH;
+  } else if (energy < 50) {
+    return Job.Priority.NORMAL;
+  } else if (energy < 100) {
+    return Job.Priority.LOW;
+  }
+
+  return Job.Priority.IDLE;
+};
 
 module.exports = JobStore;

@@ -33,6 +33,7 @@ const JobBuild = class JobBuild extends Job {
     return this.site.progressTotal / BUILD_POWER;
   }
 
+
   buildAtSite(worker) {
     let res = worker.build(this.site);
     switch (res) {

@@ -3,6 +3,7 @@ const Job = require('job');
 const JobStore = require('job.store');
 const Sinon = require('sinon');
 const Helpers = require('./helpers.js');
+const JobUpgrade = require('job.upgrade');
 
 
 describe('Screep Store Job', () => {
@@ -10,12 +11,20 @@ describe('Screep Store Job', () => {
   const TEST_PRIORITY = Job.Priority.NORMAL;
   const TEST_SITE_ID = '12345abcde';
 
+  const createStorageCreep = function() {
+    const creep = Helpers.createSite(Creep);
+    creep.jobs = [ new JobUpgrade(Helpers.createSite(StructureController)) ];
+    return creep;
+  }
+
   describe('Construction', function() {
-    it('can only build on construction sites', function() {
+
+    it('can only store at sutiable sites', function() {
       assert.throws(() => new JobStore(new Structure()), TypeError);
       assert.throws(() => new JobStore(undefined), RangeError);
       assert.throws(() => new JobStore(null), RangeError);
-      assert.doesNotThrow(() => new JobStore(new Creep()));
+      assert.throws(() => new JobStore(new Creep()), TypeError);
+      assert.doesNotThrow(() => new JobStore(createStorageCreep()));
       assert.doesNotThrow(() => new JobStore(new StructureExtension()));
       assert.doesNotThrow(() => new JobStore(new StructureSpawn()));
       assert.doesNotThrow(() => new JobStore(new StructureStorage()));
@@ -143,8 +152,8 @@ describe('Screep Store Job', () => {
       assert(!(new StructureWall()).isStorable());
       assert((new StructureContainer()).isStorable());
       assert((new StructureContainer()).isStorable(RESOURCE_HYDROGEN));
-      assert((new Creep()).isStorable());
-      assert((new Creep()).isStorable(RESOURCE_OXYGEN));
+      assert((createStorageCreep()).isStorable());
+      assert(!(createStorageCreep()).isStorable(RESOURCE_OXYGEN));
       assert((new StructureTower()).isStorable(RESOURCE_ENERGY));
       assert(!(new StructureTower()).isStorable(RESOURCE_HYDROGEN));
     });
