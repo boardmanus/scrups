@@ -27,7 +27,7 @@ function jobOptions(options = null) {
 
 
 
-const Boss = class Boss {
+class Boss {
 
   constructor(room) {
     if (!room) {
@@ -129,8 +129,8 @@ const Boss = class Boss {
       const jobs = this.upgradeJobs.concat(
           this.storeJobs,
           this.harvestJobs,
-          // this.repairJobs,
-          // this.buildJobs,
+          this.pickupJobs,
+          this.repairJobs,
           this.constructionJobs);
 
       // Find jobs that are already being worked...
@@ -203,6 +203,13 @@ const Boss = class Boss {
 
     console.log(`${this.info()} has ${this.idlePeons.length} idle peons after assigning jobs.`);
   }
+
+
+  supervise() {
+
+  }
+
+
   /**
    * Report job information based on the options provided.
    * @param {object} options the options to modify the report
@@ -233,7 +240,7 @@ const Boss = class Boss {
 
     console.log(report);
   }
-};
+}
 
 
 /**

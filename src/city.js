@@ -3,19 +3,17 @@
  */
 const u = require('utils');
 const Boss = require('boss');
+const Cloner = require('cloner');
 const CivilEngineer = require('civilengineer');
 
-/**
- * Monkey patch some screeps classes...
- */
-Structure.prototype.needsRepair = function needsRepair() {
-  return this.hits < this.hitsMax;
-};
 
-
-const City = class City {
+class City {
 
   constructor(room) {
+    if (!room.controller.my) {
+      throw new Error(`${room.info()} not owned by me!`);
+    }
+
     this.room = room;
     room.city = this;
     this.cache = {};
@@ -38,14 +36,14 @@ const City = class City {
   get citizens() {
     return this.cache.getValue('citizens', () => {
       // Search for all citizens of the city - they may even be in other rooms!
-      _.each(this.room.find(FIND_MY_CREEPS, { filter: (c) => !c.memory.city }), (c) => {
+      _.each(this.room.find(FIND_MY_CREEPS, {filter: c => !c.memory.city}), c => {
         c.memory.city = this.room.name;
       });
 
       return _.map(
         _.filter(Object.keys(Game.creeps),
-          (k) => Game.creeps[k].memory.city === this.room.name),
-        (k) => {
+          k => Game.creeps[k].memory.city === this.room.name),
+        k => {
           const c = Game.creeps[k];
           c.city = this;
           return c;
@@ -75,7 +73,7 @@ const City = class City {
 
   get harvestSites() {
     return this.cache.getValue('harvestSites', () =>
-      this.sources.concat(_.filter(this.minerals, (m) =>
+      this.sources.concat(_.filter(this.minerals, m =>
         m.pos.lookFor(LOOK_STRUCTURES).length > 0)));
   }
 
@@ -194,7 +192,7 @@ const City = class City {
     }
 
     this.boss.audit();
-    //this.civilEngineer.audit();
+    // this.civilEngineer.audit();
   }
 
   needsHelp() {
@@ -215,10 +213,10 @@ const City = class City {
   }
 
   run() {
-    //this.civilEngineer.run();
+    // this.civilEngineer.run();
     this.boss.run();
   }
-};
+}
 
 
 /**
